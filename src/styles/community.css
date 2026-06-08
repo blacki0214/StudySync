@@ -1,0 +1,59 @@
+/* community.css
+   ----------------------------------------------------------------------------
+   Community feed and profile page. */
+
+.community-post {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  margin-bottom: var(--space-4);
+}
+.community-post .cp-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.community-post .cp-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--c-primary); color: #fff;
+  display: grid; place-items: center; font-weight: 700;
+}
+.community-post .cp-actions {
+  display: flex;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+  color: var(--c-text-muted);
+  font-size: 0.85rem;
+}
+.community-post .cp-actions span { cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
+.community-post .cp-actions span:hover { color: var(--c-primary); }
+
+/* Profile */
+.profile-header {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.profile-avatar-lg {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  color: #fff; display: grid; place-items: center;
+  font-size: 2rem; font-weight: 800;
+}
+.profile-header .ph-name { font-size: 1.4rem; font-weight: 800; margin: 0; }
+.profile-header .ph-email { color: var(--c-text-muted); }
+.profile-stat {
+  text-align: center;
+  padding: var(--space-4);
+}
+.profile-stat .ps-value { font-size: 1.5rem; font-weight: 800; color: var(--c-primary); }
+.profile-stat .ps-label { color: var(--c-text-muted); font-size: 0.82rem; }

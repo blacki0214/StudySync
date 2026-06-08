@@ -1,0 +1,88 @@
+/* dashboard.css
+   ----------------------------------------------------------------------------
+   Dashboard stat cards, leaderboard, popular subjects, recent notes. */
+
+.stat-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.stat-card .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.stat-card .stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-card .stat-label {
+  color: var(--c-text-muted);
+  font-size: 0.85rem;
+}
+.bg-grad-1 { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.bg-grad-2 { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+.bg-grad-3 { background: linear-gradient(135deg, #10b981, #059669); }
+.bg-grad-4 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+.panel {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  height: 100%;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--c-border);
+}
+.leaderboard-item:last-child { border-bottom: none; }
+.leaderboard-rank {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: var(--c-bg);
+  color: var(--c-text-muted);
+}
+.leaderboard-rank.top1 { background: #fde68a; color: #92400e; }
+.leaderboard-rank.top2 { background: #e5e7eb; color: #374151; }
+.leaderboard-rank.top3 { background: #fed7aa; color: #9a3412; }
+.leaderboard-item .lb-name { font-weight: 600; font-size: 0.9rem; }
+.leaderboard-item .lb-rep { margin-left: auto; font-weight: 700; color: var(--c-primary); }
+
+.subject-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+  margin-bottom: var(--space-2);
+}
+.subject-chip:hover { background: var(--c-bg); }
+.subject-chip .sc-code {
+  font-weight: 700;
+  color: var(--c-primary);
+  font-size: 0.85rem;
+}

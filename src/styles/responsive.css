@@ -1,0 +1,66 @@
+/* responsive.css
+   ----------------------------------------------------------------------------
+   Mobile + tablet adaptations. Kept in ONE place so all breakpoints are easy to
+   audit. We layer on top of Bootstrap's grid; these rules handle the app shell
+   (sidebar collapse) and the multi-column feature layouts. */
+
+/* Tablet and below: collapse the two-column editor / room layouts. */
+@media (max-width: 992px) {
+  .editor-layout,
+  .room-layout {
+    grid-template-columns: 1fr;
+  }
+  .auth-wrap {
+    grid-template-columns: 1fr;
+  }
+  .auth-aside {
+    display: none; /* hide the marketing panel on small screens */
+  }
+}
+
+/* Mobile: turn the fixed sidebar into an off-canvas drawer. */
+@media (max-width: 768px) {
+  .app-sidebar {
+    transform: translateX(-100%);
+  }
+  .app-sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+  .app-main {
+    margin-left: 0;
+  }
+  .navbar-toggle {
+    display: inline-flex;
+  }
+  .navbar-search {
+    max-width: 160px;
+  }
+  .app-content {
+    padding: var(--space-4);
+  }
+  .landing-hero h1 {
+    font-size: 2.1rem;
+  }
+  .landing-nav,
+  .feature-grid {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+  .user-chip .user-name,
+  .user-chip .user-rep {
+    display: none; /* show only the avatar on mobile */
+  }
+}
+
+/* Small phones: tighten stat cards. */
+@media (max-width: 480px) {
+  .stat-card {
+    flex-direction: row;
+    padding: var(--space-4);
+  }
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}

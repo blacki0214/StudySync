@@ -1,0 +1,54 @@
+/* variables.css
+   ----------------------------------------------------------------------------
+   Design tokens (colours, spacing, typography, shadows). Centralising these as
+   CSS custom properties gives the whole app a single source of truth and makes
+   theming trivial. */
+
+:root {
+  /* Brand palette */
+  --c-primary: #4f46e5;
+  --c-primary-dark: #4338ca;
+  --c-primary-light: #eef2ff;
+  --c-accent: #0ea5e9;
+  --c-success: #16a34a;
+  --c-warning: #d97706;
+  --c-danger: #dc2626;
+
+  /* Neutrals */
+  --c-bg: #f6f7fb;
+  --c-surface: #ffffff;
+  --c-border: #e5e7eb;
+  --c-text: #1f2937;
+  --c-text-muted: #6b7280;
+  --c-text-faint: #9ca3af;
+
+  /* Difficulty colours */
+  --c-easy: #16a34a;
+  --c-medium: #d97706;
+  --c-hard: #dc2626;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 18px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+
+  /* Layout */
+  --sidebar-width: 250px;
+  --navbar-height: 64px;
+
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}

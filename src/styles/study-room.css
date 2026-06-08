@@ -1,0 +1,70 @@
+/* study-room.css
+   ----------------------------------------------------------------------------
+   Study rooms grid, room detail, online users panel, activity feed,
+   difficulty heatmap. */
+
+.room-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.room-card .room-name { font-weight: 700; font-size: 1.05rem; }
+.room-card .room-desc { color: var(--c-text-muted); font-size: 0.87rem; flex: 1; margin: var(--space-2) 0 var(--space-4); }
+.room-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--c-success);
+  font-weight: 600;
+}
+
+.room-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.activity-feed {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.activity-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 0.87rem;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-item .act-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--c-accent); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.activity-item .act-time { color: var(--c-text-faint); font-size: 0.75rem; }
+
+/* Difficulty heatmap */
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.heatmap-row { display: flex; align-items: center; gap: var(--space-3); }
+.heatmap-row .hm-label { width: 150px; font-size: 0.85rem; font-weight: 600; }
+.heatmap-bar {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--c-bg);
+  overflow: hidden;
+}
+.heatmap-bar .hm-fill { height: 100%; border-radius: 999px; }
+.heatmap-row .hm-value { width: 44px; text-align: right; font-size: 0.8rem; font-weight: 700; }

@@ -1,0 +1,146 @@
+/* layout.css
+   ----------------------------------------------------------------------------
+   The application shell: sidebar + top navbar + main content area. */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.app-sidebar {
+  width: var(--sidebar-width);
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-3);
+  z-index: 1040;
+  transition: transform 0.25s ease;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: var(--space-2) var(--space-3) var(--space-5);
+  color: var(--c-text);
+}
+.sidebar-brand .brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--c-primary);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-size: 0.93rem;
+}
+.sidebar-link:hover {
+  background: var(--c-bg);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.sidebar-link.router-link-active {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+}
+.sidebar-link i {
+  font-size: 1.05rem;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--c-border);
+  padding-top: var(--space-3);
+  font-size: 0.8rem;
+  color: var(--c-text-faint);
+}
+
+/* Main column */
+.app-main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-content {
+  padding: var(--space-6);
+  flex: 1;
+}
+
+.page-header {
+  margin-bottom: var(--space-5);
+}
+.page-header h1 {
+  font-size: 1.6rem;
+  margin: 0 0 0.25rem;
+}
+.page-header p {
+  color: var(--c-text-muted);
+  margin: 0;
+}
+
+.app-footer {
+  border-top: 1px solid var(--c-border);
+  padding: var(--space-4) var(--space-6);
+  color: var(--c-text-faint);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* Blank layout for landing / auth */
+.blank-layout {
+  min-height: 100vh;
+}
+
+/* Mobile sidebar backdrop */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1039;
+  border: 0;
+  padding: 0;
+}
+
+/* Empty state + spinner */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--c-text-muted);
+}
+.empty-state .empty-icon {
+  font-size: 2.4rem;
+  color: var(--c-text-faint);
+  margin-bottom: var(--space-3);
+}
+
+.spinner-wrap {
+  display: grid;
+  place-items: center;
+  padding: var(--space-8);
+}

@@ -1,0 +1,106 @@
+/* forms.css
+   ----------------------------------------------------------------------------
+   Auth pages (login/register), landing hero, and shared form styling. */
+
+.auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.auth-aside {
+  background: linear-gradient(140deg, #4f46e5, #0ea5e9);
+  color: #fff;
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.auth-aside h2 { color: #fff; font-size: 2rem; margin-bottom: var(--space-4); }
+.auth-aside ul { list-style: none; padding: 0; }
+.auth-aside li {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-bottom: var(--space-3); font-size: 1rem; opacity: 0.95;
+}
+.auth-aside li i { font-size: 1.2rem; }
+
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+.auth-card h1 { font-size: 1.6rem; margin-bottom: var(--space-2); }
+.auth-card .auth-sub { color: var(--c-text-muted); margin-bottom: var(--space-5); }
+
+.form-group { margin-bottom: var(--space-4); }
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: var(--space-2);
+}
+.form-control:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-light);
+}
+.form-error {
+  color: var(--c-danger);
+  font-size: 0.8rem;
+  margin-top: var(--space-1);
+}
+.auth-alt { text-align: center; margin-top: var(--space-4); font-size: 0.9rem; color: var(--c-text-muted); }
+.demo-hint {
+  background: var(--c-primary-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: 0.8rem;
+  color: var(--c-primary-dark);
+  margin-bottom: var(--space-4);
+}
+
+/* Landing */
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-8);
+}
+.landing-brand { display: flex; align-items: center; gap: var(--space-2); font-weight: 800; font-size: 1.25rem; }
+.landing-hero {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  max-width: 820px;
+  margin: 0 auto;
+}
+.landing-hero h1 {
+  font-size: 3rem;
+  line-height: 1.1;
+  margin-bottom: var(--space-4);
+}
+.landing-hero .hero-grad {
+  background: linear-gradient(120deg, #4f46e5, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.landing-hero p { font-size: 1.15rem; color: var(--c-text-muted); margin-bottom: var(--space-6); }
+.feature-grid { padding: var(--space-6) var(--space-8) var(--space-8); }
+.feature-box {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  height: 100%;
+}
+.feature-box .fb-icon {
+  width: 46px; height: 46px; border-radius: var(--radius-sm);
+  background: var(--c-primary-light); color: var(--c-primary);
+  display: grid; place-items: center; font-size: 1.3rem;
+  margin-bottom: var(--space-3);
+}
+.feature-box h3 { font-size: 1.05rem; margin-bottom: var(--space-2); }
+.feature-box p { color: var(--c-text-muted); font-size: 0.9rem; margin: 0; }

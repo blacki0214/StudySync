@@ -1,0 +1,129 @@
+/* main.css
+   ----------------------------------------------------------------------------
+   The single stylesheet imported by main.js. It pulls in every other separated
+   stylesheet in dependency order (tokens first, then layout, then per-feature
+   files) and defines global base/element styles + small shared utilities.
+
+   NOTE: All large/page-level styling lives in these dedicated files — Vue
+   components use only minimal scoped CSS, as required by the brief. */
+
+@import './variables.css';
+@import './layout.css';
+@import './navbar.css';
+@import './forms.css';
+@import './dashboard.css';
+@import './notes.css';
+@import './editor.css';
+@import './study-room.css';
+@import './flashcards.css';
+@import './community.css';
+@import './responsive.css';
+
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--c-bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--c-primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+  color: var(--c-text);
+  font-weight: 700;
+}
+
+/* ---------- Shared surface / card ---------- */
+.card-surface {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.text-muted-sm {
+  color: var(--c-text-muted);
+  font-size: 0.875rem;
+}
+
+/* ---------- Badges ---------- */
+.badge-soft {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.difficulty-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.difficulty-Easy { background: var(--c-easy); }
+.difficulty-Medium { background: var(--c-medium); }
+.difficulty-Hard { background: var(--c-hard); }
+
+/* ---------- Buttons (brand overrides on top of Bootstrap) ---------- */
+.btn-brand {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-brand:hover {
+  background: var(--c-primary-dark);
+  border-color: var(--c-primary-dark);
+  color: #fff;
+}
+.btn-soft {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  border: none;
+  font-weight: 600;
+}
+
+/* ---------- Misc utilities ---------- */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.page-fade-enter-from,
+.page-fade-leave-to {
+  opacity: 0;
+}
+
+.dot-online {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-success);
+  display: inline-block;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+}
