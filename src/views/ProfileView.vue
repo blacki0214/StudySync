@@ -47,28 +47,30 @@ function initials(name) {
 
 <template>
   <div>
-    <!-- Cover + identity -->
-    <div class="profile-cover"></div>
-    <div class="profile-id">
-      <span class="pi-avatar-wrap">
-        <img v-if="user.avatar_url" :src="user.avatar_url" class="pi-avatar" :alt="user.full_name" />
-        <span v-else class="pi-avatar pi-avatar-fallback">{{ initials(user.full_name) }}</span>
-      </span>
-      <div class="pi-main">
-        <h1 class="pi-name">{{ user.full_name }}</h1>
-        <div v-if="user.handle || user.program" class="pi-handle">
-          <template v-if="user.handle">@{{ user.handle }}</template>
-          <template v-if="user.handle && user.program"> · </template>
-          <template v-if="user.program">{{ user.program }}</template>
+    <!-- Cover + identity (one card) -->
+    <div class="profile-header">
+      <div class="profile-cover"></div>
+      <div class="profile-id">
+        <span class="pi-avatar-wrap">
+          <img v-if="user.avatar_url" :src="user.avatar_url" class="pi-avatar" :alt="user.full_name" />
+          <span v-else class="pi-avatar pi-avatar-fallback">{{ initials(user.full_name) }}</span>
+        </span>
+        <div class="pi-main">
+          <h1 class="pi-name">{{ user.full_name }}</h1>
+          <div v-if="user.handle || user.program" class="pi-handle">
+            <template v-if="user.handle">@{{ user.handle }}</template>
+            <template v-if="user.handle && user.program"> · </template>
+            <template v-if="user.program">{{ user.program }}</template>
+          </div>
+          <div class="pi-meta">
+            <span v-if="user.location"><i class="bi bi-geo-alt"></i>{{ user.location }}</span>
+            <span v-if="joinedDate"><i class="bi bi-calendar3"></i>{{ t('profile.joined', { date: joinedDate }) }}</span>
+            <span v-if="user.role"><i class="bi bi-mortarboard"></i>{{ user.role === 'teacher' ? t('auth.roleTeacher') : t('auth.roleStudent') }}</span>
+          </div>
         </div>
-        <div class="pi-meta">
-          <span v-if="user.location"><i class="bi bi-geo-alt"></i>{{ user.location }}</span>
-          <span v-if="joinedDate"><i class="bi bi-calendar3"></i>{{ t('profile.joined', { date: joinedDate }) }}</span>
-          <span v-if="user.role"><i class="bi bi-mortarboard"></i>{{ user.role === 'teacher' ? t('auth.roleTeacher') : t('auth.roleStudent') }}</span>
+        <div class="pi-actions">
+          <button class="btn btn-brand"><i class="bi bi-pencil-square"></i>{{ t('profile.edit') }}</button>
         </div>
-      </div>
-      <div class="pi-actions">
-        <button class="btn btn-brand"><i class="bi bi-pencil-square"></i>{{ t('profile.edit') }}</button>
       </div>
     </div>
 

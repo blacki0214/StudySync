@@ -3,36 +3,45 @@
    Profile: gradient cover, identity header, stat cards, reputation chart and
    achievements grid. */
 
-.profile-cover {
-  height: 200px;
+/* The header is one card: cover on top, identity on a white panel below it,
+   with the avatar straddling the seam — so nothing floats on the page bg. */
+.profile-header {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-5);
+}
+.profile-cover {
+  height: 180px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: var(--grad-cover);
-  position: relative;
 }
 .profile-id {
   display: flex;
   align-items: flex-end;
   gap: var(--space-4);
-  margin: var(--space-3) var(--space-2) var(--space-5);
+  padding: 0 var(--space-5) var(--space-4);
   flex-wrap: wrap;
 }
-/* Only the avatar straddles the cover; the text sits cleanly below it. */
+/* Only the avatar straddles the cover; the text sits on the white panel. */
 .profile-id .pi-avatar-wrap {
-  margin-top: -64px;
+  margin-top: -52px;
   flex-shrink: 0;
   line-height: 0;
 }
 .profile-id .pi-avatar {
-  width: 104px; height: 104px; border-radius: 50%;
+  width: 112px; height: 112px; border-radius: 50%;
   border: 4px solid var(--c-surface); object-fit: cover; background: var(--c-surface-2);
   display: block;
 }
 .profile-id .pi-avatar-fallback {
   display: grid; place-items: center;
   background: var(--grad-brand); color: #fff;
-  font-size: 2rem; font-weight: 700;
+  font-size: 2.1rem; font-weight: 700;
 }
-.profile-id .pi-main { flex: 1; padding-bottom: var(--space-1); min-width: 220px; }
+.profile-id .pi-main { flex: 1; padding-bottom: 0.2rem; min-width: 200px; }
+.profile-id .pi-actions { margin-left: auto; }
 .profile-id .pi-name {
   font-size: 1.5rem; font-weight: 800; margin: 0;
   display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
