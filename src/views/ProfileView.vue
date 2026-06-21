@@ -4,16 +4,18 @@
  * and the achievements grid (matches the Figma). Layout uses row/col grid; all
  * other styling is semantic classes in styles/profile.css.
  */
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
-import { reputationSeries, achievements } from '../data/sampleAchievements.js'
+import { useContentStore } from '../stores/contentStore.js'
 import StatCard from '../components/common/StatCard.vue'
 import LineAreaChart from '../components/charts/LineAreaChart.vue'
 
 const auth = useAuthStore()
+const content = useContentStore()
 const { t } = useI18n()
 const user = computed(() => auth.user || {})
+onMounted(() => content.ensureLoaded())
 
 const stats = computed(() => [
   { label: t('profile.reputationPoints'), value: '2,480', icon: 'bi-trophy', grad: 'grad-orange', delta: t('profile.deltaThisWeek', { n: 128 }), deltaType: 'up' },
@@ -22,7 +24,7 @@ const stats = computed(() => [
   { label: t('profile.followers'), value: '284', icon: 'bi-people', grad: 'grad-green', delta: t('profile.deltaThisWeek', { n: 12 }), deltaType: 'up' }
 ])
 
-const unlockedCount = achievements.filter((a) => a.unlocked).length
+const unlockedCount = computed(() => content.achievements.filter((a) => a.unlocked).length)
 </script>
 
 <template>
@@ -64,9 +66,9 @@ const unlockedCount = achievements.filter((a) => a.unlocked).length
               <h3>{{ t('profile.reputationOverTime') }}</h3>
               <div class="chart-sub">{{ t('profile.last12') }}</div>
             </div>
-            <span class="badge-live">{{ t('profile.ytd', { n: reputationSeries.ytd.toLocaleString() }) }}</span>
+            <span v-if="content.reputationSeries" class="badge-live">{{ t('profile.ytd', { n: content.reputationSeries.ytd.toLocaleString() }) }}</span>
           </div>
-          <LineAreaChart :labels="reputationSeries.labels" :values="reputationSeries.values" :max="reputationSeries.max" :ticks="4" :area="false" :height="280" />
+          <LineAreaChart v-if="content.reputationSeries" :labels="content.reputationSeries.labels" :values="content.reputationSeries.values" :max="content.reputationSeries.max" :ticks="4" :area="false" :height="280" />
         </div>
       </div>
 
@@ -77,7 +79,7 @@ const unlockedCount = achievements.filter((a) => a.unlocked).length
             <span class="ach-count">{{ t('profile.unlockedOf', { n: unlockedCount }) }}</span>
           </div>
           <div class="row g-3 ach-grid">
-            <div v-for="a in achievements" :key="a.id" class="col-6">
+            <div v-for="a in content.achievements" :key="a.id" class="col-6">
               <div class="ach-card" :class="{ locked: !a.unlocked }">
                 <span class="ach-icon" :class="a.color"><i class="bi" :class="a.icon"></i></span>
                 <div class="ach-name">{{ a.name }}</div>

@@ -12,10 +12,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useNoteStore } from '../stores/noteStore.js'
-import { sampleDecks } from '../data/sampleDecks.js'
-import { sampleRooms } from '../data/sampleRooms.js'
-import { communityPosts } from '../data/sampleCommunity.js'
-import { userById } from '../data/sampleUsers.js'
+import { useContentStore } from '../stores/contentStore.js'
 import NoteCard from '../components/notes/NoteCard.vue'
 import StudyRoomCard from '../components/study/StudyRoomCard.vue'
 import EmptyState from '../components/common/EmptyState.vue'
@@ -24,19 +21,21 @@ const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const noteStore = useNoteStore()
+const content = useContentStore()
 const tab = ref('notes')
+const userById = (id) => content.userById(id)
 
 onMounted(async () => {
   if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
-  await noteStore.fetchNotes()
+  await Promise.all([noteStore.fetchNotes(), content.ensureLoaded()])
 })
 
 const subject = computed(() => subjectStore.getById(props.id))
 
 const notes = computed(() => noteStore.notes.filter((n) => n.subject_id === props.id))
-const decks = computed(() => sampleDecks.filter((d) => d.subject === subject.value?.code))
-const rooms = computed(() => sampleRooms.filter((r) => r.subject_id === props.id))
-const posts = computed(() => communityPosts.filter((p) => p.subject === subject.value?.code))
+const decks = computed(() => content.decks.filter((d) => d.subject === subject.value?.code))
+const rooms = computed(() => content.rooms.filter((r) => r.subject_id === props.id))
+const posts = computed(() => content.posts.filter((p) => p.subject === subject.value?.code))
 
 const tabs = computed(() => [
   { key: 'notes', label: t('subjectHub.notes'), count: notes.value.length },

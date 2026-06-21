@@ -37,10 +37,10 @@ npm run dev
 The app runs immediately in **DEMO MODE** using local sample data
 (`src/data`) — no backend required. This is ideal for marking/demos.
 
-### Connect a real Supabase backend (optional)
+### Connect a real Supabase backend + deploy to Vercel
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run `supabase/schema.sql` in the Supabase SQL editor.
+2. Run `supabase/schema.sql` then `supabase/seed.sql` in the Supabase SQL editor.
 3. Copy `.env.example` → `.env` and fill in:
    ```
    VITE_SUPABASE_URL=...
@@ -48,6 +48,12 @@ The app runs immediately in **DEMO MODE** using local sample data
    ```
 4. Restart `npm run dev`. The same code paths now use the live database and
    realtime channels (presence, broadcast, postgres_changes).
+
+> **Once both env vars are set the app uses ONLY the database — no sample/mock
+> data is shown.** When they're absent it falls back to demo mode (sample data),
+> so the project still runs offline for marking.
+
+**Full step-by-step DB setup + Vercel deployment guide: [`DEPLOYMENT.md`](./DEPLOYMENT.md).**
 
 ## 📁 Project structure
 

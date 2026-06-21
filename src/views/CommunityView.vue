@@ -4,13 +4,14 @@
  * contributors (matches the Figma). Votes are optimistic local state. Layout
  * uses row/col grid; all other styling is semantic classes in community.css.
  */
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { communityPosts, trendingTopics, topContributors } from '../data/sampleCommunity.js'
-import { userById } from '../data/sampleUsers.js'
-import { subjectByCode } from '../data/sampleSubjects.js'
+import { useContentStore } from '../stores/contentStore.js'
 
 const { t } = useI18n()
+const content = useContentStore()
+const userById = (id) => content.userById(id)
+const subjectByCode = (code) => content.subjectByCode(code)
 const filters = [
   { value: 'Hot', key: 'community.hot', icon: 'bi-fire' },
   { value: 'New', key: 'community.new' },
@@ -19,7 +20,12 @@ const filters = [
   { value: 'Unanswered', key: 'community.unanswered' }
 ]
 const activeFilter = ref('Hot')
-const posts = ref(communityPosts.map((p) => ({ ...p, voted: false })))
+// Local, mutable copy so up-votes stay optimistic; filled once data loads.
+const posts = ref([])
+onMounted(async () => {
+  await content.ensureLoaded()
+  posts.value = content.posts.map((p) => ({ ...p, voted: false }))
+})
 
 function vote(post) {
   post.voted = !post.voted
@@ -103,7 +109,7 @@ function initials(name) {
     <div class="col-12 col-xl-4 community-rail">
       <div class="panel">
         <div class="section-title"><i class="bi bi-graph-up-arrow"></i>{{ t('community.trendingTopics') }}</div>
-        <div v-for="(topic, i) in trendingTopics" :key="topic.tag" class="trend-row">
+        <div v-for="(topic, i) in content.trending" :key="topic.tag" class="trend-row">
           <span class="tr-rank">{{ i + 1 }}</span>
           <div>
             <div class="tr-tag">{{ topic.tag }}</div>
@@ -115,7 +121,7 @@ function initials(name) {
 
       <div class="panel">
         <div class="section-title"><i class="bi bi-trophy-fill"></i>{{ t('community.topContributors') }}</div>
-        <div v-for="(c, i) in topContributors" :key="c.id" class="contrib-row">
+        <div v-for="(c, i) in content.contributors" :key="c.id" class="contrib-row">
           <span class="cr-rank">#{{ i + 1 }}</span>
           <img v-if="userById(c.id)?.avatar" :src="userById(c.id).avatar" class="avatar-ring cr-avatar" :alt="c.full_name" />
           <span v-else class="user-avatar cr-avatar">{{ initials(c.full_name) }}</span>

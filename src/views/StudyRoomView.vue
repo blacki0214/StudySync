@@ -7,24 +7,28 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { isSupabaseConfigured } from '../services/supabaseClient.js'
+import { useContentStore } from '../stores/contentStore.js'
 import {
-  sampleRooms,
   roomParticipants,
   roomActivity,
   roomResources,
   roomChat
 } from '../data/sampleRooms.js'
-import { subjectById } from '../data/sampleSubjects.js'
 
 const route = useRoute()
 const { t } = useI18n()
-const room = computed(() => sampleRooms.find((r) => r.id === route.params.id) || sampleRooms[0])
-const subject = computed(() => subjectById(room.value.subject_id))
+const content = useContentStore()
+const room = computed(() => content.rooms.find((r) => r.id === route.params.id) || content.rooms[0])
+const subject = computed(() => content.subjectById(room.value?.subject_id))
 
-const participants = roomParticipants
-const activity = roomActivity
-const resources = roomResources
-const messages = ref([...roomChat])
+// The live call (video tiles, presence, chat, shared files) is a visual mock with
+// no backing table. With a real backend connected we show nothing rather than
+// fake people; in demo mode we keep the seeded call so the page looks alive.
+const participants = isSupabaseConfigured ? [] : roomParticipants
+const activity = isSupabaseConfigured ? [] : roomActivity
+const resources = isSupabaseConfigured ? [] : roomResources
+const messages = ref(isSupabaseConfigured ? [] : [...roomChat])
 const draft = ref('')
 
 // --- Functional Pomodoro countdown (starts at 18:42 like the mockup) ---
@@ -37,6 +41,7 @@ const pomodoro = computed(() => {
 })
 
 onMounted(() => {
+  content.ensureLoaded()
   timer = setInterval(() => {
     if (seconds.value > 0) seconds.value--
   }, 1000)
@@ -55,7 +60,7 @@ function initials(name) {
 </script>
 
 <template>
-  <div>
+  <div v-if="room">
     <!-- Header -->
     <div class="room-top">
       <div>

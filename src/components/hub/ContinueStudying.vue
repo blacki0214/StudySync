@@ -4,28 +4,27 @@
  * natural things to resume: the last edited note, a deck with cards due, and a
  * live study room. Each card links straight into its feature.
  */
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { sampleNotes } from '../../data/sampleNotes.js'
-import { sampleDecks } from '../../data/sampleDecks.js'
-import { sampleRooms } from '../../data/sampleRooms.js'
-import { subjectById } from '../../data/sampleSubjects.js'
+import { useContentStore } from '../../stores/contentStore.js'
 
 const { t } = useI18n()
+const content = useContentStore()
+onMounted(() => content.ensureLoaded())
 
 // Most-recently edited note.
 const note = computed(() =>
-  [...sampleNotes].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
+  [...content.notes].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
 )
-const noteSubject = computed(() => subjectById(note.value?.subject_id))
-const deck = computed(() => sampleDecks.find((d) => d.due > 0) || sampleDecks[0])
-const room = computed(() => sampleRooms.find((r) => r.live) || sampleRooms[0])
+const noteSubject = computed(() => content.subjectById(note.value?.subject_id))
+const deck = computed(() => content.decks.find((d) => d.due > 0) || content.decks[0])
+const room = computed(() => content.rooms.find((r) => r.live) || content.rooms[0])
 </script>
 
 <template>
   <section class="continue-row row g-3 row-gap-section">
     <!-- Resume the last note -->
-    <div class="col-12 col-md-4">
+    <div v-if="note" class="col-12 col-md-4">
       <router-link :to="{ name: 'note-detail', params: { id: note.id } }" class="continue-card">
         <span class="continue-icon grad-blue"><i class="bi bi-pencil-square"></i></span>
         <div class="continue-body">
@@ -38,7 +37,7 @@ const room = computed(() => sampleRooms.find((r) => r.live) || sampleRooms[0])
     </div>
 
     <!-- Review a due deck -->
-    <div class="col-12 col-md-4">
+    <div v-if="deck" class="col-12 col-md-4">
       <router-link to="/flashcards" class="continue-card">
         <span class="continue-icon grad-orange"><i class="bi bi-stars"></i></span>
         <div class="continue-body">
@@ -51,7 +50,7 @@ const room = computed(() => sampleRooms.find((r) => r.live) || sampleRooms[0])
     </div>
 
     <!-- Join a live room -->
-    <div class="col-12 col-md-4">
+    <div v-if="room" class="col-12 col-md-4">
       <router-link :to="{ name: 'study-room', params: { id: room.id } }" class="continue-card">
         <span class="continue-icon grad-green"><i class="bi bi-camera-video"></i></span>
         <div class="continue-body">

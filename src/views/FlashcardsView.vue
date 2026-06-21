@@ -9,12 +9,10 @@
  * Layout uses only Bootstrap's row/col grid; all other styling is semantic
  * classes defined in styles/flashcards.css.
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { sampleDecks, flashcardStats } from '../data/sampleDecks.js'
-import { sampleNotes } from '../data/sampleNotes.js'
-import { subjectByCode } from '../data/sampleSubjects.js'
+import { useContentStore } from '../stores/contentStore.js'
 import { generateFlashcards } from '../utils/flashcardGenerator.js'
 import StatCard from '../components/common/StatCard.vue'
 import BarChart from '../components/charts/BarChart.vue'
@@ -23,37 +21,56 @@ import KeywordExtractor from '../components/ai/KeywordExtractor.vue'
 
 const route = useRoute()
 const { t } = useI18n()
-// If arriving from a note (/flashcards/:noteId), open straight into "create"
-// mode pre-loaded with that note.
-const fromNote = sampleNotes.find((n) => n.id === route.params.noteId)
-const tab = ref(fromNote ? 'create' : 'study')
-const stats = computed(() => [
-  { label: t('flashcards.cardsMastered'), value: flashcardStats.mastered, icon: 'bi-trophy', grad: 'grad-orange' },
-  { label: t('flashcards.dueToday'), value: flashcardStats.dueToday, icon: 'bi-bullseye', grad: 'grad-blue' },
-  { label: t('flashcards.streak'), value: flashcardStats.streak + 'd', icon: 'bi-fire', grad: 'grad-fuchsia' },
-  { label: t('flashcards.avgRecall'), value: flashcardStats.avgRecall + '%', icon: 'bi-clock', grad: 'grad-green' }
-])
+const content = useContentStore()
+const subjectByCode = (code) => content.subjectByCode(code)
+
+const tab = ref('study')
+const stats = computed(() => {
+  const fs = content.flashcardStats || {}
+  return [
+    { label: t('flashcards.cardsMastered'), value: fs.mastered ?? 0, icon: 'bi-trophy', grad: 'grad-orange' },
+    { label: t('flashcards.dueToday'), value: fs.dueToday ?? 0, icon: 'bi-bullseye', grad: 'grad-blue' },
+    { label: t('flashcards.streak'), value: (fs.streak ?? 0) + 'd', icon: 'bi-fire', grad: 'grad-fuchsia' },
+    { label: t('flashcards.avgRecall'), value: (fs.avgRecall ?? 0) + '%', icon: 'bi-clock', grad: 'grad-green' }
+  ]
+})
 const weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // ---- Study mode ----
-const deck = ref(sampleDecks[0])
+const deck = ref(null)
 const idx = ref(0)
 const flipped = ref(false)
-const card = computed(() => deck.value.cards[idx.value])
-const studyProgress = computed(() => ((idx.value + 1) / deck.value.cards.length) * 100)
+const card = computed(() => deck.value?.cards?.[idx.value] || null)
+const studyProgress = computed(() =>
+  deck.value?.cards?.length ? ((idx.value + 1) / deck.value.cards.length) * 100 : 0
+)
 
 function rate() {
+  if (!deck.value?.cards?.length) return
   flipped.value = false
   idx.value = (idx.value + 1) % deck.value.cards.length
 }
 function step(d) {
+  if (!deck.value?.cards?.length) return
   flipped.value = false
   idx.value = (idx.value + d + deck.value.cards.length) % deck.value.cards.length
 }
 
 // ---- Create cards (manual generation from a note) ----
-const noteForGen = ref(fromNote || sampleNotes[0])
-const generated = computed(() => generateFlashcards(noteForGen.value.content, { maxCards: 12 }))
+const noteForGen = ref(null)
+const generated = computed(() =>
+  noteForGen.value ? generateFlashcards(noteForGen.value.content, { maxCards: 12 }) : []
+)
+
+onMounted(async () => {
+  await content.ensureLoaded()
+  // If arriving from a note (/flashcards/:noteId), open straight into "create"
+  // mode pre-loaded with that note.
+  const fromNote = content.notes.find((n) => n.id === route.params.noteId)
+  if (fromNote) tab.value = 'create'
+  deck.value = content.decks[0] || null
+  noteForGen.value = fromNote || content.notes[0] || null
+})
 </script>
 
 <template>
@@ -61,7 +78,7 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
     <header class="page-head">
       <div>
         <h1 class="ph-title">{{ t('flashcards.title') }}</h1>
-        <p class="ph-sub">{{ t('flashcards.sub', { due: flashcardStats.dueToday, decks: sampleDecks.length }) }}</p>
+        <p class="ph-sub">{{ t('flashcards.sub', { due: content.flashcardStats?.dueToday ?? 0, decks: content.decks.length }) }}</p>
       </div>
       <div class="action-row">
         <button class="btn btn-outline-soft" @click="tab='create'"><i class="bi bi-stars"></i>{{ t('flashcards.aiGenerate') }}</button>
@@ -83,7 +100,7 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
 
     <!-- STUDY MODE -->
     <div v-if="tab==='study'" class="row g-4">
-      <div class="col-12 col-xl-8">
+      <div v-if="deck && card" class="col-12 col-xl-8">
         <div class="study-head">
           <span class="deck-chip">{{ t('flashcards.cardN', { name: deck.name, current: idx + 1, total: deck.cards.length }) }}</span>
           <div class="study-progress"><div class="sp-fill" :style="{ width: studyProgress + '%' }"></div></div>
@@ -116,11 +133,11 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
         <div class="panel">
           <div class="reviewed-title">{{ t('flashcards.cardsReviewed') }}</div>
           <div class="reviewed-sub">{{ t('flashcards.last7') }}</div>
-          <BarChart :labels="weekLabels" :values="flashcardStats.reviewedLast7" :height="170" />
+          <BarChart :labels="weekLabels" :values="content.flashcardStats?.reviewedLast7 || []" :height="170" />
           <div class="reviewed-stats">
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.today') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: flashcardStats.todayCount }) }}</span></div>
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.thisWeek') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: flashcardStats.weekCount }) }}</span></div>
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.retention') }}</span><span class="rs-val ok">{{ flashcardStats.retention }}%</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.today') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: content.flashcardStats?.todayCount ?? 0 }) }}</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.thisWeek') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: content.flashcardStats?.weekCount ?? 0 }) }}</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.retention') }}</span><span class="rs-val ok">{{ content.flashcardStats?.retention ?? 0 }}%</span></div>
           </div>
         </div>
       </div>
@@ -129,7 +146,7 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
       <div class="col-12">
         <h3 class="decks-title">{{ t('flashcards.yourDecks') }}</h3>
         <div class="row g-3">
-          <div v-for="d in sampleDecks" :key="d.id" class="col-12 col-md-6 col-xl-4">
+          <div v-for="d in content.decks" :key="d.id" class="col-12 col-md-6 col-xl-4">
             <div class="deck-card" role="button" @click="deck = d; idx = 0; flipped = false; tab='study'">
               <div class="dk-head">
                 <span class="icon-tile dk-icon" :class="d.color">{{ d.subject.slice(0,3) }}</span>
@@ -159,10 +176,10 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
       <div class="field-inline">
         <label>{{ t('flashcards.fromNote') }}</label>
         <select v-model="noteForGen" class="form-select note-select">
-          <option v-for="n in sampleNotes" :key="n.id" :value="n">{{ n.title }}</option>
+          <option v-for="n in content.notes" :key="n.id" :value="n">{{ n.title }}</option>
         </select>
       </div>
-      <QuizGenerator :content="noteForGen.content" />
+      <QuizGenerator v-if="noteForGen" :content="noteForGen.content" />
     </div>
 
     <!-- CREATE CARDS (manual flashcard generator + keyword analysis) -->
@@ -171,7 +188,7 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
         <div class="field-inline">
           <label>{{ t('flashcards.generateFromNote') }}</label>
           <select v-model="noteForGen" class="form-select note-select">
-            <option v-for="n in sampleNotes" :key="n.id" :value="n">{{ n.title }}</option>
+            <option v-for="n in content.notes" :key="n.id" :value="n">{{ n.title }}</option>
           </select>
           <span class="badge-soft">{{ t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
         </div>
@@ -186,7 +203,7 @@ const generated = computed(() => generateFlashcards(noteForGen.value.content, { 
         </div>
       </div>
       <div class="col-12 col-xl-4">
-        <KeywordExtractor :content="noteForGen.content" />
+        <KeywordExtractor v-if="noteForGen" :content="noteForGen.content" />
       </div>
     </div>
   </div>

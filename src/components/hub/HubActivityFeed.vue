@@ -4,14 +4,16 @@
  * flashcards) so the Hub shows everything happening in one place. Each row's
  * text is translated from the event's i18n key and links into its feature.
  */
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { activityFeed } from '../../data/sampleActivity.js'
-import { userById } from '../../data/sampleUsers.js'
+import { useContentStore } from '../../stores/contentStore.js'
 
 const { t } = useI18n()
+const content = useContentStore()
+onMounted(() => content.ensureLoaded())
 
 function actorName(id) {
-  return userById(id)?.full_name || 'Someone'
+  return content.userById(id)?.full_name || 'Someone'
 }
 </script>
 
@@ -20,7 +22,7 @@ function actorName(id) {
     <div class="section-title"><i class="bi bi-activity"></i>{{ t('hub.recentActivity') }}</div>
 
     <router-link
-      v-for="a in activityFeed"
+      v-for="a in content.activities"
       :key="a.id"
       :to="a.to"
       class="activity-row"

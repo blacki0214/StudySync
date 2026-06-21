@@ -14,15 +14,13 @@ import { useI18n } from 'vue-i18n'
 import { usePaletteStore } from '../../stores/paletteStore.js'
 import { useUiStore } from '../../stores/uiStore.js'
 import { useSubjectStore } from '../../stores/subjectStore.js'
+import { useContentStore } from '../../stores/contentStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
-import { sampleNotes } from '../../data/sampleNotes.js'
-import { sampleRooms } from '../../data/sampleRooms.js'
-import { sampleDecks } from '../../data/sampleDecks.js'
-import { communityPosts } from '../../data/sampleCommunity.js'
 
 const palette = usePaletteStore()
 const ui = useUiStore()
 const subjectStore = useSubjectStore()
+const content = useContentStore()
 const router = useRouter()
 const { t } = useI18n()
 
@@ -63,20 +61,20 @@ const index = computed(() => {
     { icon: 'bi-person', label: t('nav.profile'), to: '/profile' }
   ].forEach((p) => entries.push({ type: 'actions', icon: p.icon, label: p.label, sublabel: t('palette.goTo'), run: () => go(p.to) }))
 
-  // Searchable entities.
-  sampleNotes.forEach((n) =>
+  // Searchable entities (sourced from the DB in live mode, samples in demo mode).
+  content.notes.forEach((n) =>
     entries.push({ type: 'notes', icon: 'bi-file-earmark-text', label: n.title, sublabel: subjectStore.getById(n.subject_id)?.code, run: () => go({ name: 'note-detail', params: { id: n.id } }) })
   )
   subjectStore.subjects.forEach((s) =>
     entries.push({ type: 'subjects', icon: 'bi-journal-bookmark', label: `${s.code} — ${s.name}`, sublabel: s.category, run: () => go({ name: 'subject-hub', params: { id: s.id } }) })
   )
-  sampleRooms.forEach((r) =>
+  content.rooms.forEach((r) =>
     entries.push({ type: 'rooms', icon: 'bi-people', label: r.name, sublabel: r.code, run: () => go({ name: 'study-room', params: { id: r.id } }) })
   )
-  sampleDecks.forEach((d) =>
+  content.decks.forEach((d) =>
     entries.push({ type: 'decks', icon: 'bi-stars', label: d.name, sublabel: d.subject, run: () => go('/flashcards') })
   )
-  communityPosts.forEach((p) =>
+  content.posts.forEach((p) =>
     entries.push({ type: 'community', icon: 'bi-chat-square-text', label: p.title, sublabel: p.subject, run: () => go('/community') })
   )
 
@@ -119,8 +117,9 @@ watch(
   () => palette.open,
   async (isOpen) => {
     if (isOpen) {
-      // The palette is global; make sure subjects are loaded for search.
+      // The palette is global; make sure the searchable data is loaded.
       if (!subjectStore.subjects.length) subjectStore.fetchSubjects()
+      content.ensureLoaded()
       query.value = ''
       activeIndex.value = 0
       await nextTick()

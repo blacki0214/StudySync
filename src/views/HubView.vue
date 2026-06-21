@@ -8,12 +8,10 @@
  * Layout uses Bootstrap's row/col grid only; all other styling is semantic
  * classes from styles/hub.css and styles/dashboard.css.
  */
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
-import { sampleSubjects } from '../data/sampleSubjects.js'
-import { weeklyFocus, upcomingSessions, weeklyLeaderboard } from '../data/sampleDashboard.js'
-import { userById } from '../data/sampleUsers.js'
+import { useContentStore } from '../stores/contentStore.js'
 import StatCard from '../components/common/StatCard.vue'
 import LineAreaChart from '../components/charts/LineAreaChart.vue'
 import ContinueStudying from '../components/hub/ContinueStudying.vue'
@@ -21,7 +19,9 @@ import QuickLaunch from '../components/hub/QuickLaunch.vue'
 import HubActivityFeed from '../components/hub/HubActivityFeed.vue'
 
 const auth = useAuthStore()
+const content = useContentStore()
 const { t } = useI18n()
+onMounted(() => content.ensureLoaded())
 
 const dateLine = 'Saturday, June 6 · 09:42'
 // Vietnamese given name is the FIRST token (e.g. "Minh Nguyễn" -> "Minh").
@@ -35,7 +35,7 @@ const stats = computed(() => [
   { label: t('dashboard.reputation'), value: 'Gold IV', icon: 'bi-graph-up-arrow', grad: 'grad-orange', delta: t('dashboard.topInVietnam'), deltaType: 'muted' }
 ])
 
-const mySubjects = sampleSubjects.filter((s) => s.progress > 0).slice(0, 4)
+const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0).slice(0, 4))
 
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
@@ -84,7 +84,7 @@ function rankClass(i) {
             </div>
             <span class="badge-soft">{{ t('dashboard.thisWeek') }}</span>
           </div>
-          <LineAreaChart :labels="weeklyFocus.labels" :values="weeklyFocus.values" :max="weeklyFocus.max" :ticks="4" area :height="260" />
+          <LineAreaChart v-if="content.weeklyFocus" :labels="content.weeklyFocus.labels" :values="content.weeklyFocus.values" :max="content.weeklyFocus.max" :ticks="4" area :height="260" />
         </div>
       </div>
 
@@ -101,14 +101,14 @@ function rankClass(i) {
             <h3>{{ t('dashboard.upcomingSessions') }}</h3>
             <i class="bi bi-chevron-right rail-chevron"></i>
           </div>
-          <div v-for="s in upcomingSessions" :key="s.id" class="session-item">
+          <div v-for="s in content.sessions" :key="s.id" class="session-item">
             <div class="ses-bar" :style="{ background: s.color }"></div>
             <div class="ses-main">
               <div class="ses-title">{{ s.title }}</div>
               <div class="ses-when">{{ s.when }}</div>
               <div class="ses-foot">
                 <span class="avatar-stack">
-                  <span v-for="uid in s.avatars" :key="uid" class="mini-av">{{ initials(userById(uid)?.full_name) }}</span>
+                  <span v-for="uid in s.avatars" :key="uid" class="mini-av">{{ initials(content.userById(uid)?.full_name) }}</span>
                 </span>
                 <span class="ses-joining">{{ t('dashboard.joining', { n: s.joining }) }}</span>
               </div>
@@ -146,9 +146,9 @@ function rankClass(i) {
       <div class="col-12 col-xl-6">
         <div class="panel">
           <div class="section-title"><i class="bi bi-trophy-fill"></i>{{ t('dashboard.weeklyLeaderboard') }}</div>
-          <div v-for="(u, i) in weeklyLeaderboard" :key="u.id" class="lb-item">
+          <div v-for="(u, i) in content.leaderboard" :key="u.id" class="lb-item">
             <span class="lb-rank" :class="rankClass(i)">{{ i + 1 }}</span>
-            <img v-if="userById(u.id)?.avatar" :src="userById(u.id).avatar" class="avatar-ring lb-avatar" :alt="u.full_name" />
+            <img v-if="content.userById(u.id)?.avatar" :src="content.userById(u.id).avatar" class="avatar-ring lb-avatar" :alt="u.full_name" />
             <span v-else class="user-avatar lb-avatar">{{ initials(u.full_name) }}</span>
             <span class="lb-name">{{ u.full_name }}</span>
             <span class="lb-pts">{{ t('dashboard.pts', { n: u.points.toLocaleString() }) }}</span>

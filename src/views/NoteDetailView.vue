@@ -17,6 +17,9 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useNoteStore } from '../stores/noteStore.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
+import { useContentStore } from '../stores/contentStore.js'
+import { isSupabaseConfigured } from '../services/supabaseClient.js'
+import { timeAgo } from '../utils/formatDate.js'
 import { editorCollaborators, editorComments, editorHistory } from '../data/sampleEditor.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
@@ -26,8 +29,9 @@ const router = useRouter()
 const { t } = useI18n()
 const noteStore = useNoteStore()
 const subjectStore = useSubjectStore()
+const content = useContentStore()
 
-const { activeNote, draft, saveStatus, conflict, baseVersion } = storeToRefs(noteStore)
+const { activeNote, draft, saveStatus, conflict, baseVersion, versions } = storeToRefs(noteStore)
 const ready = ref(false)
 const docRef = ref(null)
 const activeTab = ref('online')
@@ -60,11 +64,27 @@ const flagshipHtml = `
   </ul>
 `
 
-const collaborators = editorCollaborators
-const comments = editorComments
-const history = editorHistory
+// The collaborator presence list and inline comments are visual mocks with no
+// backing table. With a real backend connected we don't fake them; in demo mode
+// they stay so the editor's right panel looks populated.
+const collaborators = isSupabaseConfigured ? [] : editorCollaborators
+const comments = isSupabaseConfigured ? [] : editorComments
+
+// Version history IS real (note_versions). In live mode we map the store's
+// versions; in demo mode we use the seeded sample history.
+const history = computed(() => {
+  if (!isSupabaseConfigured) return editorHistory
+  return versions.value.map((v) => ({
+    id: v.id,
+    version: v.version_number,
+    summary: v.summary || 'Edited',
+    author: content.userById(v.edited_by)?.full_name || '',
+    ago: timeAgo(v.created_at)
+  }))
+})
 
 onMounted(async () => {
+  if (isSupabaseConfigured) content.ensureLoaded()
   if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
   try {
     await noteStore.openNote(route.params.id)

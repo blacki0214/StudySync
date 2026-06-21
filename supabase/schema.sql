@@ -1,120 +1,254 @@
 -- ============================================================================
 -- StudySync Vietnam — Supabase schema
--- Run this in the Supabase SQL editor to create the backend used by the app.
--- The frontend works WITHOUT this (demo mode); apply it to enable the live
--- database, auth profiles and realtime collaboration.
+-- ----------------------------------------------------------------------------
+-- Run this ONCE in the Supabase SQL editor (Dashboard → SQL Editor → New query)
+-- to create the backend the app talks to. Then run `seed.sql` to populate demo
+-- content so the app isn't empty on first load.
+--
+-- DESIGN NOTE — profiles are NOT hard-linked to auth.users.
+--   profiles.id is its own UUID so we can seed demo authors (notes/posts/rooms
+--   reference them) WITHOUT creating real auth accounts. When a real user signs
+--   up, authService upserts a profile row whose id == the auth user id, so the
+--   two stay aligned for logged-in users. `profiles.auth_id` keeps the explicit
+--   link for anyone who wants to add stricter policies later.
 -- ============================================================================
 
+-- Reset (safe to re-run). Order matters because of foreign keys.
+drop table if exists public.activities      cascade;
+drop table if exists public.user_achievements cascade;
+drop table if exists public.achievements    cascade;
+drop table if exists public.trending_topics cascade;
+drop table if exists public.community_posts  cascade;
+drop table if exists public.study_rooms     cascade;
+drop table if exists public.quizzes         cascade;
+drop table if exists public.flashcards      cascade;
+drop table if exists public.deck_cards      cascade;
+drop table if exists public.decks           cascade;
+drop table if exists public.note_versions   cascade;
+drop table if exists public.notes           cascade;
+drop table if exists public.study_stats     cascade;
+drop table if exists public.subjects        cascade;
+drop table if exists public.profiles        cascade;
+
 -- 1. profiles ----------------------------------------------------------------
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  full_name text not null,
-  email text,
-  avatar_url text,
-  reputation int not null default 0,
-  created_at timestamptz not null default now()
+create table public.profiles (
+  id          uuid primary key default gen_random_uuid(),
+  auth_id     uuid,                       -- optional link to auth.users(id)
+  handle      text unique,
+  full_name   text not null,
+  email       text,
+  avatar_url  text,
+  program     text,
+  school      text,
+  location    text,
+  reputation  int  not null default 0,
+  tier        text,
+  percentile  text,
+  level       int  not null default 1,
+  xp          int  not null default 0,
+  xp_next     int  not null default 1000,
+  streak      int  not null default 0,
+  color       text default 'grad-blue',
+  joined      date,
+  created_at  timestamptz not null default now()
 );
 
 -- 2. subjects ----------------------------------------------------------------
-create table if not exists public.subjects (
-  id uuid primary key default gen_random_uuid(),
-  code text not null,
-  name text not null,
+create table public.subjects (
+  id           uuid primary key default gen_random_uuid(),
+  code         text not null,
+  letters      text,
+  color        text default 'grad-blue',
+  name         text not null,
+  description  text,
+  category     text,
+  rating       numeric(2,1) default 0,
+  notes_count  int  not null default 0,
+  students     int  not null default 0,
+  progress     int  not null default 0,   -- simplified (per-user in a real app)
+  created_at   timestamptz not null default now()
+);
+
+-- 3. study_stats (per-user analytics powering the charts) --------------------
+create table public.study_stats (
+  user_id           uuid primary key references public.profiles (id) on delete cascade,
+  weekly_focus      jsonb,   -- { labels:[], values:[], max }
+  reputation_series jsonb,   -- { labels:[], values:[], max, ytd }
+  flashcard_stats   jsonb    -- { mastered, dueToday, streak, avgRecall, ... }
+);
+
+-- 4. notes -------------------------------------------------------------------
+create table public.notes (
+  id            uuid primary key default gen_random_uuid(),
+  subject_id    uuid references public.subjects (id) on delete set null,
+  author_id     uuid references public.profiles (id) on delete set null,
+  title         text not null,
+  week          text,
+  read_minutes  int  default 0,
+  content       text not null default '',
+  visibility    text not null default 'public',
+  likes_count   int  not null default 0,
+  version       int  not null default 1,
+  updated_at    timestamptz not null default now(),
+  created_at    timestamptz not null default now()
+);
+
+-- 5. note_versions (one row per saved snapshot) ------------------------------
+create table public.note_versions (
+  id             uuid primary key default gen_random_uuid(),
+  note_id        uuid references public.notes (id) on delete cascade,
+  content        text not null,
+  version_number int  not null,
+  summary        text,
+  edited_by      uuid references public.profiles (id) on delete set null,
+  created_at     timestamptz not null default now()
+);
+
+-- 6. decks + deck_cards (Flashcards page) ------------------------------------
+create table public.decks (
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null,
+  subject_code text,
+  color        text default 'grad-blue',
+  due          int default 0,
+  total        int default 0,
+  created_at   timestamptz not null default now()
+);
+
+create table public.deck_cards (
+  id        uuid primary key default gen_random_uuid(),
+  deck_id   uuid references public.decks (id) on delete cascade,
+  question  text not null,
+  answer    text not null,
+  position  int default 0
+);
+
+-- 7. flashcards (generated/saved from a note) --------------------------------
+create table public.flashcards (
+  id          uuid primary key default gen_random_uuid(),
+  note_id     uuid references public.notes (id) on delete cascade,
+  question    text not null,
+  answer      text not null,
+  difficulty  text,
+  created_at  timestamptz not null default now()
+);
+
+-- 8. quizzes -----------------------------------------------------------------
+create table public.quizzes (
+  id              uuid primary key default gen_random_uuid(),
+  note_id         uuid references public.notes (id) on delete cascade,
+  question        text not null,
+  options         jsonb not null,
+  correct_answer  int  not null,
+  created_at      timestamptz not null default now()
+);
+
+-- 9. study_rooms -------------------------------------------------------------
+create table public.study_rooms (
+  id           uuid primary key default gen_random_uuid(),
+  subject_id   uuid references public.subjects (id) on delete set null,
+  code         text,
+  name         text not null,
+  description  text,
+  live         boolean default false,
+  active_users int  not null default 0,
+  created_at   timestamptz not null default now()
+);
+
+-- 10. community_posts + trending_topics --------------------------------------
+create table public.community_posts (
+  id           uuid primary key default gen_random_uuid(),
+  author_id    uuid references public.profiles (id) on delete set null,
+  subject_code text,
+  title        text not null,
+  excerpt      text,
+  tags         text[] default '{}',
+  votes        int default 0,
+  replies      int default 0,
+  answered     boolean default false,
+  created_at   timestamptz not null default now()
+);
+
+create table public.trending_topics (
+  id     uuid primary key default gen_random_uuid(),
+  tag    text not null,
+  posts  int  not null default 0
+);
+
+-- 11. achievements -----------------------------------------------------------
+create table public.achievements (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
   description text,
-  category text,
-  created_at timestamptz not null default now()
+  icon        text,
+  color       text,
+  unlocked    boolean default false,    -- simplified (per-user in a real app)
+  sort        int default 0
 );
 
--- 3. notes -------------------------------------------------------------------
-create table if not exists public.notes (
-  id uuid primary key default gen_random_uuid(),
-  subject_id uuid references public.subjects (id) on delete set null,
-  author_id uuid references public.profiles (id) on delete set null,
-  title text not null,
-  content text not null default '',
-  visibility text not null default 'public',
-  likes_count int not null default 0,
-  version int not null default 1,
-  updated_at timestamptz not null default now(),
-  created_at timestamptz not null default now()
-);
-
--- 4. note_versions (one row per saved snapshot) ------------------------------
-create table if not exists public.note_versions (
-  id uuid primary key default gen_random_uuid(),
-  note_id uuid references public.notes (id) on delete cascade,
-  content text not null,
-  version_number int not null,
-  edited_by uuid references public.profiles (id) on delete set null,
-  created_at timestamptz not null default now()
-);
-
--- 5. flashcards --------------------------------------------------------------
-create table if not exists public.flashcards (
-  id uuid primary key default gen_random_uuid(),
-  note_id uuid references public.notes (id) on delete cascade,
-  question text not null,
-  answer text not null,
-  difficulty text,
-  created_at timestamptz not null default now()
-);
-
--- 6. quizzes -----------------------------------------------------------------
-create table if not exists public.quizzes (
-  id uuid primary key default gen_random_uuid(),
-  note_id uuid references public.notes (id) on delete cascade,
-  question text not null,
-  options jsonb not null,
-  correct_answer int not null,
-  created_at timestamptz not null default now()
-);
-
--- 7. study_rooms -------------------------------------------------------------
-create table if not exists public.study_rooms (
-  id uuid primary key default gen_random_uuid(),
-  subject_id uuid references public.subjects (id) on delete set null,
-  name text not null,
-  description text,
-  active_users int not null default 0,
-  created_at timestamptz not null default now()
-);
-
--- 8. activities --------------------------------------------------------------
-create table if not exists public.activities (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references public.profiles (id) on delete cascade,
-  type text not null,
-  description text,
-  created_at timestamptz not null default now()
+-- 12. activities (the Hub cross-feature feed) --------------------------------
+create table public.activities (
+  id          uuid primary key default gen_random_uuid(),
+  actor_id    uuid references public.profiles (id) on delete set null,
+  type        text not null,            -- note | room | community | flashcards
+  icon        text,
+  color       text,
+  i18n_key    text,                     -- e.g. hub.activity.noteEdited
+  params      jsonb default '{}',
+  route_name  text,
+  route_params jsonb default '{}',
+  created_at  timestamptz not null default now()
 );
 
 -- ----------------------------------------------------------------------------
--- Realtime: add the tables we subscribe to in the app to the realtime publication.
+-- Realtime: publish the tables the editor/rooms subscribe to.
 -- ----------------------------------------------------------------------------
 alter publication supabase_realtime add table public.notes;
 alter publication supabase_realtime add table public.note_versions;
 
 -- ----------------------------------------------------------------------------
--- Row Level Security (basic policies — tighten for production).
+-- Row Level Security. Reads are public (it's a sharing platform); writes are
+-- limited to authenticated users. Tighten these for real production use.
 -- ----------------------------------------------------------------------------
-alter table public.profiles      enable row level security;
-alter table public.subjects      enable row level security;
-alter table public.notes         enable row level security;
-alter table public.note_versions enable row level security;
-alter table public.flashcards    enable row level security;
-alter table public.quizzes       enable row level security;
-alter table public.study_rooms   enable row level security;
-alter table public.activities    enable row level security;
+alter table public.profiles        enable row level security;
+alter table public.subjects        enable row level security;
+alter table public.study_stats     enable row level security;
+alter table public.notes           enable row level security;
+alter table public.note_versions   enable row level security;
+alter table public.decks           enable row level security;
+alter table public.deck_cards      enable row level security;
+alter table public.flashcards      enable row level security;
+alter table public.quizzes         enable row level security;
+alter table public.study_rooms     enable row level security;
+alter table public.community_posts enable row level security;
+alter table public.trending_topics enable row level security;
+alter table public.achievements    enable row level security;
+alter table public.activities      enable row level security;
 
--- Public read for shared content.
-create policy "read subjects"  on public.subjects      for select using (true);
-create policy "read notes"     on public.notes         for select using (true);
-create policy "read versions"  on public.note_versions for select using (true);
-create policy "read rooms"     on public.study_rooms   for select using (true);
-create policy "read profiles"  on public.profiles      for select using (true);
+-- Public read for everything the app displays.
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'profiles','subjects','study_stats','notes','note_versions','decks',
+    'deck_cards','flashcards','quizzes','study_rooms','community_posts',
+    'trending_topics','achievements','activities'
+  ]
+  loop
+    execute format('create policy "public read %1$s" on public.%1$I for select using (true);', t);
+  end loop;
+end $$;
 
--- Authenticated users can write their own data.
-create policy "insert notes"   on public.notes         for insert with check (auth.uid() = author_id);
-create policy "update notes"   on public.notes         for update using (true);
-create policy "insert versions" on public.note_versions for insert with check (true);
-create policy "own profile"    on public.profiles      for update using (auth.uid() = id);
+-- Authenticated users can write the content they interact with.
+create policy "auth insert notes"     on public.notes         for insert to authenticated with check (true);
+create policy "auth update notes"     on public.notes         for update to authenticated using (true);
+create policy "auth delete notes"     on public.notes         for delete to authenticated using (true);
+create policy "auth insert versions"  on public.note_versions for insert to authenticated with check (true);
+create policy "auth insert posts"     on public.community_posts for insert to authenticated with check (true);
+create policy "auth insert flashcards" on public.flashcards   for insert to authenticated with check (true);
+create policy "auth insert quizzes"   on public.quizzes       for insert to authenticated with check (true);
+create policy "auth insert activity"  on public.activities    for insert to authenticated with check (true);
+
+-- Profiles: anyone can create their row on sign-up; you may only edit your own.
+create policy "insert own profile" on public.profiles for insert with check (true);
+create policy "update own profile" on public.profiles for update using (auth.uid() = auth_id or auth.uid() = id);
