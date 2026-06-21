@@ -118,17 +118,6 @@ function initials(name) {
           <i class="bi bi-fire tr-fire"></i>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="section-title"><i class="bi bi-trophy-fill"></i>{{ t('community.topContributors') }}</div>
-        <div v-for="(c, i) in content.contributors" :key="c.id" class="contrib-row">
-          <span class="cr-rank">#{{ i + 1 }}</span>
-          <img v-if="userById(c.id)?.avatar" :src="userById(c.id).avatar" class="avatar-ring cr-avatar" :alt="c.full_name" />
-          <span v-else class="user-avatar cr-avatar">{{ initials(c.full_name) }}</span>
-          <span class="cr-name">{{ c.full_name }}</span>
-          <span class="cr-rep">{{ t('community.rep', { n: c.rep }) }}</span>
-        </div>
-      </div>
     </div>
   </div>
 </template>

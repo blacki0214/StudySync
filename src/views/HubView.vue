@@ -33,24 +33,22 @@ const studyHours = computed(() => {
   const v = content.weeklyFocus?.values || []
   return Math.round(v.reduce((a, b) => a + b, 0) * 10) / 10
 })
-// Notes authored by the signed-in user.
+// Notes authored by the signed-in user, and the subjects they own.
 const myNotesCount = computed(() => content.notes.filter((n) => n.author_id === auth.user?.id).length)
+const mySubjectsCount = computed(() => content.subjects.filter((s) => s.owner_id && s.owner_id === auth.user?.id).length)
 
-// Real headline metrics — no fake deltas. Cards with no data simply show 0 / —.
+// Personal study metrics — no ranking/reputation.
 const stats = computed(() => [
-  { label: t('dashboard.contributionScore'), value: (auth.user?.reputation ?? 0).toLocaleString(), icon: 'bi-trophy', grad: 'grad-blue' },
-  { label: t('dashboard.notesShared'), value: myNotesCount.value, icon: 'bi-file-earmark-text', grad: 'grad-fuchsia' },
+  { label: t('dashboard.notesShared'), value: myNotesCount.value, icon: 'bi-file-earmark-text', grad: 'grad-blue' },
   { label: t('dashboard.studyHours'), value: studyHours.value + 'h', icon: 'bi-clock', grad: 'grad-green' },
-  { label: t('dashboard.reputation'), value: auth.user?.tier || '—', icon: 'bi-graph-up-arrow', grad: 'grad-orange' }
+  { label: t('profile.subjects'), value: mySubjectsCount.value, icon: 'bi-folder', grad: 'grad-fuchsia' },
+  { label: t('profile.streak'), value: (auth.user?.streak || 0) + 'd', icon: 'bi-fire', grad: 'grad-orange' }
 ])
 
 const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0).slice(0, 4))
 
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
-}
-function rankClass(i) {
-  return i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : ''
 }
 </script>
 
@@ -150,20 +148,5 @@ function rankClass(i) {
       </div>
     </div>
 
-    <!-- Weekly leaderboard -->
-    <div class="row g-4">
-      <div class="col-12 col-xl-6">
-        <div class="panel">
-          <div class="section-title"><i class="bi bi-trophy-fill"></i>{{ t('dashboard.weeklyLeaderboard') }}</div>
-          <div v-for="(u, i) in content.leaderboard" :key="u.id" class="lb-item">
-            <span class="lb-rank" :class="rankClass(i)">{{ i + 1 }}</span>
-            <img v-if="content.userById(u.id)?.avatar" :src="content.userById(u.id).avatar" class="avatar-ring lb-avatar" :alt="u.full_name" />
-            <span v-else class="user-avatar lb-avatar">{{ initials(u.full_name) }}</span>
-            <span class="lb-name">{{ u.full_name }}</span>
-            <span class="lb-pts">{{ t('dashboard.pts', { n: u.points.toLocaleString() }) }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
