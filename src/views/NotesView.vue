@@ -6,6 +6,7 @@
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useNoteStore } from '../stores/noteStore.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import NoteCard from '../components/notes/NoteCard.vue'
@@ -14,6 +15,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const noteStore = useNoteStore()
 const subjectStore = useSubjectStore()
 
@@ -76,13 +78,13 @@ async function createNote() {
 
 <template>
   <div>
-    <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-3">
+    <header class="page-head">
       <div>
-        <h1>Notes</h1>
-        <p>Find shared notes or create your own.</p>
+        <h1 class="ph-title">{{ t('notes.title') }}</h1>
+        <p class="ph-sub">{{ t('notes.sub') }}</p>
       </div>
-      <button class="btn btn-brand" @click="openForm"><i class="bi bi-plus-lg me-1"></i>New note</button>
-    </div>
+      <button class="btn btn-brand" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.newNote') }}</button>
+    </header>
 
     <NoteSearchFilter
       v-model:search="search"
@@ -96,10 +98,10 @@ async function createNote() {
     <EmptyState
       v-else-if="!filtered.length"
       icon="bi-sticky"
-      title="No notes found"
-      message="Try a different search, or create the first note for this subject."
+      :title="t('notes.emptyTitle')"
+      :message="t('notes.emptyMsg')"
     >
-      <button class="btn btn-brand mt-2" @click="openForm"><i class="bi bi-plus-lg me-1"></i>Create note</button>
+      <button class="btn btn-brand empty-cta" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.createNote') }}</button>
     </EmptyState>
 
     <div v-else class="row g-4">
@@ -113,30 +115,30 @@ async function createNote() {
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Create a new note</h5>
+            <h5 class="modal-title">{{ t('notes.modalTitle') }}</h5>
             <button class="btn-close" @click="showForm = false"></button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>Subject</label>
+              <label>{{ t('notes.subject') }}</label>
               <select v-model="form.subject_id" class="form-select">
                 <option v-for="s in subjectStore.subjects" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Title</label>
-              <input v-model="form.title" class="form-control" placeholder="e.g. Vue reactivity basics" />
+              <label>{{ t('notes.titleField') }}</label>
+              <input v-model="form.title" class="form-control" :placeholder="t('notes.titlePlaceholder')" />
             </div>
             <div class="form-group">
-              <label>Content</label>
+              <label>{{ t('notes.content') }}</label>
               <textarea v-model="form.content" class="form-control" rows="5"
-                placeholder="Write definition sentences so flashcards/quizzes generate well..."></textarea>
+                :placeholder="t('notes.contentPlaceholder')"></textarea>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-soft" @click="showForm = false">Cancel</button>
+            <button class="btn btn-soft" @click="showForm = false">{{ t('common.cancel') }}</button>
             <button class="btn btn-brand" :disabled="creating" @click="createNote">
-              <span v-if="creating" class="spinner-border spinner-border-sm me-2"></span>Create &amp; continue
+              <span v-if="creating" class="spinner-border spinner-border-sm"></span>{{ t('notes.createContinue') }}
             </button>
           </div>
         </div>

@@ -2,53 +2,73 @@
 /**
  * App.vue — top-level shell.
  *
- * Chooses between two layouts based on the active route's meta.layout:
- *   • 'blank'  -> landing / login / register (no sidebar)
- *   • default  -> the authenticated app shell (sidebar + navbar + footer)
+ * Two layouts based on route meta.layout:
+ *   • 'blank'  -> landing / login / register (no chrome)
+ *   • default  -> the app shell (sidebar + top bar + content + floating actions)
  *
- * The mobile sidebar open/close state lives here and is passed down to the
- * navbar (toggle button) and sidebar (drawer).
+ * Theme is initialised once here so the saved light/dark choice applies before
+ * the first paint of any page.
  */
-import { ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUiStore } from './stores/uiStore.js'
+import { usePaletteStore } from './stores/paletteStore.js'
 import AppSidebar from './components/common/AppSidebar.vue'
 import AppNavbar from './components/common/AppNavbar.vue'
-import AppFooter from './components/common/AppFooter.vue'
+import CommandPalette from './components/common/CommandPalette.vue'
 
 const route = useRoute()
-const sidebarOpen = ref(false)
+const ui = useUiStore()
+const palette = usePaletteStore()
+
+// Global ⌘K / Ctrl+K opens the command palette. Bound here (the always-mounted
+// shell) so the listener has a single, clean add/remove lifecycle.
+function onKeydown(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    palette.toggle()
+  }
+}
+
+onMounted(() => {
+  ui.initTheme()
+  window.addEventListener('keydown', onKeydown)
+})
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <!-- Blank layout: full-bleed pages such as the landing and auth screens. -->
   <div v-if="route.meta.layout === 'blank'" class="blank-layout">
     <router-view v-slot="{ Component }">
-      <transition name="page-fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
+      <transition name="page-fade" mode="out-in"><component :is="Component" /></transition>
     </router-view>
   </div>
 
-  <!-- App shell: sidebar + navbar + routed content. -->
   <div v-else class="app-shell">
-    <AppSidebar :open="sidebarOpen" @close="sidebarOpen = false" />
+    <AppSidebar />
     <button
-      v-if="sidebarOpen"
+      v-if="ui.sidebarOpen"
       class="sidebar-backdrop d-md-none"
       aria-label="Close menu"
-      @click="sidebarOpen = false"
+      @click="ui.closeSidebar()"
     ></button>
 
     <div class="app-main">
-      <AppNavbar @toggle-sidebar="sidebarOpen = !sidebarOpen" />
+      <AppNavbar />
       <main class="app-content">
         <router-view v-slot="{ Component }">
-          <transition name="page-fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
+          <transition name="page-fade" mode="out-in"><component :is="Component" /></transition>
         </router-view>
       </main>
-      <AppFooter />
     </div>
+
+    <!-- Floating AI + help buttons (bottom-right in every mockup). -->
+    <div class="floating-actions">
+      <button class="fab-help" aria-label="Help">?</button>
+      <button class="fab-ai" aria-label="AI assistant" @click="palette.show()"><i class="bi bi-stars"></i></button>
+    </div>
+
+    <!-- Global ⌘K command palette -->
+    <CommandPalette />
   </div>
 </template>

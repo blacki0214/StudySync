@@ -6,14 +6,13 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient.js'
+import { currentUser } from '../data/sampleUsers.js'
 
-// A fake session used when no backend is configured.
+// A fake session used when no backend is configured — the signed-in student
+// from the Figma mockups, carrying gamification fields (XP, streak, tier).
 const DEMO_USER = {
-  id: 'user-1',
-  email: 'demo.student@studysync.vn',
-  full_name: 'Demo Student',
-  avatar_url: '',
-  reputation: 120
+  ...currentUser,
+  avatar_url: currentUser.avatar
 }
 
 const DEMO_STORAGE_KEY = 'studysync_demo_session'

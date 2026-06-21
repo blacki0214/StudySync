@@ -1,0 +1,117 @@
+/* command-palette.css
+   ----------------------------------------------------------------------------
+   The global ⌘K command palette: centered dialog over a dimmed backdrop, with
+   grouped results and a keyboard-hint footer. */
+
+.palette-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+.palette-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+}
+.palette {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  max-height: 70vh;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.palette-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--c-border);
+}
+.palette-input i { color: var(--c-text-faint); font-size: 1.1rem; }
+.palette-input input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: var(--c-text);
+}
+.palette-input input:focus { outline: none; }
+.palette-input .kbd {
+  font-size: 0.72rem;
+  color: var(--c-text-faint);
+  border: 1px solid var(--c-border-strong);
+  border-radius: 6px;
+  padding: 0.05rem 0.4rem;
+}
+
+.palette-results {
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+.palette-empty { color: var(--c-text-muted); text-align: center; padding: var(--space-5); margin: 0; }
+
+.palette-group { margin-bottom: var(--space-2); }
+.palette-group-head {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+}
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  color: var(--c-text);
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-sm);
+}
+.palette-item.active { background: var(--c-primary-light); }
+.palette-item-icon { color: var(--c-text-muted); width: 18px; text-align: center; }
+.palette-item.active .palette-item-icon { color: var(--c-primary-dark); }
+.palette-item-label { flex: 1; font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palette-item-sub { color: var(--c-text-faint); font-size: 0.78rem; flex-shrink: 0; }
+
+.palette-foot {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-5);
+  border-top: 1px solid var(--c-border);
+  color: var(--c-text-faint);
+  font-size: 0.78rem;
+}
+.palette-foot .kbd {
+  border: 1px solid var(--c-border-strong);
+  border-radius: 5px;
+  padding: 0 0.3rem;
+  margin-right: 0.15rem;
+}
+
+/* Open/close transition */
+.palette-enter-active,
+.palette-leave-active { transition: opacity 0.15s ease; }
+.palette-enter-active .palette,
+.palette-leave-active .palette { transition: transform 0.18s ease; }
+.palette-enter-from,
+.palette-leave-to { opacity: 0; }
+.palette-enter-from .palette,
+.palette-leave-to .palette { transform: translateY(-12px); }

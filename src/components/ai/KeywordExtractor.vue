@@ -4,7 +4,10 @@
  * Technical terms are highlighted. Pure rule-based extraction (no AI API).
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { extractKeywords } from '../../utils/keywordExtractor.js'
+
+const { t } = useI18n()
 
 const props = defineProps({
   content: { type: String, default: '' },
@@ -16,9 +19,9 @@ const keywords = computed(() => extractKeywords(props.content, { limit: props.li
 
 <template>
   <div class="panel">
-    <div class="section-title"><i class="bi bi-tags"></i>Key terms</div>
+    <div class="section-title"><i class="bi bi-tags"></i>{{ t('keywords.title') }}</div>
 
-    <p v-if="!keywords.length" class="text-muted-sm mb-0">No keywords extracted yet.</p>
+    <p v-if="!keywords.length" class="kw-empty">{{ t('keywords.empty') }}</p>
 
     <div class="keyword-cloud">
       <span
@@ -32,9 +35,9 @@ const keywords = computed(() => extractKeywords(props.content, { limit: props.li
       </span>
     </div>
 
-    <p class="text-muted-sm mt-3 mb-0">
-      <span class="keyword-tag is-technical" style="padding:0.1rem 0.5rem">term</span>
-      = detected technical term.
+    <p class="kw-legend">
+      <span class="keyword-tag is-technical kw-legend-chip">term</span>
+      {{ t('keywords.legend') }}
     </p>
   </div>
 </template>

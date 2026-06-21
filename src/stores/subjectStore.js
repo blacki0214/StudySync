@@ -17,7 +17,8 @@ export const useSubjectStore = defineStore('subjects', {
 
   getters: {
     categories: (state) => [...new Set(state.subjects.map((s) => s.category))],
-    getById: (state) => (id) => state.subjects.find((s) => s.id === id) || null
+    getById: (state) => (id) => state.subjects.find((s) => s.id === id) || null,
+    getByCode: (state) => (code) => state.subjects.find((s) => s.code === code) || null
   },
 
   actions: {

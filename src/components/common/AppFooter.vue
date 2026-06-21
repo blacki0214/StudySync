@@ -5,6 +5,6 @@ const year = new Date().getFullYear()
 
 <template>
   <footer class="app-footer">
-    © {{ year }} StudySync Vietnam — built with Vue 3, Pinia &amp; Supabase for COS30043.
+    © {{ year }} StudySync — built with Vue 3, Pinia &amp; Supabase for COS30043.
   </footer>
 </template>

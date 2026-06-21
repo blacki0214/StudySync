@@ -1,0 +1,50 @@
+/* subject-hub.css
+   ----------------------------------------------------------------------------
+   The per-subject hub page: header + section switcher that gathers a subject's
+   notes, decks, rooms and Q&A. Reuses note/room/deck/post card styles from the
+   other stylesheets. */
+
+.subject-hub-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+.subject-hub-head .shh-badge { width: 60px; height: 60px; font-size: 1.15rem; }
+.subject-hub-head .shh-main { flex: 1; min-width: 0; }
+.subject-hub-head .shh-eyebrow { color: var(--c-text-faint); font-size: 0.82rem; }
+.subject-hub-head .shh-name { font-size: 1.5rem; font-weight: 800; margin: 0.2rem 0; }
+.subject-hub-head .shh-desc { color: var(--c-text-muted); margin: 0 0 var(--space-3); }
+.subject-hub-head .shh-meta {
+  display: flex; flex-wrap: wrap; gap: var(--space-4);
+  color: var(--c-text-muted); font-size: 0.85rem;
+}
+.subject-hub-head .shh-meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.subject-hub-head .shh-rating { color: var(--c-orange); font-weight: 700; }
+.subject-hub-head .shh-progress { width: 160px; flex-shrink: 0; }
+.subject-hub-head .shh-progress-val { text-align: right; font-weight: 800; margin-bottom: var(--space-2); }
+
+/* Section switcher (reuses .seg-tabs/.seg-tab from editor.css). */
+.subject-hub-tabs { max-width: 520px; margin-bottom: var(--space-5); }
+.subject-hub-tabs .seg-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--c-surface-2);
+  border-radius: var(--radius-pill);
+  padding: 0.05rem 0.4rem;
+  margin-left: 0.25rem;
+}
+.subject-hub-tabs .seg-tab.active .seg-count { background: var(--c-primary-light); color: var(--c-primary-dark); }
+
+/* Deck card as a link (reuses .deck-card from flashcards.css). */
+.deck-link { display: block; color: inherit; text-decoration: none; }
+.deck-link:hover { text-decoration: none; color: inherit; box-shadow: var(--shadow); }
+
+/* Community post as a link (reuses .post-card from community.css). */
+.shh-post { color: inherit; text-decoration: none; }
+.shh-post:hover { text-decoration: none; color: inherit; box-shadow: var(--shadow); }

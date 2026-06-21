@@ -1,0 +1,76 @@
+/* hub.css
+   ----------------------------------------------------------------------------
+   Study Hub home: "continue studying" resume cards, quick-launch tiles, and the
+   unified cross-feature activity feed. */
+
+/* ---- Continue studying ---- */
+.continue-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.continue-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); color: inherit; text-decoration: none; }
+.continue-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center; color: #fff; font-size: 1.15rem; flex-shrink: 0;
+}
+.continue-body { flex: 1; min-width: 0; }
+.continue-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-text-faint); }
+.continue-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.continue-meta { color: var(--c-text-muted); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+.continue-go { color: var(--c-text-faint); }
+.continue-card:hover .continue-go { color: var(--c-primary); }
+
+/* ---- Quick launch tiles ---- */
+.quick-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-2);
+  color: inherit;
+  text-decoration: none;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.quick-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow); color: inherit; text-decoration: none; }
+.quick-icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: grid; place-items: center; color: #fff; font-size: 1.2rem;
+}
+.quick-label { font-weight: 600; font-size: 0.85rem; }
+
+/* ---- Activity feed ---- */
+.hub-activity { height: 100%; }
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--c-border);
+  color: inherit;
+  text-decoration: none;
+}
+.activity-row:last-child { border-bottom: none; }
+.activity-row:hover { text-decoration: none; }
+.activity-row:hover .activity-text > div:first-child { color: var(--c-primary); }
+.activity-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: grid; place-items: center; color: #fff; font-size: 0.9rem; flex-shrink: 0;
+}
+.activity-text { flex: 1; font-size: 0.87rem; min-width: 0; }
+.activity-ago { color: var(--c-text-faint); font-size: 0.75rem; margin-top: 0.1rem; }

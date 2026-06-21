@@ -13,3 +13,8 @@ dist-ssr
 .DS_Store
 Thumbs.db
 *.log
+
+# Claude Code — never push AI assistant instructions/config to GitHub
+.claude/
+CLAUDE.md
+CLAUDE.local.md

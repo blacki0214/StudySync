@@ -14,17 +14,21 @@ const routes = [
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true, layout: 'blank' } },
   { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue'), meta: { public: true, layout: 'blank' } },
 
-  { path: '/dashboard', name: 'dashboard', component: () => import('../views/DashboardView.vue') },
+  // The Hub is the home command-center (formerly the dashboard).
+  { path: '/hub', name: 'hub', component: () => import('../views/HubView.vue') },
+  { path: '/dashboard', redirect: '/hub' }, // backwards-compatible redirect
   { path: '/subjects', name: 'subjects', component: () => import('../views/SubjectsView.vue') },
+  { path: '/subjects/:id', name: 'subject-hub', component: () => import('../views/SubjectHubView.vue'), props: true },
   { path: '/notes', name: 'notes', component: () => import('../views/NotesView.vue') },
   { path: '/notes/:id', name: 'note-detail', component: () => import('../views/NoteDetailView.vue'), props: true },
+  { path: '/rooms', name: 'rooms', component: () => import('../views/StudyRoomsView.vue') },
   { path: '/rooms/:id', name: 'study-room', component: () => import('../views/StudyRoomView.vue'), props: true },
   { path: '/flashcards', name: 'flashcards', component: () => import('../views/FlashcardsView.vue') },
   { path: '/flashcards/:noteId', name: 'flashcards-note', component: () => import('../views/FlashcardsView.vue'), props: true },
   { path: '/community', name: 'community', component: () => import('../views/CommunityView.vue') },
   { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue') },
 
-  { path: '/:pathMatch(.*)*', redirect: '/dashboard' }
+  { path: '/:pathMatch(.*)*', redirect: '/hub' }
 ]
 
 const router = createRouter({
@@ -45,7 +49,7 @@ router.beforeEach(async (to) => {
   }
   // Prevent logged-in users from seeing login/register.
   if ((to.name === 'login' || to.name === 'register') && auth.isAuthenticated) {
-    return { name: 'dashboard' }
+    return { name: 'hub' }
   }
   return true
 })

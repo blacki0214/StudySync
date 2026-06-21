@@ -5,8 +5,10 @@
  * Tracks the user's selections and scores them at the end.
  */
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { generateQuiz } from '../../utils/quizGenerator.js'
 
+const { t } = useI18n()
 const props = defineProps({
   content: { type: String, default: '' }
 })
@@ -57,28 +59,27 @@ watch(() => props.content, build, { immediate: true })
 
 <template>
   <div>
-    <div class="generator-toolbar">
-      <h2 class="section-title mb-0"><i class="bi bi-patch-question"></i>Quiz</h2>
-      <span v-if="questions.length" class="quiz-progress ms-auto">
-        Question {{ current + 1 }} / {{ questions.length }}
+    <div class="quiz-head">
+      <h2 class="section-title section-title-flush"><i class="bi bi-patch-question"></i>{{ t('quiz.title') }}</h2>
+      <span v-if="questions.length" class="badge-soft">
+        {{ t('quiz.questionOf', { current: current + 1, total: questions.length }) }}
       </span>
     </div>
 
     <div v-if="!questions.length" class="empty-state">
       <div class="empty-icon"><i class="bi bi-patch-question"></i></div>
-      <p class="text-muted-sm">Not enough definition sentences to build a quiz. Add more detailed
-        notes and try again.</p>
+      <p class="empty-text">{{ t('quiz.empty') }}</p>
     </div>
 
     <!-- Result screen -->
     <div v-else-if="finished" class="quiz-card quiz-result">
       <div class="score-circle">{{ percent }}%</div>
-      <h4>You scored {{ score }} / {{ questions.length }}</h4>
-      <p class="text-muted-sm">Review the highlighted answers below, or try again.</p>
-      <button class="btn btn-brand" @click="build"><i class="bi bi-arrow-repeat me-1"></i>Retake quiz</button>
+      <h4>{{ t('quiz.scored', { score, total: questions.length }) }}</h4>
+      <p class="quiz-result-sub">{{ t('quiz.reviewHint') }}</p>
+      <button class="btn btn-brand" @click="build"><i class="bi bi-arrow-repeat"></i>{{ t('quiz.retake') }}</button>
 
-      <div class="text-start mt-4">
-        <div v-for="(q, qi) in questions" :key="qi" class="mb-3">
+      <div class="quiz-review">
+        <div v-for="(q, qi) in questions" :key="qi" class="quiz-review-item">
           <div class="quiz-question">{{ qi + 1 }}. {{ q.question }}</div>
           <div
             v-for="(opt, oi) in q.options"
@@ -105,13 +106,13 @@ watch(() => props.content, build, { immediate: true })
         <span class="opt-key">{{ String.fromCharCode(65 + oi) }}</span>{{ opt }}
       </div>
 
-      <div class="d-flex justify-content-between mt-4">
+      <div class="quiz-nav">
         <button class="btn btn-soft" :disabled="current === 0" @click="prev">
-          <i class="bi bi-arrow-left me-1"></i>Back
+          <i class="bi bi-arrow-left"></i>{{ t('quiz.back') }}
         </button>
         <button class="btn btn-brand" :disabled="answers[current] === null" @click="next">
-          {{ current === questions.length - 1 ? 'Finish' : 'Next' }}
-          <i class="bi bi-arrow-right ms-1"></i>
+          {{ current === questions.length - 1 ? t('quiz.finish') : t('quiz.next') }}
+          <i class="bi bi-arrow-right"></i>
         </button>
       </div>
     </div>

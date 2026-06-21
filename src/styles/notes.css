@@ -1,7 +1,127 @@
 /* notes.css
    ----------------------------------------------------------------------------
-   Notes list, note cards, search/filter bar, subjects grid. */
+   Subjects page (trending hero, filter pills, subject cards) and the Collab
+   Notes list (note cards, search/filter). */
 
+/* ---- Trending hero ---- */
+.trending-hero {
+  background: var(--grad-button);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+}
+.trending-hero::after {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+.trending-hero .th-eyebrow {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.trending-hero h2 { color: #fff; font-size: 1.5rem; margin: var(--space-3) 0 var(--space-5); }
+.trending-card {
+  display: block;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  color: #fff;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+}
+.trending-card:hover { color: #fff; text-decoration: none; background: rgba(255, 255, 255, 0.18); }
+.trending-card .tc-code { font-size: 0.78rem; opacity: 0.85; }
+.trending-card .tc-name { font-weight: 700; font-size: 1.05rem; margin: 0.2rem 0 var(--space-3); }
+.trending-card .tc-meta { display: flex; gap: var(--space-4); font-size: 0.8rem; opacity: 0.9; }
+.trending-card .tc-meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+/* ---- Filter bar ---- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.filter-bar .search-box {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+.filter-bar .search-box i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--c-text-faint);
+}
+.filter-bar .search-box input {
+  width: 100%;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1rem 0.6rem 2.4rem;
+  color: var(--c-text);
+}
+.filter-bar .search-box input:focus { outline: none; border-color: var(--c-primary); }
+.filter-bar .filter-select { max-width: 220px; }
+.filter-bar .filter-select-sm { max-width: 180px; }
+.cat-pills { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.cat-pill {
+  border: none;
+  background: none;
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+}
+.cat-pill:hover { color: var(--c-text); }
+.cat-pill.active { background: var(--c-primary-light); color: var(--c-primary-dark); }
+
+/* ---- Subject card ---- */
+.subject-card {
+  display: block;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.subject-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); color: inherit; text-decoration: none; }
+.subject-card .sc-badge { width: 52px; height: 52px; font-size: 1rem; margin-bottom: var(--space-4); }
+.subject-card .sc-code { color: var(--c-text-faint); font-size: 0.8rem; }
+.subject-card .sc-name { font-weight: 700; font-size: 1.1rem; margin: 0.3rem 0 var(--space-4); }
+.subject-card .sc-row { display: flex; align-items: center; justify-content: space-between; }
+.subject-card .sc-rating { color: var(--c-orange); font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; }
+.subject-card .sc-notes { color: var(--c-text-muted); font-size: 0.85rem; }
+.subject-card .sc-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--c-border);
+  margin-top: var(--space-4); padding-top: var(--space-4);
+}
+.subject-card .sc-students { color: var(--c-text-muted); font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+.mini-circle {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--c-surface-2); border: 2px solid var(--c-surface);
+  display: grid; place-items: center; font-size: 0.62rem; font-weight: 700; color: var(--c-text-muted);
+}
+
+/* ---- Note card (Collab Notes list) ---- */
 .note-card {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -13,79 +133,14 @@
   flex-direction: column;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.note-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.note-card .note-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: var(--space-2);
-}
+.note-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.note-card .note-title { font-size: 1.05rem; font-weight: 700; margin: var(--space-3) 0 var(--space-2); }
 .note-card .note-excerpt {
-  color: var(--c-text-muted);
-  font-size: 0.88rem;
-  line-height: 1.5;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: var(--c-text-muted); font-size: 0.87rem; line-height: 1.5; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .note-card .note-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-  font-size: 0.78rem;
-  color: var(--c-text-faint);
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-top: var(--space-4); font-size: 0.78rem; color: var(--c-text-faint);
 }
 .note-card .note-meta .meta-spacer { margin-left: auto; }
-
-.search-filter-bar {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-5);
-}
-.search-filter-bar .search-box {
-  position: relative;
-  flex: 1;
-  min-width: 220px;
-}
-.search-filter-bar .search-box i {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--c-text-faint);
-}
-.search-filter-bar .search-box input {
-  width: 100%;
-  padding-left: 2.2rem;
-}
-
-.subject-card {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
-  height: 100%;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.subject-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.subject-card .subj-cat {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--c-accent);
-}
-.subject-card .subj-code {
-  font-weight: 800;
-  color: var(--c-primary);
-}

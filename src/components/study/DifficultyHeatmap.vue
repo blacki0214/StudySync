@@ -6,7 +6,9 @@
  * transparent to the user.
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const props = defineProps({
   analysis: { type: Object, required: true } // output of analyzeDifficulty()
 })
@@ -16,10 +18,10 @@ const props = defineProps({
 const rows = computed(() => {
   const m = props.analysis.metrics
   return [
-    { label: 'Sentence length', pct: Math.min((m.avgSentenceLength / 25) * 100, 100), raw: m.avgSentenceLength.toFixed(1) },
-    { label: 'Technical terms', pct: Math.min((m.technicalCount / 8) * 100, 100), raw: m.technicalCount },
-    { label: 'Long words', pct: Math.min((m.longWordRatio / 0.25) * 100, 100), raw: `${Math.round(m.longWordRatio * 100)}%` },
-    { label: 'Content length', pct: Math.min((m.totalWords / 250) * 100, 100), raw: `${m.totalWords}w` }
+    { label: t('editor.diffSentence'), pct: Math.min((m.avgSentenceLength / 25) * 100, 100), raw: m.avgSentenceLength.toFixed(1) },
+    { label: t('editor.diffTechnical'), pct: Math.min((m.technicalCount / 8) * 100, 100), raw: m.technicalCount },
+    { label: t('editor.diffLongWords'), pct: Math.min((m.longWordRatio / 0.25) * 100, 100), raw: `${Math.round(m.longWordRatio * 100)}%` },
+    { label: t('editor.diffLength'), pct: Math.min((m.totalWords / 250) * 100, 100), raw: `${m.totalWords}w` }
   ]
 })
 
@@ -33,8 +35,8 @@ function barColor(pct) {
 <template>
   <div class="panel">
     <div class="section-title">
-      <i class="bi bi-bar-chart-steps"></i>Difficulty analysis
-      <span class="difficulty-pill ms-auto" :class="`difficulty-${analysis.level}`">{{ analysis.level }}</span>
+      <i class="bi bi-bar-chart-steps"></i>{{ t('editor.difficultyTitle') }}
+      <span class="difficulty-pill hm-pill" :class="`difficulty-${analysis.level}`">{{ analysis.level }}</span>
     </div>
 
     <div class="heatmap">
@@ -47,6 +49,6 @@ function barColor(pct) {
       </div>
     </div>
 
-    <p class="text-muted-sm mt-3 mb-0"><i class="bi bi-lightbulb me-1"></i>{{ analysis.explanation }}</p>
+    <p class="hm-explain"><i class="bi bi-lightbulb"></i>{{ analysis.explanation }}</p>
   </div>
 </template>

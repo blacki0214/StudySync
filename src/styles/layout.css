@@ -1,24 +1,24 @@
 /* layout.css
    ----------------------------------------------------------------------------
-   The application shell: sidebar + top navbar + main content area. */
+   The application shell: fixed sidebar + top bar + scrolling content, matching
+   the Figma. Colours come entirely from variables.css so dark mode just works. */
 
 .app-shell {
   display: flex;
   min-height: 100vh;
+  background: var(--c-bg);
 }
 
-/* Sidebar */
+/* ---------------- Sidebar ---------------- */
 .app-sidebar {
   width: var(--sidebar-width);
   background: var(--c-surface);
   border-right: 1px solid var(--c-border);
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  inset: 0 auto 0 0;
   display: flex;
   flex-direction: column;
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-5) var(--space-4) var(--space-4);
   z-index: 1040;
   transition: transform 0.25s ease;
 }
@@ -26,40 +26,61 @@
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-weight: 800;
-  font-size: 1.15rem;
-  padding: var(--space-2) var(--space-3) var(--space-5);
-  color: var(--c-text);
+  gap: var(--space-3);
+  padding: 0 var(--space-2) var(--space-5);
 }
 .sidebar-brand .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--c-primary);
-  display: grid;
-  place-items: center;
-  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  object-fit: contain;
+  flex-shrink: 0;
+  /* The logo art is a star mascot on a cloud; a soft tinted backing lifts it
+     off the white sidebar in both light and dark themes. */
+  background: var(--c-primary-tint);
+  padding: 2px;
+}
+.sidebar-brand .brand-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1.1;
+  color: var(--c-text);
+}
+.sidebar-brand .brand-sub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
+}
+
+.sidebar-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
+  padding: 0 var(--space-2);
+  margin: var(--space-3) 0 var(--space-2);
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  gap: 3px;
 }
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.7rem 0.9rem;
+  padding: 0.62rem 0.7rem;
   border-radius: var(--radius-sm);
   color: var(--c-text-muted);
   font-weight: 600;
-  font-size: 0.93rem;
+  font-size: 0.9rem;
 }
 .sidebar-link:hover {
-  background: var(--c-bg);
+  background: var(--c-surface-2);
   color: var(--c-text);
   text-decoration: none;
 }
@@ -69,16 +90,126 @@
 }
 .sidebar-link i {
   font-size: 1.05rem;
+  width: 20px;
+  text-align: center;
+}
+.sidebar-link .link-badge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 0.12rem 0.5rem;
+}
+.link-badge.live {
+  background: #dcfce7;
+  color: #15803d;
+}
+.link-badge.count {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  min-width: 20px;
+  text-align: center;
 }
 
-.sidebar-footer {
+/* XP / achievement card */
+.xp-card {
+  background: var(--grad-xp);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-brand);
+}
+.xp-card::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+.xp-card .xp-trophy {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--space-3);
+}
+.xp-card .xp-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.xp-card .xp-meta {
+  font-size: 0.76rem;
+  opacity: 0.9;
+  margin-bottom: var(--space-2);
+}
+.xp-bar {
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.xp-bar .xp-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: #fff;
+}
+
+.sidebar-spacer {
+  flex: 1;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--c-border);
-  padding-top: var(--space-3);
-  font-size: 0.8rem;
+  margin-top: var(--space-4);
+  color: inherit;
+  text-decoration: none;
+}
+.sidebar-user:hover { text-decoration: none; color: inherit; }
+.sidebar-user .su-avatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+.sidebar-user .su-avatar img,
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sidebar-user .su-dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-live);
+  border: 2px solid var(--c-surface);
+}
+.sidebar-user .su-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.1;
+}
+.sidebar-user .su-sub {
+  font-size: 0.72rem;
   color: var(--c-text-faint);
 }
 
-/* Main column */
+/* ---------------- Main column ---------------- */
 .app-main {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -86,38 +217,33 @@
   flex-direction: column;
   min-width: 0;
 }
-
 .app-content {
   padding: var(--space-6);
   flex: 1;
+  max-width: 1320px;
+  width: 100%;
 }
 
 .page-header {
   margin-bottom: var(--space-5);
 }
 .page-header h1 {
-  font-size: 1.6rem;
-  margin: 0 0 0.25rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.02em;
 }
 .page-header p {
   color: var(--c-text-muted);
   margin: 0;
 }
-
-.app-footer {
-  border-top: 1px solid var(--c-border);
-  padding: var(--space-4) var(--space-6);
-  color: var(--c-text-faint);
-  font-size: 0.82rem;
-  text-align: center;
+.eyebrow {
+  color: var(--c-text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
 }
 
-/* Blank layout for landing / auth */
-.blank-layout {
-  min-height: 100vh;
-}
-
-/* Mobile sidebar backdrop */
+/* Mobile drawer backdrop */
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
@@ -138,9 +264,45 @@
   color: var(--c-text-faint);
   margin-bottom: var(--space-3);
 }
-
+.empty-cta { margin-top: var(--space-2); }
 .spinner-wrap {
   display: grid;
   place-items: center;
   padding: var(--space-8);
+}
+
+/* Floating action buttons (AI + help) */
+.floating-actions {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 14px;
+  z-index: 1050;
+}
+.fab-ai {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--grad-brand);
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  box-shadow: var(--shadow-brand);
+  display: grid;
+  place-items: center;
+}
+.fab-help {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-strong);
+  color: var(--c-text-muted);
+}
+
+.blank-layout {
+  min-height: 100vh;
 }

@@ -1,129 +1,118 @@
 /* flashcards.css
    ----------------------------------------------------------------------------
-   Flashcard flip cards, quiz UI, keyword cloud, study summary. */
+   Flashcards page: tabs, study flip-card, SRS rating buttons, cards-reviewed
+   chart, decks grid; plus the manual quiz UI. */
 
-.generator-toolbar {
-  display: flex;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: var(--space-5);
+.text-tabs { display: flex; gap: var(--space-5); border-bottom: 1px solid var(--c-border); margin-bottom: var(--space-5); }
+.text-tab {
+  border: none; background: none; padding: 0 0 var(--space-3);
+  font-weight: 600; color: var(--c-text-muted); position: relative;
+}
+.text-tab.active { color: var(--c-text); }
+.text-tab.active::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: var(--c-primary); border-radius: 2px;
 }
 
-/* Flip card */
-.flashcard {
-  perspective: 1200px;
-  height: 200px;
-  cursor: pointer;
+/* Study card */
+.study-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.deck-chip {
+  background: #0f172a; color: #fff; font-size: 0.78rem; font-weight: 600;
+  border-radius: var(--radius-pill); padding: 0.3rem 0.8rem;
 }
-.flashcard-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.55s;
-  transform-style: preserve-3d;
-}
-.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
-.flashcard-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: var(--radius);
-  border: 1px solid var(--c-border);
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-.flashcard-front { background: var(--c-surface); }
-.flashcard-back {
-  background: var(--c-primary);
-  color: #fff;
-  transform: rotateY(180deg);
-}
-.flashcard-face .fc-label {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.6;
-  margin-bottom: var(--space-2);
-}
-.flashcard-face .fc-text { font-size: 1rem; font-weight: 600; line-height: 1.45; }
-.flashcard-hint { font-size: 0.72rem; opacity: 0.55; margin-top: var(--space-3); }
+.study-progress { width: 140px; height: 6px; background: var(--c-surface-2); border-radius: var(--radius-pill); overflow: hidden; }
+.study-progress .sp-fill { height: 100%; background: #0f172a; border-radius: var(--radius-pill); }
 
-/* Quiz */
-.quiz-card {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-5);
+.flip-card { perspective: 1400px; cursor: pointer; }
+.flip-inner {
+  position: relative; width: 100%; min-height: 280px;
+  transition: transform 0.55s; transform-style: preserve-3d;
 }
-.quiz-question { font-weight: 700; margin-bottom: var(--space-4); }
+.flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: var(--space-8);
+}
+.flip-back { transform: rotateY(180deg); }
+.flip-face .ff-label { font-size: 0.72rem; letter-spacing: 0.08em; color: var(--c-text-faint); text-transform: uppercase; margin-bottom: var(--space-4); }
+.flip-face .ff-text { font-size: 1.4rem; font-weight: 700; line-height: 1.4; }
+.flip-face .ff-hint { color: var(--c-text-faint); font-size: 0.82rem; margin-top: var(--space-4); }
+
+.srs-row { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-top: var(--space-4); }
+.srs-btn { border-radius: var(--radius-sm); font-weight: 600; padding: 0.5rem 1.4rem; background: var(--c-surface); }
+.srs-btn.again { border: 1px solid #fecaca; color: var(--c-red); }
+.srs-btn.hard { border: 1px solid #fed7aa; color: var(--c-orange); }
+.srs-btn.easy { border: 1px solid #bbf7d0; color: var(--c-green); }
+.srs-nav {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--c-border-strong); background: var(--c-surface);
+  color: var(--c-text-muted); display: grid; place-items: center;
+}
+
+/* Reviewed stats rail */
+.reviewed-title { font-weight: 700; font-size: 1.02rem; }
+.reviewed-sub { color: var(--c-text-muted); font-size: 0.82rem; margin-bottom: var(--space-3); }
+.reviewed-stats { margin-top: var(--space-3); }
+.reviewed-stat { display: flex; justify-content: space-between; padding: var(--space-2) 0; border-top: 1px solid var(--c-border); }
+.reviewed-stat:first-child { border-top: none; }
+.reviewed-stat .rs-key { color: var(--c-text-muted); font-size: 0.85rem; }
+.reviewed-stat .rs-val { font-weight: 700; }
+.reviewed-stat .rs-val.ok { color: var(--c-green); }
+
+.decks-title { font-size: 1.15rem; margin: var(--space-5) 0 var(--space-4); }
+.note-select { max-width: 360px; }
+.gen-card { height: 100%; }
+.gen-pattern { color: var(--c-text-muted); font-size: 0.82rem; margin-bottom: var(--space-1); }
+.gen-q { font-weight: 700; margin-bottom: var(--space-2); }
+.gen-a { color: var(--c-text-muted); font-size: 0.9rem; }
+.dk-count { color: var(--c-text-muted); font-size: 0.82rem; }
+
+/* Decks grid */
+.deck-card {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--space-5); height: 100%;
+}
+.deck-card .dk-head { display: flex; align-items: center; gap: var(--space-3); }
+.deck-card .dk-icon { width: 40px; height: 40px; border-radius: 11px; font-size: 0.78rem; }
+.deck-card .dk-name { font-weight: 700; font-size: 0.95rem; }
+.deck-card .dk-sub { color: var(--c-text-faint); font-size: 0.78rem; }
+.deck-card .dk-foot { display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-4); font-size: 0.82rem; }
+
+/* Quiz (reused manual quiz UI) */
+.quiz-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+.quiz-nav { display: flex; justify-content: space-between; margin-top: var(--space-4); }
+.quiz-review { text-align: left; margin-top: var(--space-4); }
+.quiz-review-item { margin-bottom: var(--space-4); }
+.quiz-result-sub { color: var(--c-text-muted); }
+.empty-text { color: var(--c-text-muted); }
+.quiz-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--space-5); }
+.quiz-question { font-weight: 700; font-size: 1.1rem; margin-bottom: var(--space-4); }
 .quiz-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-  cursor: pointer;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm); margin-bottom: var(--space-2); cursor: pointer;
 }
-.quiz-option:hover { background: var(--c-bg); }
+.quiz-option:hover { background: var(--c-surface-2); }
 .quiz-option.selected { border-color: var(--c-primary); background: var(--c-primary-light); }
-.quiz-option.correct { border-color: var(--c-success); background: #dcfce7; }
-.quiz-option.incorrect { border-color: var(--c-danger); background: #fee2e2; }
-.quiz-option .opt-key {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: var(--c-bg); display: grid; place-items: center;
-  font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
-}
-
-.quiz-progress { font-weight: 600; color: var(--c-text-muted); }
-.quiz-result {
-  text-align: center;
-  padding: var(--space-6);
-}
+.quiz-option.correct { border-color: var(--c-green); background: #dcfce7; }
+.quiz-option.incorrect { border-color: var(--c-red); background: #fee2e2; }
+.quiz-option .opt-key { width: 26px; height: 26px; border-radius: 50%; background: var(--c-surface-2); display: grid; place-items: center; font-weight: 700; font-size: 0.8rem; }
+.quiz-result { text-align: center; padding: var(--space-6); }
 .quiz-result .score-circle {
-  width: 120px; height: 120px; border-radius: 50%;
-  margin: 0 auto var(--space-4);
-  display: grid; place-items: center;
-  font-size: 1.8rem; font-weight: 800; color: #fff;
-  background: var(--c-primary);
+  width: 110px; height: 110px; border-radius: 50%; margin: 0 auto var(--space-4);
+  display: grid; place-items: center; font-size: 1.7rem; font-weight: 800; color: #fff; background: var(--grad-button);
 }
 
-/* Keyword cloud */
-.keyword-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-.keyword-tag {
-  background: var(--c-primary-light);
-  color: var(--c-primary-dark);
-  border-radius: 999px;
-  padding: 0.3rem 0.8rem;
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-.keyword-tag.is-technical {
-  background: var(--c-accent);
-  color: #fff;
-}
-.keyword-tag .kw-count {
-  opacity: 0.7;
-  font-size: 0.72rem;
-  margin-left: 0.3rem;
-}
-
-/* Study summary */
+/* Keyword cloud / summary (study tools that reuse the manual AI) */
+.keyword-cloud { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.keyword-tag { background: var(--c-primary-light); color: var(--c-primary-dark); border-radius: var(--radius-pill); padding: 0.3rem 0.8rem; font-weight: 600; font-size: 0.85rem; }
+.keyword-tag.is-technical { background: var(--c-cyan); color: #fff; }
+.keyword-tag .kw-count { opacity: 0.7; font-size: 0.72rem; margin-left: 0.3rem; }
+.kw-empty { color: var(--c-text-muted); font-size: 0.85rem; margin: 0; }
+.kw-legend { color: var(--c-text-muted); font-size: 0.85rem; margin: var(--space-3) 0 0; }
+.kw-legend-chip { padding: 0.1rem 0.5rem; }
 .summary-list { padding-left: 1.1rem; margin: 0; }
-.summary-list li {
-  margin-bottom: var(--space-2);
-  line-height: 1.55;
-  color: var(--c-text);
-}
+.summary-list li { margin-bottom: var(--space-2); line-height: 1.55; }

@@ -1,33 +1,57 @@
 /* variables.css
    ----------------------------------------------------------------------------
-   Design tokens (colours, spacing, typography, shadows). Centralising these as
-   CSS custom properties gives the whole app a single source of truth and makes
-   theming trivial. */
+   Design tokens for the StudySync design system (matches the Figma mockups).
+   Light theme lives on :root; the dark theme overrides the same variables under
+   [data-theme="dark"], so every component is themed purely through these tokens.
+   The dark-mode toggle in the top bar flips data-theme on <html>. */
 
 :root {
-  /* Brand palette */
-  --c-primary: #4f46e5;
-  --c-primary-dark: #4338ca;
-  --c-primary-light: #eef2ff;
-  --c-accent: #0ea5e9;
+  /* ---- Brand (indigo → violet) ---- */
+  --c-primary: #6366f1;
+  --c-primary-dark: #4f46e5;
+  --c-violet: #8b5cf6;
+  --c-primary-light: #eef2ff;       /* sidebar active / soft chips */
+  --c-primary-tint: #f5f3ff;
+  --grad-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --grad-button: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --grad-xp: linear-gradient(135deg, #7c6df2 0%, #9333ea 100%);
+  --grad-cover: linear-gradient(120deg, #4f7cf5 0%, #7c3aed 60%, #9333ea 100%);
+
+  /* ---- Accent icon tints (stat cards) ---- */
+  --c-blue: #3b82f6;
+  --c-fuchsia: #d946ef;
+  --c-green: #10b981;
+  --c-orange: #f59e0b;
+  --c-red: #ef4444;
+  --c-cyan: #06b6d4;
+
+  --grad-blue: linear-gradient(135deg, #3b82f6, #2563eb);
+  --grad-fuchsia: linear-gradient(135deg, #e879f9, #c026d3);
+  --grad-green: linear-gradient(135deg, #34d399, #059669);
+  --grad-orange: linear-gradient(135deg, #fbbf24, #f59e0b);
+
+  /* ---- Surfaces & text ---- */
+  --c-bg: #f8f9fc;
+  --c-surface: #ffffff;
+  --c-surface-2: #f8fafc;
+  --c-border: #eef0f4;
+  --c-border-strong: #e2e8f0;
+  --c-text: #0f172a;
+  --c-text-muted: #64748b;
+  --c-text-faint: #94a3b8;
+
+  /* ---- Status ---- */
   --c-success: #16a34a;
   --c-warning: #d97706;
   --c-danger: #dc2626;
+  --c-live: #10b981;
 
-  /* Neutrals */
-  --c-bg: #f6f7fb;
-  --c-surface: #ffffff;
-  --c-border: #e5e7eb;
-  --c-text: #1f2937;
-  --c-text-muted: #6b7280;
-  --c-text-faint: #9ca3af;
-
-  /* Difficulty colours */
+  /* Difficulty */
   --c-easy: #16a34a;
   --c-medium: #d97706;
   --c-hard: #dc2626;
 
-  /* Spacing scale */
+  /* ---- Spacing ---- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -36,19 +60,52 @@
   --space-6: 2rem;
   --space-8: 3rem;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius: 12px;
-  --radius-lg: 18px;
+  /* ---- Radius ---- */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
-  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+  /* ---- Shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
+  --shadow-brand: 0 8px 24px rgba(99, 102, 241, 0.35);
 
-  /* Layout */
-  --sidebar-width: 250px;
-  --navbar-height: 64px;
+  /* ---- Layout ---- */
+  --sidebar-width: 256px;
+  --navbar-height: 68px;
 
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   Dark theme — flipped by the top-bar toggle (data-theme="dark" on <html>).
+   --------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --c-primary-light: #1e1b4b;
+  --c-primary-tint: #1e1b3a;
+
+  --c-bg: #0b1120;
+  --c-surface: #111827;
+  --c-surface-2: #0f1626;
+  --c-border: #1f2937;
+  --c-border-strong: #334155;
+  --c-text: #e5e7eb;
+  --c-text-muted: #94a3b8;
+  --c-text-faint: #64748b;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Smooth the theme transition. */
+:root,
+[data-theme='dark'] {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
 }

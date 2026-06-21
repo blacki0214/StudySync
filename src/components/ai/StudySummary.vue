@@ -4,9 +4,11 @@
  * sentences by keyword density (see textAnalyzer.extractKeySentences). No AI API.
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { extractKeywords } from '../../utils/keywordExtractor.js'
 import { extractKeySentences } from '../../utils/textAnalyzer.js'
 
+const { t } = useI18n()
 const props = defineProps({
   content: { type: String, default: '' },
   maxSentences: { type: Number, default: 4 }
@@ -20,11 +22,9 @@ const summary = computed(() => {
 
 <template>
   <div class="panel">
-    <div class="section-title"><i class="bi bi-card-list"></i>Study summary</div>
+    <div class="section-title"><i class="bi bi-card-list"></i>{{ t('editor.summaryTitle') }}</div>
 
-    <p v-if="!summary.length" class="text-muted-sm mb-0">
-      Write a few sentences and a key-point summary will appear here.
-    </p>
+    <p v-if="!summary.length" class="tool-empty">{{ t('editor.summaryEmpty') }}</p>
 
     <ol v-else class="summary-list">
       <li v-for="(sentence, i) in summary" :key="i">{{ sentence }}</li>

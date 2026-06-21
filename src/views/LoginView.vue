@@ -5,10 +5,13 @@
  */
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { validateEmail, validatePassword, firstError } from '../utils/validation.js'
+import logoMark from '../assets/images/logo-mark.png'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
@@ -23,7 +26,7 @@ async function submit() {
 
   try {
     await auth.login({ email: email.value, password: password.value })
-    router.push(route.query.redirect || '/dashboard')
+    router.push(route.query.redirect || '/hub')
   } catch (e) {
     error.value = auth.error || 'Login failed.'
   }
@@ -33,45 +36,46 @@ async function submit() {
 <template>
   <div class="auth-wrap">
     <aside class="auth-aside">
-      <h2>Welcome back 👋</h2>
-      <p class="mb-4">Pick up where you left off — your notes, flashcards and study rooms are waiting.</p>
+      <div class="auth-brand"><img :src="logoMark" alt="StudySync logo" />StudySync</div>
+      <h2>{{ t('auth.welcomeBack') }}</h2>
+      <p class="auth-aside-sub">{{ t('auth.welcomeSub') }}</p>
       <ul>
-        <li><i class="bi bi-check-circle-fill"></i> Real-time collaborative notes</li>
-        <li><i class="bi bi-check-circle-fill"></i> Auto-generated flashcards &amp; quizzes</li>
-        <li><i class="bi bi-check-circle-fill"></i> Live study rooms with presence</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat1') }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat2') }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat3') }}</li>
       </ul>
     </aside>
 
     <div class="auth-form-panel">
       <div class="auth-card">
-        <h1>Log in</h1>
-        <p class="auth-sub">Enter your details to continue.</p>
+        <h1>{{ t('auth.login') }}</h1>
+        <p class="auth-sub">{{ t('auth.loginSub') }}</p>
 
         <div v-if="!isSupabaseConfigured" class="demo-hint">
-          <i class="bi bi-info-circle me-1"></i>
-          <strong>Demo mode:</strong> any email &amp; password (6+ chars) will sign you in.
+          <i class="bi bi-info-circle"></i>
+          {{ t('auth.demoLogin') }}
         </div>
 
         <form @submit.prevent="submit">
           <div class="form-group">
-            <label>Email</label>
-            <input v-model="email" type="email" class="form-control" placeholder="you@university.edu.vn" />
+            <label>{{ t('auth.email') }}</label>
+            <input v-model="email" type="email" class="form-control" :placeholder="t('auth.emailPlaceholder')" />
           </div>
           <div class="form-group">
-            <label>Password</label>
+            <label>{{ t('auth.password') }}</label>
             <input v-model="password" type="password" class="form-control" placeholder="••••••••" />
           </div>
 
-          <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</p>
+          <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle"></i>{{ error }}</p>
 
-          <button class="btn btn-brand w-100" :disabled="auth.loading">
-            <span v-if="auth.loading" class="spinner-border spinner-border-sm me-2"></span>
-            Log in
+          <button class="btn btn-brand auth-submit" :disabled="auth.loading">
+            <span v-if="auth.loading" class="spinner-border spinner-border-sm"></span>
+            {{ t('auth.login') }}
           </button>
         </form>
 
         <p class="auth-alt">
-          No account? <router-link to="/register">Create one</router-link>
+          {{ t('auth.noAccount') }} <router-link to="/register">{{ t('auth.createOne') }}</router-link>
         </p>
       </div>
     </div>

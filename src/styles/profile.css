@@ -1,0 +1,52 @@
+/* profile.css
+   ----------------------------------------------------------------------------
+   Profile: gradient cover, identity header, stat cards, reputation chart and
+   achievements grid. */
+
+.profile-cover {
+  height: 200px;
+  border-radius: var(--radius-lg);
+  background: var(--grad-cover);
+  position: relative;
+}
+.profile-id {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin: -52px var(--space-2) var(--space-5);
+  flex-wrap: wrap;
+}
+.profile-id .pi-avatar {
+  width: 104px; height: 104px; border-radius: 50%;
+  border: 4px solid var(--c-surface); object-fit: cover; background: var(--c-surface);
+}
+.profile-id .pi-main { flex: 1; padding-bottom: var(--space-2); min-width: 220px; }
+.profile-id .pi-name {
+  font-size: 1.5rem; font-weight: 800; margin: 0;
+  display: inline-flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+}
+.profile-id .pi-handle { color: var(--c-text-muted); margin-top: 0.2rem; }
+.profile-id .pi-meta {
+  display: flex; gap: var(--space-4); flex-wrap: wrap;
+  color: var(--c-text-faint); font-size: 0.82rem; margin-top: 0.4rem;
+}
+.profile-id .pi-meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.profile-id .pi-actions { display: flex; gap: var(--space-2); padding-bottom: var(--space-2); }
+
+.section-title-flush { margin-bottom: 0; }
+.ach-count { color: var(--c-text-muted); font-size: 0.85rem; }
+.ach-grid { margin-top: var(--space-1); }
+
+/* Achievements grid */
+.ach-card {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--space-4);
+  height: 100%;
+}
+.ach-card.locked { opacity: 0.5; filter: grayscale(0.5); }
+.ach-card .ach-icon {
+  width: 40px; height: 40px; border-radius: 11px; color: #fff;
+  display: grid; place-items: center; font-size: 1.05rem; margin-bottom: var(--space-3);
+}
+.ach-card .ach-name { font-weight: 700; font-size: 0.92rem; }
+.ach-card .ach-desc { color: var(--c-text-muted); font-size: 0.8rem; }

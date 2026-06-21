@@ -1,72 +1,147 @@
 <script setup>
 /**
- * StudyRoomView — a live study room. On enter we join the room's realtime
- * channel (presence + activity broadcast). The user can post activity which is
- * broadcast to everyone in the room.
+ * StudyRoomView — the live study room (visual mock of a video call, matching the
+ * Figma). Video tiles use portraits/avatars; the Pomodoro timer counts down for
+ * real and the group chat is interactive. No camera/WebRTC is used.
  */
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
-import { useStudyRoomStore } from '../stores/studyRoomStore.js'
-import OnlineUsersPanel from '../components/study/OnlineUsersPanel.vue'
-import ActivityFeed from '../components/study/ActivityFeed.vue'
-import LoadingSpinner from '../components/common/LoadingSpinner.vue'
+import { useI18n } from 'vue-i18n'
+import {
+  sampleRooms,
+  roomParticipants,
+  roomActivity,
+  roomResources,
+  roomChat
+} from '../data/sampleRooms.js'
+import { subjectById } from '../data/sampleSubjects.js'
 
 const route = useRoute()
-const roomStore = useStudyRoomStore()
-const { activeRoom, onlineUsers, activityFeed } = storeToRefs(roomStore)
+const { t } = useI18n()
+const room = computed(() => sampleRooms.find((r) => r.id === route.params.id) || sampleRooms[0])
+const subject = computed(() => subjectById(room.value.subject_id))
 
-const ready = ref(false)
-const message = ref('')
+const participants = roomParticipants
+const activity = roomActivity
+const resources = roomResources
+const messages = ref([...roomChat])
+const draft = ref('')
 
-onMounted(async () => {
-  await roomStore.enterRoom(route.params.id)
-  ready.value = true
+// --- Functional Pomodoro countdown (starts at 18:42 like the mockup) ---
+const seconds = ref(18 * 60 + 42)
+let timer = null
+const pomodoro = computed(() => {
+  const m = Math.floor(seconds.value / 60)
+  const s = seconds.value % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
-onUnmounted(() => roomStore.leaveRoom())
 
-function post() {
-  if (!message.value.trim()) return
-  roomStore.sendActivity(message.value.trim())
-  message.value = ''
+onMounted(() => {
+  timer = setInterval(() => {
+    if (seconds.value > 0) seconds.value--
+  }, 1000)
+})
+onUnmounted(() => clearInterval(timer))
+
+function send() {
+  if (!draft.value.trim()) return
+  messages.value.push({ id: 'user-1', name: 'Minh', time: 'now', text: draft.value.trim(), me: true })
+  draft.value = ''
+}
+
+function initials(name) {
+  return (name || '?').split(' ').map((p) => p[0]).slice(0, 1).join('').toUpperCase()
 }
 </script>
 
 <template>
-  <LoadingSpinner v-if="!ready" label="Joining study room..." />
-
-  <div v-else-if="activeRoom">
-    <div class="page-header">
-      <router-link to="/dashboard" class="text-muted-sm"><i class="bi bi-arrow-left me-1"></i>Dashboard</router-link>
-      <h1 class="mt-1 mb-1">
-        <span class="badge-soft me-2">{{ activeRoom.subject?.code }}</span>{{ activeRoom.name }}
-      </h1>
-      <p>{{ activeRoom.description }}</p>
+  <div>
+    <!-- Header -->
+    <div class="room-top">
+      <div>
+        <div class="rt-crumb">
+          <router-link v-if="subject" :to="{ name: 'subject-hub', params: { id: subject.id } }" class="crumb-link">{{ subject.code }}</router-link>
+          <template v-else>{{ subject?.code }}</template> · Group 4
+        </div>
+        <div class="rt-titlerow">
+          <h2 class="rt-title">{{ room.name }}</h2>
+          <span class="rec-badge"><span class="rec-dot"></span>{{ t('rooms.recLive') }}</span>
+          <span class="rt-students"><i class="bi bi-people"></i>{{ t('rooms.studentsCount', { n: participants.length }) }}</span>
+        </div>
+      </div>
+      <div class="pomodoro">
+        <div class="pm-label"><i class="bi bi-stopwatch"></i>{{ t('rooms.pomodoro') }}</div>
+        <div class="pm-time">{{ pomodoro }}</div>
+      </div>
     </div>
 
     <div class="room-layout">
-      <div>
-        <!-- Shared "whiteboard" / broadcast composer -->
-        <div class="panel mb-4">
-          <div class="section-title"><i class="bi bi-megaphone"></i>Broadcast an update</div>
-          <div class="input-group">
-            <input
-              v-model="message"
-              class="form-control"
-              placeholder="e.g. I just added a note on hash tables"
-              @keyup.enter="post"
-            />
-            <button class="btn btn-brand" @click="post"><i class="bi bi-send me-1"></i>Send</button>
+      <!-- Video stage -->
+      <div class="video-stage">
+        <div class="video-grid">
+          <div
+            v-for="p in participants"
+            :key="p.id"
+            class="video-tile"
+            :class="{ speaking: p.speaking }"
+          >
+            <img v-if="p.cameraOn" :src="p.portrait" class="tile-full" :alt="p.name" />
+            <img v-else :src="p.portrait" class="tile-avatar" :alt="p.name" />
+            <i v-if="p.speaking" class="bi bi-reception-4 tile-signal"></i>
+            <span class="tile-name">{{ p.name }}</span>
+            <span v-if="p.muted" class="tile-mute"><i class="bi bi-mic-mute-fill"></i></span>
           </div>
-          <p class="text-muted-sm mt-2 mb-0">
-            Your message is broadcast to everyone in the room in real time (Supabase broadcast channel).
-          </p>
         </div>
 
-        <ActivityFeed :activities="activityFeed" />
+        <!-- Call controls -->
+        <div class="call-controls">
+          <button class="cc-btn" title="Mute"><i class="bi bi-mic-fill"></i></button>
+          <button class="cc-btn" title="Camera"><i class="bi bi-camera-video-fill"></i></button>
+          <button class="cc-btn primary" title="Share screen"><i class="bi bi-display"></i></button>
+          <button class="cc-btn" title="Reactions"><i class="bi bi-emoji-smile"></i></button>
+          <router-link to="/rooms" class="cc-btn danger" title="Leave"><i class="bi bi-telephone-x-fill"></i></router-link>
+        </div>
       </div>
 
-      <OnlineUsersPanel :users="onlineUsers" title="In this room" />
+      <!-- Right rail -->
+      <div class="room-rail">
+        <div class="panel">
+          <div class="rail-label"><i class="bi bi-activity"></i>{{ t('rooms.liveActivity') }}</div>
+          <div v-for="(a, i) in activity" :key="i" class="activity-line">
+            <span class="al-dot" :style="{ background: a.color }"></span>
+            <span>{{ a.text }}</span>
+            <span class="al-time">{{ a.ago }}</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="rail-label"><i class="bi bi-folder2-open"></i>{{ t('rooms.sharedResources') }}</div>
+          <div v-for="(r, i) in resources" :key="i" class="resource-row">
+            <span class="rr-icon"><i class="bi" :class="r.icon"></i></span>
+            <div>
+              <div class="rr-name">{{ r.name }}</div>
+              <div class="rr-size">{{ r.size }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="rail-label"><i class="bi bi-chat-dots"></i>{{ t('rooms.groupChat') }}</div>
+          <div class="chat-scroll">
+            <div v-for="(m, i) in messages" :key="i" class="chat-msg" :class="{ me: m.me }">
+              <span class="cm-avatar">{{ initials(m.name) }}</span>
+              <div class="cm-body">
+                <div class="cm-meta">{{ m.name }} · {{ m.time }}</div>
+                <div class="cm-bubble">{{ m.text }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <input v-model="draft" :placeholder="t('rooms.messageRoom')" @keyup.enter="send" />
+            <button class="btn btn-brand btn-sm" @click="send"><i class="bi bi-send"></i></button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

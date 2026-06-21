@@ -1,0 +1,77 @@
+/* ai-tools.css
+   ----------------------------------------------------------------------------
+   The editor's AI-tools slide-over drawer, the difficulty heatmap, and the
+   small contextual "→ subject" links added across the app. */
+
+/* ---- Drawer ---- */
+.ai-drawer-wrap { position: fixed; inset: 0; z-index: 1060; }
+.ai-drawer-backdrop {
+  position: absolute; inset: 0; border: 0; padding: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+.ai-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 440px; max-width: 92vw;
+  background: var(--c-bg);
+  border-left: 1px solid var(--c-border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+.ai-drawer-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.ai-drawer-title { font-weight: 800; font-size: 1.05rem; display: flex; align-items: center; gap: 0.45rem; }
+.ai-drawer-title i { color: var(--c-primary); }
+.ai-drawer-sub { color: var(--c-text-muted); font-size: 0.8rem; margin-top: 0.2rem; }
+.ai-drawer-body {
+  flex: 1; overflow-y: auto;
+  padding: var(--space-4) var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-4);
+}
+.ai-drawer-foot {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
+}
+.ai-drawer-cta { width: 100%; }
+
+.ai-fc { padding: var(--space-3) 0; border-bottom: 1px solid var(--c-border); }
+.ai-fc:last-child { border-bottom: none; }
+.ai-fc-q { font-weight: 700; font-size: 0.9rem; }
+.ai-fc-a { color: var(--c-text-muted); font-size: 0.85rem; margin-top: 0.2rem; }
+.tool-empty { color: var(--c-text-muted); font-size: 0.85rem; margin: 0; }
+
+/* Slide-in transition */
+.drawer-enter-active,
+.drawer-leave-active { transition: opacity 0.2s ease; }
+.drawer-enter-active .ai-drawer,
+.drawer-leave-active .ai-drawer { transition: transform 0.25s ease; }
+.drawer-enter-from,
+.drawer-leave-to { opacity: 0; }
+.drawer-enter-from .ai-drawer,
+.drawer-leave-to .ai-drawer { transform: translateX(100%); }
+
+/* ---- Difficulty heatmap ---- */
+.heatmap { display: flex; flex-direction: column; gap: var(--space-3); }
+.heatmap-row { display: flex; align-items: center; gap: var(--space-3); }
+.heatmap-row .hm-label { width: 130px; font-size: 0.82rem; font-weight: 600; }
+.heatmap-bar { flex: 1; height: 10px; border-radius: var(--radius-pill); background: var(--c-surface-2); overflow: hidden; }
+.heatmap-bar .hm-fill { height: 100%; border-radius: var(--radius-pill); }
+.heatmap-row .hm-value { width: 42px; text-align: right; font-size: 0.78rem; font-weight: 700; }
+.hm-pill { margin-left: auto; }
+.hm-explain { color: var(--c-text-muted); font-size: 0.85rem; margin: var(--space-3) 0 0; display: flex; align-items: flex-start; gap: 0.4rem; }
+.hm-explain i { color: var(--c-warning); margin-top: 0.15rem; }
+
+/* ---- Contextual "→ subject" links ---- */
+.eh-crumb-link,
+.crumb-link { color: var(--c-primary); font-weight: 600; }
+.eh-crumb-link:hover,
+.crumb-link:hover { text-decoration: underline; }
+.subject-chip-link { text-decoration: none; }
+.subject-chip-link:hover { background: var(--c-primary-light); color: var(--c-primary-dark); text-decoration: none; }
+.dk-sub-link { color: var(--c-text-faint); text-decoration: none; }
+.dk-sub-link:hover { color: var(--c-primary); text-decoration: none; }

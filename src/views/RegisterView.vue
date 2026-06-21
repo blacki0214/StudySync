@@ -10,6 +10,10 @@ import {
   validateFullName,
   firstError
 } from '../utils/validation.js'
+import logoMark from '../assets/images/logo-mark.png'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -29,7 +33,7 @@ async function submit() {
 
   try {
     await auth.register({ email: email.value, password: password.value, fullName: fullName.value })
-    router.push('/dashboard')
+    router.push('/hub')
   } catch (e) {
     error.value = auth.error || 'Registration failed.'
   }
@@ -39,49 +43,50 @@ async function submit() {
 <template>
   <div class="auth-wrap">
     <aside class="auth-aside">
-      <h2>Join StudySync 🚀</h2>
-      <p class="mb-4">Create a free account and start collaborating with classmates today.</p>
+      <div class="auth-brand"><img :src="logoMark" alt="StudySync logo" />StudySync</div>
+      <h2>{{ t('auth.joinTitle') }}</h2>
+      <p class="auth-aside-sub">{{ t('auth.joinSub') }}</p>
       <ul>
-        <li><i class="bi bi-check-circle-fill"></i> Share and co-edit subject notes</li>
-        <li><i class="bi bi-check-circle-fill"></i> Turn notes into flashcards instantly</li>
-        <li><i class="bi bi-check-circle-fill"></i> Climb the contributor leaderboard</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat1') }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat2') }}</li>
+        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat3') }}</li>
       </ul>
     </aside>
 
     <div class="auth-form-panel">
       <div class="auth-card">
-        <h1>Create account</h1>
-        <p class="auth-sub">It only takes a moment.</p>
+        <h1>{{ t('auth.register') }}</h1>
+        <p class="auth-sub">{{ t('auth.registerSub') }}</p>
 
         <div v-if="!isSupabaseConfigured" class="demo-hint">
-          <i class="bi bi-info-circle me-1"></i>
-          <strong>Demo mode:</strong> accounts are stored locally for this session.
+          <i class="bi bi-info-circle"></i>
+          {{ t('auth.demoRegister') }}
         </div>
 
         <form @submit.prevent="submit">
           <div class="form-group">
-            <label>Full name</label>
-            <input v-model="fullName" type="text" class="form-control" placeholder="Nguyen Van A" />
+            <label>{{ t('auth.fullName') }}</label>
+            <input v-model="fullName" type="text" class="form-control" :placeholder="t('auth.namePlaceholder')" />
           </div>
           <div class="form-group">
-            <label>Email</label>
-            <input v-model="email" type="email" class="form-control" placeholder="you@university.edu.vn" />
+            <label>{{ t('auth.email') }}</label>
+            <input v-model="email" type="email" class="form-control" :placeholder="t('auth.emailPlaceholder')" />
           </div>
           <div class="form-group">
-            <label>Password</label>
-            <input v-model="password" type="password" class="form-control" placeholder="At least 6 characters" />
+            <label>{{ t('auth.password') }}</label>
+            <input v-model="password" type="password" class="form-control" :placeholder="t('auth.passwordPlaceholder')" />
           </div>
 
-          <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</p>
+          <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle"></i>{{ error }}</p>
 
-          <button class="btn btn-brand w-100" :disabled="auth.loading">
-            <span v-if="auth.loading" class="spinner-border spinner-border-sm me-2"></span>
-            Create account
+          <button class="btn btn-brand auth-submit" :disabled="auth.loading">
+            <span v-if="auth.loading" class="spinner-border spinner-border-sm"></span>
+            {{ t('auth.register') }}
           </button>
         </form>
 
         <p class="auth-alt">
-          Already registered? <router-link to="/login">Log in</router-link>
+          {{ t('auth.alreadyRegistered') }} <router-link to="/login">{{ t('auth.login') }}</router-link>
         </p>
       </div>
     </div>
