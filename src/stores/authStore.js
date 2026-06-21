@@ -18,7 +18,11 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.user),
-    displayName: (state) => state.user?.full_name || 'Guest'
+    displayName: (state) => state.user?.full_name || 'Guest',
+    // Role drives navigation + route guards. Defaults to 'student' when unset.
+    role: (state) => state.user?.role || 'student',
+    isTeacher: (state) => state.user?.role === 'teacher',
+    isStudent: (state) => (state.user?.role || 'student') === 'student'
   },
 
   actions: {

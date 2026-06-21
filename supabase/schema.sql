@@ -72,6 +72,10 @@ create table public.subjects (
   notes_count  int  not null default 0,
   students     int  not null default 0,
   progress     int  not null default 0,   -- simplified (per-user in a real app)
+  owner_id     uuid references public.profiles(id) on delete set null,  -- null = seed/public
+  owner_type   text default 'public',      -- personal | class | public
+  visibility   text default 'public',      -- private | class | public
+  class_id     uuid,                        -- FK wired in Phase 2
   created_at   timestamptz not null default now()
 );
 
@@ -149,6 +153,23 @@ create table public.quizzes (
   created_at      timestamptz not null default now()
 );
 
+-- 8b. documents (NotebookLM-style sources added into a subject) --------------
+create table public.documents (
+  id            uuid primary key default gen_random_uuid(),
+  subject_id    uuid references public.subjects(id) on delete cascade,
+  class_id      uuid,                              -- FK wired in Phase 2
+  owner_id      uuid references public.profiles(id) on delete set null,
+  title         text not null,
+  source_type   text default 'text',              -- text | pdf | file | link
+  file_path     text,                             -- Supabase Storage path (null in demo)
+  source_url    text,
+  extracted_text text default '',
+  char_count    int default 0,
+  status        text default 'ready',             -- pending | extracting | ready | error
+  visibility    text default 'private',           -- private | class | public
+  created_at    timestamptz not null default now()
+);
+
 -- 9. study_rooms -------------------------------------------------------------
 create table public.study_rooms (
   id           uuid primary key default gen_random_uuid(),
@@ -211,6 +232,7 @@ create table public.activities (
 -- ----------------------------------------------------------------------------
 alter publication supabase_realtime add table public.notes;
 alter publication supabase_realtime add table public.note_versions;
+alter publication supabase_realtime add table public.documents;
 
 -- ----------------------------------------------------------------------------
 -- Row Level Security. Reads are public (it's a sharing platform); writes are
@@ -230,6 +252,7 @@ alter table public.community_posts enable row level security;
 alter table public.trending_topics enable row level security;
 alter table public.achievements    enable row level security;
 alter table public.activities      enable row level security;
+alter table public.documents       enable row level security;
 
 -- Public read for everything the app displays.
 do $$
@@ -258,3 +281,24 @@ create policy "auth insert activity"  on public.activities    for insert to auth
 -- Profiles: anyone can create their row on sign-up; you may only edit your own.
 create policy "insert own profile" on public.profiles for insert with check (true);
 create policy "update own profile" on public.profiles for update using (auth.uid() = auth_id or auth.uid() = id);
+
+-- Subjects: public read (above) + owners manage their own.
+create policy "insert own subject" on public.subjects for insert to authenticated with check (owner_id = auth.uid());
+create policy "update own subject" on public.subjects for update to authenticated using (owner_id = auth.uid());
+create policy "delete own subject" on public.subjects for delete to authenticated using (owner_id = auth.uid());
+
+-- Documents: owner-only in Phase 1 (class sharing broadens this in Phase 2).
+create policy "doc owner read"   on public.documents for select using (owner_id = auth.uid() or visibility = 'public');
+create policy "doc owner insert" on public.documents for insert to authenticated with check (owner_id = auth.uid());
+create policy "doc owner update" on public.documents for update to authenticated using (owner_id = auth.uid());
+create policy "doc owner delete" on public.documents for delete to authenticated using (owner_id = auth.uid());
+
+-- Storage bucket for uploaded source files (private; owner-scoped objects).
+insert into storage.buckets (id, name, public) values ('documents', 'documents', false)
+  on conflict (id) do nothing;
+create policy "documents upload own" on storage.objects for insert to authenticated
+  with check (bucket_id = 'documents' and owner = auth.uid());
+create policy "documents read own" on storage.objects for select to authenticated
+  using (bucket_id = 'documents' and owner = auth.uid());
+create policy "documents delete own" on storage.objects for delete to authenticated
+  using (bucket_id = 'documents' and owner = auth.uid());

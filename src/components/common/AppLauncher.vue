@@ -4,12 +4,17 @@
  * Opens a popover grid of colourful feature tiles; each navigates to that
  * feature's own full page. Uses a Bootstrap dropdown (auto-closes on select).
  */
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '../../stores/authStore.js'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 
-const features = [
+// `roles` (optional) limits a tile to specific roles; tiles without it show to all.
+const allFeatures = [
   { to: '/hub', icon: 'bi-compass', grad: 'grad-blue', key: 'nav.hub' },
+  { to: '/my-subjects', icon: 'bi-folder-fill', grad: 'grad-blue', key: 'nav.mySubjects' },
   { to: '/subjects', icon: 'bi-journal-bookmark-fill', grad: 'grad-green', key: 'nav.subjects' },
   { to: '/notes', icon: 'bi-file-earmark-text', grad: 'grad-fuchsia', key: 'nav.collabNotes' },
   { to: '/rooms', icon: 'bi-people-fill', grad: 'grad-orange', key: 'nav.studyRooms' },
@@ -17,6 +22,10 @@ const features = [
   { to: '/community', icon: 'bi-chat-square-text-fill', grad: 'grad-fuchsia', key: 'nav.community' },
   { to: '/profile', icon: 'bi-person-fill', grad: 'grad-green', key: 'nav.profile' }
 ]
+
+const features = computed(() =>
+  allFeatures.filter((f) => !f.roles || f.roles.includes(auth.role))
+)
 </script>
 
 <template>

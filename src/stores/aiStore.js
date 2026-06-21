@@ -36,6 +36,17 @@ export const useAiStore = defineStore('ai', {
       this.summary = extractKeySentences(content, this.keywords, 4)
     },
 
+    /**
+     * Analyse a set of documents (NotebookLM-style sources) as one corpus:
+     * concatenate their extracted text and run the same generators.
+     * @param {Array<{extracted_text?: string}>} docs
+     */
+    analyzeDocuments(docs) {
+      const corpus = (docs || []).map((d) => d.extracted_text || '').join('\n\n').trim()
+      this.analyze(corpus)
+      return corpus
+    },
+
     generateFlashcardsOnly(content) {
       this.flashcards = generateFlashcards(content, { maxCards: 12 })
       return this.flashcards

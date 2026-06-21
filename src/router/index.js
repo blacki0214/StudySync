@@ -23,7 +23,9 @@ const routes = [
   { path: '/hub', name: 'hub', component: () => import('../views/HubView.vue') },
   { path: '/dashboard', redirect: '/hub' }, // backwards-compatible redirect
   { path: '/subjects', name: 'subjects', component: () => import('../views/SubjectsView.vue') },
+  { path: '/my-subjects', name: 'my-subjects', component: () => import('../views/MySubjectsView.vue') },
   { path: '/subjects/:id', name: 'subject-hub', component: () => import('../views/SubjectHubView.vue'), props: true },
+  { path: '/subjects/:id/workspace', name: 'subject-workspace', component: () => import('../views/SubjectWorkspaceView.vue'), props: true },
   { path: '/notes', name: 'notes', component: () => import('../views/NotesView.vue') },
   { path: '/notes/:id', name: 'note-detail', component: () => import('../views/NoteDetailView.vue'), props: true },
   { path: '/rooms', name: 'rooms', component: () => import('../views/StudyRoomsView.vue') },
@@ -54,6 +56,10 @@ router.beforeEach(async (to) => {
   }
   // Prevent logged-in users from seeing login/register.
   if ((to.name === 'login' || to.name === 'register') && auth.isAuthenticated) {
+    return { name: 'hub' }
+  }
+  // Role-gated routes (e.g. teacher-only Classes area). Bounce to the hub.
+  if (to.meta.requireRole && auth.role !== to.meta.requireRole) {
     return { name: 'hub' }
   }
   return true
