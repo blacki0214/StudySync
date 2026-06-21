@@ -14,6 +14,10 @@ import { classService } from '../services/classService.js'
 import { timeAgo } from '../utils/formatDate.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
+import ClassNotesTab from '../components/classes/ClassNotesTab.vue'
+import ClassDocumentsTab from '../components/classes/ClassDocumentsTab.vue'
+import ClassAssignmentsTab from '../components/classes/ClassAssignmentsTab.vue'
+import ClassGradebookTab from '../components/classes/ClassGradebookTab.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
@@ -113,7 +117,11 @@ async function destroy() {
 
     <div class="text-tabs">
       <button class="text-tab" :class="{ active: tab==='announcements' }" @click="tab='announcements'">{{ t('classes.announcements') }}</button>
+      <button class="text-tab" :class="{ active: tab==='notes' }" @click="tab='notes'">{{ t('classes.notes') }}</button>
+      <button class="text-tab" :class="{ active: tab==='documents' }" @click="tab='documents'">{{ t('classes.documents') }}</button>
+      <button class="text-tab" :class="{ active: tab==='assignments' }" @click="tab='assignments'">{{ t('classes.assignments') }}</button>
       <button class="text-tab" :class="{ active: tab==='roster' }" @click="tab='roster'">{{ t('classes.roster') }} <span class="seg-count">{{ roster.length }}</span></button>
+      <button v-if="isOwner" class="text-tab" :class="{ active: tab==='gradebook' }" @click="tab='gradebook'">{{ t('classes.gradebook') }}</button>
     </div>
 
     <!-- Announcements -->
@@ -144,8 +152,14 @@ async function destroy() {
       </div>
     </div>
 
+    <!-- Notes / Documents / Assignments / Gradebook -->
+    <ClassNotesTab v-else-if="tab==='notes'" :class-id="props.id" />
+    <ClassDocumentsTab v-else-if="tab==='documents'" :class-id="props.id" />
+    <ClassAssignmentsTab v-else-if="tab==='assignments'" :class-id="props.id" :is-owner="isOwner" />
+    <ClassGradebookTab v-else-if="tab==='gradebook' && isOwner" :class-id="props.id" />
+
     <!-- Roster -->
-    <div v-else>
+    <div v-else-if="tab==='roster'">
       <EmptyState v-if="!roster.length" icon="bi-people" :title="t('classes.noStudents')" :message="isOwner ? t('classes.shareCode', { code: cls.code }) : ''" />
       <div v-else class="panel roster">
         <div v-for="m in roster" :key="m.id" class="roster-row">

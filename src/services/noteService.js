@@ -21,17 +21,18 @@ let demoIdCounter = 1000
 const nextDemoId = (prefix) => `${prefix}-${++demoIdCounter}`
 
 export const noteService = {
-  /** List notes, optionally filtered by subject. */
-  async listNotes({ subjectId } = {}) {
+  /** List notes, optionally filtered by subject and/or class. */
+  async listNotes({ subjectId, classId } = {}) {
     if (!isSupabaseConfigured) {
-      const notes = subjectId
-        ? demoNotes.filter((n) => n.subject_id === subjectId)
-        : demoNotes
+      let notes = demoNotes
+      if (subjectId) notes = notes.filter((n) => n.subject_id === subjectId)
+      if (classId) notes = notes.filter((n) => n.class_id === classId)
       return [...notes].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
     }
 
     let query = supabase.from('notes').select('*').order('updated_at', { ascending: false })
     if (subjectId) query = query.eq('subject_id', subjectId)
+    if (classId) query = query.eq('class_id', classId)
     const { data, error } = await query
     if (error) throw error
     return data
@@ -48,12 +49,13 @@ export const noteService = {
   },
 
   /** Create a new note (version starts at 1). */
-  async createNote({ subjectId, authorId, title, content, visibility = 'public' }) {
+  async createNote({ subjectId, classId = null, authorId, title, content, visibility = 'public' }) {
     const now = new Date().toISOString()
     if (!isSupabaseConfigured) {
       const note = {
         id: nextDemoId('note'),
         subject_id: subjectId,
+        class_id: classId,
         author_id: authorId,
         title,
         content,
@@ -71,6 +73,7 @@ export const noteService = {
       .from('notes')
       .insert({
         subject_id: subjectId,
+        class_id: classId,
         author_id: authorId,
         title,
         content,

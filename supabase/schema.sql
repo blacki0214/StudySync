@@ -14,6 +14,9 @@
 -- ============================================================================
 
 -- Reset (safe to re-run). Order matters because of foreign keys.
+drop table if exists public.quiz_attempts    cascade;
+drop table if exists public.submissions      cascade;
+drop table if exists public.assignments      cascade;
 drop table if exists public.class_announcements cascade;
 drop table if exists public.class_members   cascade;
 drop table if exists public.classes         cascade;
@@ -95,6 +98,7 @@ create table public.study_stats (
 create table public.notes (
   id            uuid primary key default gen_random_uuid(),
   subject_id    uuid references public.subjects (id) on delete set null,
+  class_id      uuid,                          -- FK added with classes (Phase 3)
   author_id     uuid references public.profiles (id) on delete set null,
   title         text not null,
   week          text,
@@ -269,6 +273,48 @@ returns boolean language sql security definer stable set search_path = public as
       or exists (select 1 from public.classes where id = cid and owner_id = auth.uid());
 $$;
 
+-- 14. assignments + submissions + quiz attempts (Phase 3) --------------------
+create table public.assignments (
+  id                 uuid primary key default gen_random_uuid(),
+  class_id           uuid references public.classes(id) on delete cascade,
+  author_id          uuid references public.profiles(id) on delete set null,
+  title              text not null,
+  instructions       text,
+  type               text default 'text',     -- text | quiz
+  source_document_id uuid references public.documents(id) on delete set null,
+  due_at             timestamptz,
+  created_at         timestamptz not null default now()
+);
+create table public.submissions (
+  id            uuid primary key default gen_random_uuid(),
+  assignment_id uuid references public.assignments(id) on delete cascade,
+  user_id       uuid references public.profiles(id) on delete cascade,
+  content       text,
+  answers       jsonb default '[]',
+  score         int,
+  total         int,
+  graded        boolean default false,
+  created_at    timestamptz not null default now(),
+  unique (assignment_id, user_id)
+);
+create table public.quiz_attempts (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references public.profiles(id) on delete cascade,
+  subject_id  uuid references public.subjects(id) on delete set null,
+  document_id uuid references public.documents(id) on delete set null,
+  class_id    uuid references public.classes(id) on delete set null,
+  score       int,
+  total       int,
+  created_at  timestamptz not null default now()
+);
+create or replace function public.is_assignment_owner(aid uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from public.assignments a join public.classes c on c.id = a.class_id
+    where a.id = aid and c.owner_id = auth.uid()
+  );
+$$;
+
 -- ----------------------------------------------------------------------------
 -- Realtime: publish the tables the editor/rooms subscribe to.
 -- ----------------------------------------------------------------------------
@@ -330,8 +376,8 @@ create policy "insert own subject" on public.subjects for insert to authenticate
 create policy "update own subject" on public.subjects for update to authenticated using (owner_id = auth.uid());
 create policy "delete own subject" on public.subjects for delete to authenticated using (owner_id = auth.uid());
 
--- Documents: owner-only in Phase 1 (class sharing broadens this in Phase 2).
-create policy "doc owner read"   on public.documents for select using (owner_id = auth.uid() or visibility = 'public');
+-- Documents: owner, public, or any member of the document's class can read.
+create policy "doc owner read"   on public.documents for select using (owner_id = auth.uid() or visibility = 'public' or public.is_class_member(class_id));
 create policy "doc owner insert" on public.documents for insert to authenticated with check (owner_id = auth.uid());
 create policy "doc owner update" on public.documents for update to authenticated using (owner_id = auth.uid());
 create policy "doc owner delete" on public.documents for delete to authenticated using (owner_id = auth.uid());
@@ -366,3 +412,21 @@ create policy "members delete" on public.class_members for delete to authenticat
 create policy "ann read"   on public.class_announcements for select using (public.is_class_member(class_id));
 create policy "ann insert" on public.class_announcements for insert to authenticated with check (public.is_class_owner(class_id));
 create policy "ann delete" on public.class_announcements for delete to authenticated using (public.is_class_owner(class_id));
+
+-- Assignments + submissions + quiz attempts (Phase 3).
+alter table public.assignments   enable row level security;
+alter table public.submissions   enable row level security;
+alter table public.quiz_attempts enable row level security;
+
+create policy "assign read"   on public.assignments for select using (public.is_class_member(class_id));
+create policy "assign write"  on public.assignments for insert to authenticated with check (public.is_class_owner(class_id));
+create policy "assign update" on public.assignments for update to authenticated using (public.is_class_owner(class_id));
+create policy "assign delete" on public.assignments for delete to authenticated using (public.is_class_owner(class_id));
+
+create policy "sub read"   on public.submissions for select using (user_id = auth.uid() or public.is_assignment_owner(assignment_id));
+create policy "sub insert" on public.submissions for insert to authenticated with check (user_id = auth.uid());
+create policy "sub update" on public.submissions for update to authenticated using (user_id = auth.uid() or public.is_assignment_owner(assignment_id));
+create policy "sub delete" on public.submissions for delete to authenticated using (user_id = auth.uid() or public.is_assignment_owner(assignment_id));
+
+create policy "attempt read"   on public.quiz_attempts for select using (user_id = auth.uid() or public.is_class_owner(class_id));
+create policy "attempt insert" on public.quiz_attempts for insert to authenticated with check (user_id = auth.uid());

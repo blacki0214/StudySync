@@ -62,3 +62,52 @@
   text-transform: uppercase; margin-bottom: var(--space-3);
 }
 .join-back { display: inline-block; margin-top: var(--space-4); font-size: 0.9rem; color: var(--c-text-muted); }
+
+/* Class content tabs (notes/documents/assignments) */
+.tab-toolbar { display: flex; justify-content: flex-end; margin-bottom: var(--space-3); }
+.inline-create { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+.inline-create .form-control { flex: 1; }
+.class-list-row { text-decoration: none; color: inherit; }
+.class-list-row:hover { text-decoration: none; background: var(--c-surface-2); }
+
+/* Assignment cards */
+.assign-card {
+  background: var(--c-surface); border: 1px solid var(--c-border);
+  border-radius: var(--radius); padding: var(--space-4); margin-bottom: var(--space-3);
+}
+.assign-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.assign-title { font-weight: 700; font-size: 1.05rem; }
+.assign-desc { color: var(--c-text-muted); font-size: 0.9rem; margin: 0.2rem 0 var(--space-3); white-space: pre-wrap; }
+.assign-foot { display: flex; gap: var(--space-2); }
+.assign-instructions { color: var(--c-text-muted); margin-bottom: var(--space-4); white-space: pre-wrap; }
+
+/* Quiz runner */
+.quiz-q { margin-bottom: var(--space-4); }
+.quiz-q-text { font-weight: 600; margin-bottom: var(--space-2); }
+.quiz-opt {
+  display: flex; align-items: center; gap: var(--space-2);
+  border: 1px solid var(--c-border-strong); border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem; margin-bottom: 6px; cursor: pointer;
+}
+.quiz-opt:hover { background: var(--c-surface-2); }
+.quiz-opt.on { border-color: var(--c-primary); background: var(--c-primary-light); }
+.quiz-result { text-align: center; padding: var(--space-5) 0; }
+.qr-score { font-size: 2.4rem; font-weight: 800; color: var(--c-primary); }
+
+/* Submissions panel */
+.sub-row { border-bottom: 1px solid var(--c-border); padding: var(--space-3) 0; }
+.sub-row:last-child { border-bottom: none; }
+.sub-head { display: flex; align-items: center; gap: var(--space-2); }
+.sub-content { margin: var(--space-2) 0; color: var(--c-text); white-space: pre-wrap; background: var(--c-surface-2); border-radius: var(--radius-sm); padding: var(--space-3); }
+.sub-grade { display: flex; gap: var(--space-2); align-items: center; }
+.sub-grade-input { max-width: 120px; }
+
+/* Gradebook table */
+.gradebook-wrap { overflow-x: auto; }
+.gradebook { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.gradebook th, .gradebook td { padding: 0.6rem 0.8rem; text-align: center; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+.gradebook th { color: var(--c-text-muted); font-weight: 700; text-align: center; }
+.gradebook .gb-student { text-align: left; display: flex; align-items: center; gap: var(--space-2); }
+.gradebook td.gb-student { font-weight: 600; }
+.gradebook .roster-avatar { width: 28px; height: 28px; font-size: 0.68rem; }
+.gradebook .gb-cell { font-variant-numeric: tabular-nums; }

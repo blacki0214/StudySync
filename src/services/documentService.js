@@ -47,20 +47,47 @@ export const documentService = {
     return data
   },
 
+  /** Fetch a single document by id. */
+  async getDocument(id) {
+    if (!isSupabaseConfigured) return readDemo().find((d) => d.id === id) || null
+    const { data, error } = await supabase.from('documents').select('*').eq('id', id).single()
+    if (error) throw error
+    return data
+  },
+
+  /** List a class's shared documents, newest first. */
+  async listByClass(classId) {
+    if (!isSupabaseConfigured) {
+      return readDemo()
+        .filter((d) => d.class_id === classId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    }
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('class_id', classId)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return data
+  },
+
   /**
    * Create a document from already-extracted text. Pass `file` (live mode only)
-   * to also upload the original to Storage.
+   * to also upload the original to Storage. `classId` shares it with a class
+   * (its visibility becomes 'class').
    */
-  async createDocument({ subjectId, ownerId, title, sourceType = 'text', sourceUrl = null, text = '', file = null }) {
+  async createDocument({ subjectId = null, classId = null, ownerId, title, sourceType = 'text', sourceUrl = null, text = '', file = null }) {
     const row = {
       subject_id: subjectId,
+      class_id: classId,
       owner_id: ownerId,
       title: (title || 'Untitled source').trim(),
       source_type: sourceType,
       source_url: sourceUrl,
       extracted_text: text,
       char_count: text.length,
-      status: 'ready'
+      status: 'ready',
+      visibility: classId ? 'class' : 'private'
     }
 
     if (!isSupabaseConfigured) {
