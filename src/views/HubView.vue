@@ -23,16 +23,25 @@ const content = useContentStore()
 const { t } = useI18n()
 onMounted(() => content.ensureLoaded())
 
-const dateLine = 'Saturday, June 6 · 09:42'
+// Today's date, formatted from the device clock (no hardcoded date).
+const dateLine = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 // Vietnamese given name is the FIRST token (e.g. "Minh Nguyễn" -> "Minh").
-const firstName = computed(() => (auth.user?.full_name || 'Minh').split(' ')[0])
+const firstName = computed(() => (auth.user?.full_name || '').split(' ')[0] || 'there')
 
-// Computed so the labels/deltas re-translate when the language changes.
+// Total focus hours this week, summed from the real study_stats series.
+const studyHours = computed(() => {
+  const v = content.weeklyFocus?.values || []
+  return Math.round(v.reduce((a, b) => a + b, 0) * 10) / 10
+})
+// Notes authored by the signed-in user.
+const myNotesCount = computed(() => content.notes.filter((n) => n.author_id === auth.user?.id).length)
+
+// Real headline metrics — no fake deltas. Cards with no data simply show 0 / —.
 const stats = computed(() => [
-  { label: t('dashboard.contributionScore'), value: '2,480', icon: 'bi-trophy', grad: 'grad-blue', delta: t('dashboard.deltaThisWeek', { n: 128 }), deltaType: 'up' },
-  { label: t('dashboard.notesShared'), value: '47', icon: 'bi-file-earmark-text', grad: 'grad-fuchsia', delta: t('dashboard.thisMonthN', { n: 12 }), deltaType: 'muted' },
-  { label: t('dashboard.studyHours'), value: '19.5h', icon: 'bi-clock', grad: 'grad-green', delta: t('dashboard.vsLastWeek', { n: 22 }), deltaType: 'up' },
-  { label: t('dashboard.reputation'), value: 'Gold IV', icon: 'bi-graph-up-arrow', grad: 'grad-orange', delta: t('dashboard.topInVietnam'), deltaType: 'muted' }
+  { label: t('dashboard.contributionScore'), value: (auth.user?.reputation ?? 0).toLocaleString(), icon: 'bi-trophy', grad: 'grad-blue' },
+  { label: t('dashboard.notesShared'), value: myNotesCount.value, icon: 'bi-file-earmark-text', grad: 'grad-fuchsia' },
+  { label: t('dashboard.studyHours'), value: studyHours.value + 'h', icon: 'bi-clock', grad: 'grad-green' },
+  { label: t('dashboard.reputation'), value: auth.user?.tier || '—', icon: 'bi-graph-up-arrow', grad: 'grad-orange' }
 ])
 
 const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0).slice(0, 4))
@@ -52,7 +61,7 @@ function rankClass(i) {
       <div class="dash-greeting">
         <div class="eyebrow">{{ dateLine }}</div>
         <h1>{{ t('dashboard.greeting', { name: firstName }) }} <span>👋</span></h1>
-        <p class="greet-sub">{{ t('dashboard.streakLine', { days: auth.user?.streak || 14 }) }}</p>
+        <p class="greet-sub">{{ t('dashboard.streakLine', { days: auth.user?.streak || 0 }) }}</p>
       </div>
       <div class="action-row">
         <button class="btn btn-outline-soft"><i class="bi bi-calendar3"></i>{{ t('dashboard.schedule') }}</button>
@@ -80,7 +89,7 @@ function rankClass(i) {
           <div class="chart-card-head">
             <div>
               <h3>{{ t('dashboard.weeklyFocus') }}</h3>
-              <div class="chart-sub">{{ t('dashboard.weeklyFocusSub', { hours: '19.5', pct: 22 }) }}</div>
+              <div class="chart-sub">{{ t('dashboard.weeklyFocusSub', { hours: studyHours }) }}</div>
             </div>
             <span class="badge-soft">{{ t('dashboard.thisWeek') }}</span>
           </div>

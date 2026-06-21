@@ -55,7 +55,7 @@ export default {
 
   dashboard: {
     greeting: 'Chào buổi sáng, {name}',
-    streakLine: 'Bạn đang có chuỗi 🔥 {days} ngày liên tục. Ba buổi học đang chờ.',
+    streakLine: 'Bạn đang có chuỗi 🔥 {days} ngày liên tục.',
     schedule: 'Lịch học',
     newNote: 'Ghi chú mới',
     contributionScore: 'Điểm đóng góp',
@@ -67,7 +67,7 @@ export default {
     vsLastWeek: '↑ {n}% so với tuần trước',
     topInVietnam: 'Top 4% tại Việt Nam',
     weeklyFocus: 'Thời gian tập trung trong tuần',
-    weeklyFocusSub: '{hours} giờ · ↑ {pct}% so với tuần trước',
+    weeklyFocusSub: '{hours} giờ tuần này',
     thisWeek: 'Tuần này',
     upcomingSessions: 'Buổi học sắp tới',
     joining: '{n} người tham gia',
@@ -261,7 +261,7 @@ export default {
   },
 
   profile: {
-    joined: 'Tham gia tháng 8/2024',
+    joined: 'Tham gia {date}',
     reputationMeta: '{n} uy tín',
     share: 'Chia sẻ',
     edit: 'Sửa hồ sơ',
@@ -276,7 +276,7 @@ export default {
     last12: '12 tháng qua',
     ytd: '+{n} từ đầu năm',
     achievements: 'Thành tích',
-    unlockedOf: 'Đã mở {n} trong 24'
+    unlockedOf: 'Đã mở {n} trong {total}'
   },
 
   auth: {
@@ -291,7 +291,7 @@ export default {
     email: 'Email',
     password: 'Mật khẩu',
     fullName: 'Họ và tên',
-    emailPlaceholder: 'ban@truonghoc.edu.vn',
+    emailPlaceholder: "ban{'@'}truonghoc.edu.vn",
     namePlaceholder: 'Nguyễn Văn A',
     passwordPlaceholder: 'Ít nhất 6 ký tự',
     noAccount: 'Chưa có tài khoản?',

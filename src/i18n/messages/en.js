@@ -55,7 +55,7 @@ export default {
 
   dashboard: {
     greeting: 'Good morning, {name}',
-    streakLine: "You're on a 🔥 {days}-day streak. Three study sessions await.",
+    streakLine: "You're on a 🔥 {days}-day streak.",
     schedule: 'Schedule',
     newNote: 'New note',
     contributionScore: 'Contribution score',
@@ -67,7 +67,7 @@ export default {
     vsLastWeek: '↑ {n}% vs last week',
     topInVietnam: 'Top 4% in Vietnam',
     weeklyFocus: 'Weekly focus time',
-    weeklyFocusSub: '{hours} hours · ↑ {pct}% from last week',
+    weeklyFocusSub: '{hours} hours this week',
     thisWeek: 'This week',
     upcomingSessions: 'Upcoming sessions',
     joining: '{n} joining',
@@ -261,7 +261,7 @@ export default {
   },
 
   profile: {
-    joined: 'Joined Aug 2024',
+    joined: 'Joined {date}',
     reputationMeta: '{n} reputation',
     share: 'Share',
     edit: 'Edit profile',
@@ -276,7 +276,7 @@ export default {
     last12: 'Last 12 months',
     ytd: '+{n} YTD',
     achievements: 'Achievements',
-    unlockedOf: '{n} unlocked of 24'
+    unlockedOf: '{n} unlocked of {total}'
   },
 
   auth: {
@@ -291,7 +291,7 @@ export default {
     email: 'Email',
     password: 'Password',
     fullName: 'Full name',
-    emailPlaceholder: 'you@university.edu.vn',
+    emailPlaceholder: "you{'@'}university.edu.vn",
     namePlaceholder: 'Nguyen Van A',
     passwordPlaceholder: 'At least 6 characters',
     noAccount: 'No account?',
