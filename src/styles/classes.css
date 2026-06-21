@@ -1,0 +1,64 @@
+/* classes.css
+   ----------------------------------------------------------------------------
+   Classes list, class detail (roster + announcements) and the join page. */
+
+.class-section { margin-bottom: var(--space-6); }
+
+.class-card {
+  display: block;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.class-card:hover { text-decoration: none; box-shadow: var(--shadow); border-color: var(--c-border-strong); }
+.class-badge { width: 46px; height: 46px; font-size: 0.95rem; margin-bottom: var(--space-3); }
+.class-name { font-weight: 700; font-size: 1.05rem; color: var(--c-text); }
+.class-desc { color: var(--c-text-muted); font-size: 0.85rem; margin: 0.2rem 0 var(--space-3); min-height: 1.2em; }
+.class-foot { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Announcements */
+.announce-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.announce-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.announce-avatar { width: 30px; height: 30px; font-size: 0.72rem; }
+.announce-author { font-weight: 700; font-size: 0.9rem; }
+.announce-ago { font-size: 0.78rem; color: var(--c-text-faint); }
+.announce-del {
+  margin-left: auto; border: none; background: none; color: var(--c-text-faint);
+  width: 28px; height: 28px; border-radius: 7px;
+}
+.announce-del:hover { color: var(--c-danger); background: var(--c-surface-2); }
+.announce-body { color: var(--c-text); line-height: 1.5; white-space: pre-wrap; }
+
+/* Roster */
+.roster { display: flex; flex-direction: column; gap: 2px; }
+.roster-row { display: flex; align-items: center; gap: var(--space-3); padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--c-border); }
+.roster-row:last-child { border-bottom: none; }
+.roster-avatar { width: 34px; height: 34px; font-size: 0.78rem; }
+.roster-name { font-weight: 600; }
+.roster-spacer { flex: 1; }
+
+/* Join page */
+.join-wrap { display: grid; place-items: center; padding: var(--space-8) var(--space-4); }
+.join-card { width: 100%; max-width: 420px; text-align: center; }
+.join-icon {
+  width: 60px; height: 60px; border-radius: 50%; margin: 0 auto var(--space-4);
+  display: grid; place-items: center; font-size: 1.6rem; color: #fff; background: var(--grad-button);
+}
+.join-card h1 { font-size: 1.4rem; margin-bottom: var(--space-2); }
+.join-sub { color: var(--c-text-muted); margin-bottom: var(--space-5); }
+.join-code-input {
+  text-align: center; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.3em;
+  text-transform: uppercase; margin-bottom: var(--space-3);
+}
+.join-back { display: inline-block; margin-top: var(--space-4); font-size: 0.9rem; color: var(--c-text-muted); }

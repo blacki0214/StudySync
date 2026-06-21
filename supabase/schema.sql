@@ -14,6 +14,10 @@
 -- ============================================================================
 
 -- Reset (safe to re-run). Order matters because of foreign keys.
+drop table if exists public.class_announcements cascade;
+drop table if exists public.class_members   cascade;
+drop table if exists public.classes         cascade;
+drop table if exists public.documents       cascade;
 drop table if exists public.activities      cascade;
 drop table if exists public.user_achievements cascade;
 drop table if exists public.achievements    cascade;
@@ -227,12 +231,51 @@ create table public.activities (
   created_at  timestamptz not null default now()
 );
 
+-- 13. classes + enrollment + announcements (Phase 2) -------------------------
+create table public.classes (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null references public.profiles(id) on delete cascade,
+  name        text not null,
+  description text,
+  code        text unique not null,        -- short join code
+  color       text default 'grad-blue',
+  archived    boolean default false,
+  created_at  timestamptz not null default now()
+);
+create table public.class_members (
+  id        uuid primary key default gen_random_uuid(),
+  class_id  uuid references public.classes(id) on delete cascade,
+  user_id   uuid references public.profiles(id) on delete cascade,
+  role      text default 'member',          -- member | ta
+  joined_at timestamptz not null default now(),
+  unique (class_id, user_id)
+);
+create table public.class_announcements (
+  id         uuid primary key default gen_random_uuid(),
+  class_id   uuid references public.classes(id) on delete cascade,
+  author_id  uuid references public.profiles(id) on delete set null,
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Security-definer helpers (run as owner → bypass RLS → no policy recursion).
+create or replace function public.is_class_owner(cid uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.classes where id = cid and owner_id = auth.uid());
+$$;
+create or replace function public.is_class_member(cid uuid)
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (select 1 from public.class_members where class_id = cid and user_id = auth.uid())
+      or exists (select 1 from public.classes where id = cid and owner_id = auth.uid());
+$$;
+
 -- ----------------------------------------------------------------------------
 -- Realtime: publish the tables the editor/rooms subscribe to.
 -- ----------------------------------------------------------------------------
 alter publication supabase_realtime add table public.notes;
 alter publication supabase_realtime add table public.note_versions;
 alter publication supabase_realtime add table public.documents;
+alter publication supabase_realtime add table public.class_announcements;
 
 -- ----------------------------------------------------------------------------
 -- Row Level Security. Reads are public (it's a sharing platform); writes are
@@ -302,3 +345,24 @@ create policy "documents read own" on storage.objects for select to authenticate
   using (bucket_id = 'documents' and owner = auth.uid());
 create policy "documents delete own" on storage.objects for delete to authenticated
   using (bucket_id = 'documents' and owner = auth.uid());
+
+-- Classes + enrollment + announcements (Phase 2).
+alter table public.classes             enable row level security;
+alter table public.class_members       enable row level security;
+alter table public.class_announcements enable row level security;
+
+create policy "classes read"   on public.classes for select using (true);
+create policy "classes insert" on public.classes for insert to authenticated with check (owner_id = auth.uid());
+create policy "classes update" on public.classes for update to authenticated using (owner_id = auth.uid());
+create policy "classes delete" on public.classes for delete to authenticated using (owner_id = auth.uid());
+
+create policy "members read"   on public.class_members for select using (public.is_class_member(class_id));
+create policy "members insert" on public.class_members for insert to authenticated
+  with check (user_id = auth.uid() or public.is_class_owner(class_id));
+create policy "members update" on public.class_members for update to authenticated using (public.is_class_owner(class_id));
+create policy "members delete" on public.class_members for delete to authenticated
+  using (public.is_class_owner(class_id) or user_id = auth.uid());
+
+create policy "ann read"   on public.class_announcements for select using (public.is_class_member(class_id));
+create policy "ann insert" on public.class_announcements for insert to authenticated with check (public.is_class_owner(class_id));
+create policy "ann delete" on public.class_announcements for delete to authenticated using (public.is_class_owner(class_id));

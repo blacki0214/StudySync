@@ -33,6 +33,9 @@ const routes = [
   { path: '/flashcards', name: 'flashcards', component: () => import('../views/FlashcardsView.vue') },
   { path: '/flashcards/:noteId', name: 'flashcards-note', component: () => import('../views/FlashcardsView.vue'), props: true },
   { path: '/community', name: 'community', component: () => import('../views/CommunityView.vue') },
+  { path: '/classes', name: 'classes', component: () => import('../views/ClassesView.vue') },
+  { path: '/classes/:id', name: 'class-detail', component: () => import('../views/ClassDetailView.vue'), props: true },
+  { path: '/join', name: 'join-class', component: () => import('../views/JoinClassView.vue') },
   { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue') },
 
   { path: '/:pathMatch(.*)*', redirect: '/hub' }
