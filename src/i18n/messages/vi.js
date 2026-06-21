@@ -493,7 +493,7 @@ export default {
     strengthGood: 'Khá',
     strengthStrong: 'Mạnh',
     passwordsMismatch: 'Mật khẩu không khớp.',
-    emailExists: 'Email này đã được đăng ký.',
+    emailExists: 'Email đã tồn tại.',
     selectRequired: 'Vui lòng chọn một mục để tiếp tục.',
 
     /* Màn hình xác nhận email */
@@ -504,7 +504,7 @@ export default {
 
     /* Chào mừng (sau khi xác nhận) */
     welcomeDoneTitle: 'Hoàn tất! 🎉',
-    welcomeDoneConfirmed: 'Email của bạn đã được xác nhận.',
+    welcomeDoneConfirmed: 'Tài khoản của bạn đã sẵn sàng.',
     welcomeDoneMessage: 'Chào mừng đến với StudySync — hãy bắt đầu học cùng nhau.',
     goToApp: 'Vào ứng dụng',
 

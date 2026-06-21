@@ -505,7 +505,7 @@ export default {
 
     /* Welcome (after confirmation) */
     welcomeDoneTitle: "You're all set! 🎉",
-    welcomeDoneConfirmed: 'Your email has been confirmed.',
+    welcomeDoneConfirmed: 'Your account is ready.',
     welcomeDoneMessage: "Welcome to StudySync — let's start learning together.",
     goToApp: 'Go to the app',
 

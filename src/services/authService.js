@@ -48,21 +48,23 @@ export const authService = {
       return { needsConfirmation: false, user }
     }
 
-    // Reject duplicates up-front with a clear message (Supabase otherwise
-    // returns an obfuscated success to prevent email enumeration).
+    const cleanEmail = (email || '').trim().toLowerCase()
+    const emailExists = () => {
+      const err = new Error('An account with this email already exists.')
+      err.code = 'email_exists'
+      return err
+    }
+
+    // Reject duplicates up-front (case-insensitive) for a clear message.
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', email)
-      .maybeSingle()
-    if (existing) {
-      const err = new Error('An account with this email already exists.')
-      err.code = 'email_exists'
-      throw err
-    }
+      .ilike('email', cleanEmail)
+      .limit(1)
+    if (existing && existing.length) throw emailExists()
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanEmail,
       password,
       options: {
         emailRedirectTo: welcomeRedirect(),
@@ -70,12 +72,13 @@ export const authService = {
       }
     })
     if (error) {
-      if (/already|registered|exists/i.test(error.message)) {
-        const err = new Error('An account with this email already exists.')
-        err.code = 'email_exists'
-        throw err
-      }
+      if (/already|registered|exists/i.test(error.message)) throw emailExists()
       throw error
+    }
+    // When "Confirm email" is ON, Supabase hides duplicates by returning a user
+    // with an empty identities array instead of an error — detect that too.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw emailExists()
     }
 
     // Create the matching profile row (id == auth user id so it lines up later).
@@ -86,7 +89,7 @@ export const authService = {
         full_name: fullName,
         first_name: firstName,
         last_name: lastName,
-        email,
+        email: cleanEmail,
         dob: dob || null,
         phone,
         role,
