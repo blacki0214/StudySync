@@ -10,7 +10,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore.js'
 
 const routes = [
-  { path: '/', name: 'landing', component: () => import('../views/LandingView.vue'), meta: { public: true, layout: 'blank' } },
+  // The marketing landing page is removed — go straight to the app (the guard
+  // sends logged-out visitors to /login and logged-in users to the hub).
+  { path: '/', redirect: '/hub' },
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true, layout: 'blank' } },
   { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue'), meta: { public: true, layout: 'blank' } },
   { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue'), meta: { public: true, layout: 'blank' } },

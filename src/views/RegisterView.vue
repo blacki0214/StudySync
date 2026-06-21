@@ -4,15 +4,16 @@
  * account), then an email-confirmation screen. Centered single-column layout.
  * All data is persisted via authService (Supabase, or localStorage in demo mode).
  */
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { validateEmail, validatePassword, validatePhone, passwordStrength } from '../utils/validation.js'
+import AppSelect from '../components/common/AppSelect.vue'
 import logoMark from '../assets/images/logo-mark.png'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -32,6 +33,40 @@ const form = ref({
   email: '',
   password: '',
   confirm: ''
+})
+
+// Date of birth via three themed dropdowns (no OS calendar).
+const dobDay = ref('')
+const dobMonth = ref('')
+const dobYear = ref('')
+const thisYear = new Date().getFullYear()
+
+const daysInSelected = computed(() => {
+  const y = Number(dobYear.value) || 2000
+  const m = Number(dobMonth.value)
+  return m ? new Date(y, m, 0).getDate() : 31
+})
+const dayOptions = computed(() =>
+  Array.from({ length: daysInSelected.value }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))
+)
+const monthOptions = computed(() =>
+  Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1),
+    label: new Date(2000, i, 1).toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', { month: 'long' })
+  }))
+)
+const yearOptions = Array.from({ length: 96 }, (_, i) => {
+  const y = thisYear - 5 - i // sensible DOB range: 5–100 years ago
+  return { value: String(y), label: String(y) }
+})
+
+// Compose the stored 'YYYY-MM-DD' whenever a part changes; clamp invalid days.
+watch([dobDay, dobMonth, dobYear], () => {
+  if (Number(dobDay.value) > daysInSelected.value) dobDay.value = String(daysInSelected.value)
+  form.value.dob =
+    dobDay.value && dobMonth.value && dobYear.value
+      ? `${dobYear.value}-${String(dobMonth.value).padStart(2, '0')}-${String(dobDay.value).padStart(2, '0')}`
+      : ''
 })
 
 const roles = [
@@ -162,7 +197,11 @@ async function submit() {
           </div>
           <div class="form-group">
             <label>{{ t('auth.dob') }}</label>
-            <input v-model="form.dob" type="date" class="form-control" />
+            <div class="dob-grid">
+              <AppSelect v-model="dobDay" :options="dayOptions" placeholder="" :aria-label="t('auth.day')" />
+              <AppSelect v-model="dobMonth" :options="monthOptions" placeholder="" :aria-label="t('auth.month')" />
+              <AppSelect v-model="dobYear" :options="yearOptions" placeholder="" :aria-label="t('auth.year')" />
+            </div>
           </div>
           <div class="form-group">
             <label>{{ t('auth.phone') }}</label>
