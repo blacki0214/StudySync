@@ -66,6 +66,11 @@
   color: var(--c-text);
   font-size: 0.85rem;
 }
+/* The toolbar font picker is now an AppSelect; just position + size it. */
+.tb-font-select {
+  margin-left: auto;
+  width: 130px;
+}
 
 /* Layout: document + side panel */
 .editor-grid {

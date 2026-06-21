@@ -36,7 +36,13 @@ create table public.profiles (
   auth_id     uuid,                       -- optional link to auth.users(id)
   handle      text unique,
   full_name   text not null,
+  first_name  text,
+  last_name   text,
   email       text,
+  dob         date,
+  phone       text,
+  role        text,                       -- 'student' | 'teacher'
+  purpose     text,                       -- 'personal' | 'education' | 'teaching'
   avatar_url  text,
   program     text,
   school      text,

@@ -1,7 +1,9 @@
 <script setup>
 /**
- * AppNavbar — top bar: global search, language switcher, dark-mode toggle,
- * notifications, avatar. All visible text comes from the i18n catalog.
+ * AppNavbar — the single top bar that now drives the whole app: brand, global
+ * search, the apps launcher (all features), language switcher, dark-mode toggle,
+ * notifications and the account menu (profile + log out). The left sidebar was
+ * removed, so navigation lives in the launcher and this account menu.
  */
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -10,6 +12,7 @@ import { useUiStore } from '../../stores/uiStore.js'
 import { usePaletteStore } from '../../stores/paletteStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
 import AppLauncher from './AppLauncher.vue'
+import logoMark from '../../assets/images/logo-mark.png'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -26,13 +29,23 @@ async function logout() {
   await auth.logout()
   router.push({ name: 'login' })
 }
+
+// Initials fallback for accounts without an avatar image.
+function initials(name) {
+  if (!name) return '?'
+  return name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
+}
 </script>
 
 <template>
   <header class="app-navbar">
-    <button class="navbar-toggle" :aria-label="t('nav.workspace')" @click="ui.toggleSidebar()">
-      <i class="bi bi-list"></i>
-    </button>
+    <router-link to="/hub" class="navbar-brand">
+      <img :src="logoMark" class="navbar-brand-mark" alt="StudySync logo" />
+      <span class="navbar-brand-text">
+        <span class="nb-name">StudySync</span>
+        <span class="nb-sub">Vietnam</span>
+      </span>
+    </router-link>
 
     <div class="navbar-search">
       <i class="bi bi-search search-ico"></i>
@@ -79,17 +92,22 @@ async function logout() {
       </button>
 
       <div class="dropdown">
-        <img
-          v-if="auth.user?.avatar_url"
-          :src="auth.user.avatar_url"
-          class="navbar-avatar"
-          :alt="auth.displayName"
-          data-bs-toggle="dropdown"
-          role="button"
-        />
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><router-link class="dropdown-item" to="/profile"><i class="bi bi-person"></i>{{ t('nav.profile') }}</router-link></li>
+        <button class="navbar-profile" data-bs-toggle="dropdown" :aria-label="auth.displayName">
+          <img
+            v-if="auth.user?.avatar_url"
+            :src="auth.user.avatar_url"
+            class="navbar-avatar"
+            :alt="auth.displayName"
+          />
+          <span v-else class="navbar-avatar navbar-avatar-fallback">{{ initials(auth.displayName) }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end profile-menu">
+          <li class="profile-menu-head">
+            <div class="pm-name">{{ auth.displayName }}</div>
+            <div class="pm-sub">{{ auth.user?.program || 'Student' }}</div>
+          </li>
           <li><hr class="dropdown-divider" /></li>
+          <li><router-link class="dropdown-item" to="/profile"><i class="bi bi-person"></i>{{ t('nav.profile') }}</router-link></li>
           <li><button class="dropdown-item text-danger" @click="logout"><i class="bi bi-box-arrow-right"></i>{{ t('nav.logout') }}</button></li>
         </ul>
       </div>

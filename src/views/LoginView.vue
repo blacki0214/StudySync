@@ -1,7 +1,7 @@
 <script setup>
 /**
- * LoginView — email/password sign-in. Validates client-side, then delegates to
- * the auth store. In demo mode any credentials succeed.
+ * LoginView — centered email/password sign-in with a forgot-password link and a
+ * show/hide password toggle. Validates client-side, then delegates to the store.
  */
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -18,6 +18,7 @@ const route = useRoute()
 
 const email = ref('')
 const password = ref('')
+const showPw = ref(false)
 const error = ref(null)
 
 async function submit() {
@@ -34,50 +35,57 @@ async function submit() {
 </script>
 
 <template>
-  <div class="auth-wrap">
-    <aside class="auth-aside">
-      <div class="auth-brand"><img :src="logoMark" alt="StudySync logo" />StudySync</div>
-      <h2>{{ t('auth.welcomeBack') }}</h2>
-      <p class="auth-aside-sub">{{ t('auth.welcomeSub') }}</p>
-      <ul>
-        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat1') }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat2') }}</li>
-        <li><i class="bi bi-check-circle-fill"></i> {{ t('auth.feat3') }}</li>
-      </ul>
-    </aside>
+  <div class="auth-screen">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <img :src="logoMark" alt="StudySync logo" />
+        <span>StudySync<small>Vietnam</small></span>
+      </div>
 
-    <div class="auth-form-panel">
-      <div class="auth-card">
-        <h1>{{ t('auth.login') }}</h1>
-        <p class="auth-sub">{{ t('auth.loginSub') }}</p>
+      <div class="auth-head">
+        <h1>{{ t('auth.welcomeBack') }}</h1>
+        <p>{{ t('auth.loginSub') }}</p>
+      </div>
 
-        <div v-if="!isSupabaseConfigured" class="demo-hint">
-          <i class="bi bi-info-circle"></i>
-          {{ t('auth.demoLogin') }}
+      <div v-if="!isSupabaseConfigured" class="demo-hint">
+        <i class="bi bi-info-circle"></i> {{ t('auth.demoLogin') }}
+      </div>
+
+      <form @submit.prevent="submit">
+        <div class="form-group">
+          <label>{{ t('auth.email') }}</label>
+          <input v-model="email" type="email" class="form-control" :placeholder="t('auth.emailPlaceholder')" />
+        </div>
+        <div class="form-group">
+          <label>{{ t('auth.password') }}</label>
+          <div class="pw-field">
+            <input
+              v-model="password"
+              :type="showPw ? 'text' : 'password'"
+              class="form-control"
+              placeholder="••••••••"
+            />
+            <button type="button" class="pw-toggle" :aria-label="showPw ? t('auth.hidePassword') : t('auth.showPassword')" @click="showPw = !showPw">
+              <i class="bi" :class="showPw ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
         </div>
 
-        <form @submit.prevent="submit">
-          <div class="form-group">
-            <label>{{ t('auth.email') }}</label>
-            <input v-model="email" type="email" class="form-control" :placeholder="t('auth.emailPlaceholder')" />
-          </div>
-          <div class="form-group">
-            <label>{{ t('auth.password') }}</label>
-            <input v-model="password" type="password" class="form-control" placeholder="••••••••" />
-          </div>
+        <div class="auth-link-row">
+          <router-link to="/forgot-password">{{ t('auth.forgotPassword') }}</router-link>
+        </div>
 
-          <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle"></i>{{ error }}</p>
+        <p v-if="error" class="form-error"><i class="bi bi-exclamation-circle"></i>{{ error }}</p>
 
-          <button class="btn btn-brand auth-submit" :disabled="auth.loading">
-            <span v-if="auth.loading" class="spinner-border spinner-border-sm"></span>
-            {{ t('auth.login') }}
-          </button>
-        </form>
+        <button class="btn btn-brand auth-submit" :disabled="auth.loading">
+          <span v-if="auth.loading" class="spinner-border spinner-border-sm"></span>
+          {{ t('auth.login') }}
+        </button>
+      </form>
 
-        <p class="auth-alt">
-          {{ t('auth.noAccount') }} <router-link to="/register">{{ t('auth.createOne') }}</router-link>
-        </p>
-      </div>
+      <p class="auth-foot">
+        {{ t('auth.noAccount') }} <router-link to="/register">{{ t('auth.createOne') }}</router-link>
+      </p>
     </div>
   </div>
 </template>

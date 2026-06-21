@@ -36,14 +36,45 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async register({ email, password, fullName }) {
+    async register(payload) {
       this.loading = true
       this.error = null
       try {
-        this.user = await authService.signUp({ email, password, fullName })
-        return this.user
+        const result = await authService.signUp(payload)
+        // Only mark as signed-in when a session exists (i.e. no email
+        // confirmation needed, or demo mode).
+        if (!result.needsConfirmation && result.user) this.user = result.user
+        return result
       } catch (e) {
         this.error = e.message || 'Registration failed.'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /** Send a password-reset email. */
+    async requestPasswordReset(email) {
+      this.loading = true
+      this.error = null
+      try {
+        await authService.requestPasswordReset(email)
+      } catch (e) {
+        this.error = e.message || 'Could not send the reset email.'
+        throw e
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /** Set a new password after following the reset link. */
+    async updatePassword(newPassword) {
+      this.loading = true
+      this.error = null
+      try {
+        await authService.updatePassword(newPassword)
+      } catch (e) {
+        this.error = e.message || 'Could not update the password.'
         throw e
       } finally {
         this.loading = false

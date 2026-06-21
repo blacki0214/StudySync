@@ -31,6 +31,29 @@ export function validateFullName(name) {
   return null
 }
 
+export function validatePhone(phone) {
+  if (!phone || !phone.trim()) return 'Phone number is required.'
+  const cleaned = phone.replace(/[\s\-().]/g, '')
+  if (!/^\+?\d{8,15}$/.test(cleaned)) return 'Please enter a valid phone number.'
+  return null
+}
+
+/**
+ * Rough password strength estimate for the signup meter.
+ * @returns {{ score: 0|1|2|3|4, key: string }} key maps to an i18n label.
+ */
+export function passwordStrength(pw) {
+  if (!pw) return { score: 0, key: 'weak' }
+  let score = 0
+  if (pw.length >= 8) score++
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
+  if (/\d/.test(pw)) score++
+  if (/[^A-Za-z0-9]/.test(pw)) score++
+  if (pw.length < 6) score = 0
+  const key = ['weak', 'weak', 'fair', 'good', 'strong'][score]
+  return { score, key }
+}
+
 /**
  * Run several validators and return the first error found, or null if all pass.
  * @param {Array<string|null>} results

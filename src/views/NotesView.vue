@@ -11,6 +11,7 @@ import { useNoteStore } from '../stores/noteStore.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import NoteCard from '../components/notes/NoteCard.vue'
 import NoteSearchFilter from '../components/notes/NoteSearchFilter.vue'
+import AppSelect from '../components/common/AppSelect.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 
@@ -39,6 +40,10 @@ watch(() => route.query, (q) => {
 })
 
 const subjectCode = (id) => subjectStore.getById(id)?.code || ''
+
+const subjectOptions = computed(() =>
+  subjectStore.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+)
 
 const filtered = computed(() => {
   let list = [...noteStore.notes]
@@ -121,9 +126,7 @@ async function createNote() {
           <div class="modal-body">
             <div class="form-group">
               <label>{{ t('notes.subject') }}</label>
-              <select v-model="form.subject_id" class="form-select">
-                <option v-for="s in subjectStore.subjects" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option>
-              </select>
+              <AppSelect v-model="form.subject_id" :options="subjectOptions" :placeholder="t('notes.subject')" :aria-label="t('notes.subject')" />
             </div>
             <div class="form-group">
               <label>{{ t('notes.titleField') }}</label>

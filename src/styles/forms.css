@@ -60,10 +60,130 @@
   font-size: 0.85rem;
   margin-bottom: var(--space-2);
 }
-.form-control:focus {
+/* ----------------------------------------------------------------------------
+   Themed form controls — Bootstrap's defaults are hard-coded white, which made
+   native <select>s unreadable / clashing in dark mode. Drive them from the same
+   theme tokens as everything else so they work in both light and dark. */
+.form-control,
+.form-select {
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border-strong);
+  color: var(--c-text);
+  border-radius: var(--radius-sm);
+}
+.form-control::placeholder { color: var(--c-text-faint); }
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--c-surface);
+  border-color: var(--c-primary);
+  color: var(--c-text);
+  box-shadow: 0 0 0 3px var(--c-primary-light);
+}
+/* The native option popup — keep it on-theme and readable in both modes. */
+.form-select option {
+  background-color: var(--c-surface);
+  color: var(--c-text);
+}
+/* Bootstrap's caret SVG is dark; swap it for a light one in dark mode. */
+[data-theme='dark'] .form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e5e7eb' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+}
+
+/* ----------------------------------------------------------------------------
+   AppSelect — custom, fully theme-able dropdown replacing the native <select>.
+   Trigger mimics .form-select; the popup uses the same surface/border/shadow
+   tokens as the other menus, so it looks identical in light and dark mode. */
+.app-select {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.app-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-strong);
+  color: var(--c-text);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+.app-select-trigger:hover { background: var(--c-surface-2); }
+.app-select.open .app-select-trigger,
+.app-select-trigger:focus-visible {
+  outline: none;
   border-color: var(--c-primary);
   box-shadow: 0 0 0 3px var(--c-primary-light);
 }
+.app-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-select-value.placeholder { color: var(--c-text-faint); }
+.app-select-caret {
+  font-size: 0.7rem;
+  color: var(--c-text-faint);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.app-select.open .app-select-caret { transform: rotate(180deg); }
+
+.app-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1055;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+.app-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--c-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.app-select-option.highlight { background: var(--c-surface-2); }
+.app-select-option.active { background: var(--c-primary-light); color: var(--c-primary-dark); }
+.app-select-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-select-check { color: var(--c-primary); font-size: 0.95rem; flex-shrink: 0; }
+
+/* Bootstrap modal (create-note dialog, etc.) — theme its surface so it isn't a
+   white box in dark mode. */
+.modal-content {
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+}
+.modal-header,
+.modal-footer { border-color: var(--c-border); }
+/* The close (×) glyph is a dark SVG; invert it in dark mode so it's visible. */
+[data-theme='dark'] .btn-close { filter: invert(1) grayscale(1) brightness(1.8); }
 .form-error {
   color: var(--c-danger);
   font-size: 0.8rem;
@@ -75,6 +195,138 @@
 .auth-aside-sub { margin-bottom: var(--space-4); }
 .auth-submit { width: 100%; }
 .auth-alt { text-align: center; margin-top: var(--space-4); font-size: 0.9rem; color: var(--c-text-muted); }
+
+/* ============================================================================
+   Centered, multi-step auth screens (login / signup wizard / status pages).
+   Replaces the old split layout — a single centered card on a soft gradient. */
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+  background:
+    radial-gradient(1100px 480px at 50% -12%, rgba(99, 102, 241, 0.18), transparent 62%),
+    var(--c-bg);
+}
+.auth-box {
+  width: 100%;
+  max-width: 460px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6);
+}
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--c-text);
+}
+.auth-logo img {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: var(--c-primary-tint); padding: 2px; object-fit: contain;
+}
+.auth-logo small {
+  display: block; font-size: 0.58rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--c-text-faint); font-weight: 700;
+}
+
+.auth-head { text-align: center; margin-bottom: var(--space-5); }
+.auth-head h1 { font-size: 1.45rem; margin: 0 0 var(--space-1); }
+.auth-head p { color: var(--c-text-muted); margin: 0; font-size: 0.92rem; }
+
+/* Progress segments + step counter */
+.auth-progress { display: flex; gap: 6px; margin-bottom: var(--space-2); }
+.auth-progress .seg {
+  flex: 1; height: 5px; border-radius: var(--radius-pill);
+  background: var(--c-surface-2); border: 1px solid var(--c-border);
+  transition: background 0.2s ease;
+}
+.auth-progress .seg.done { background: var(--grad-button); border-color: transparent; }
+.auth-step-count {
+  text-align: center; font-size: 0.74rem; color: var(--c-text-faint);
+  font-weight: 600; margin-bottom: var(--space-5);
+}
+
+/* Two-column name row */
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+@media (max-width: 420px) { .field-row { grid-template-columns: 1fr; } }
+
+/* Selectable choice cards (role / purpose) */
+.choice-list { display: grid; gap: var(--space-3); }
+.choice-card {
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; text-align: left;
+  border: 1.5px solid var(--c-border-strong); background: var(--c-surface);
+  border-radius: var(--radius); padding: var(--space-4); cursor: pointer;
+}
+.choice-card:hover { border-color: var(--c-primary); background: var(--c-surface-2); }
+.choice-card.selected {
+  border-color: var(--c-primary); background: var(--c-primary-light);
+  box-shadow: 0 0 0 3px var(--c-primary-light);
+}
+.choice-icon {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+  color: #fff; font-size: 1.2rem; flex-shrink: 0;
+}
+.choice-text { flex: 1; }
+.choice-title { font-weight: 700; color: var(--c-text); }
+.choice-desc { font-size: 0.82rem; color: var(--c-text-muted); }
+.choice-check { color: var(--c-primary); font-size: 1.25rem; opacity: 0; }
+.choice-card.selected .choice-check { opacity: 1; }
+
+/* Password field with show/hide toggle */
+.pw-field { position: relative; }
+.pw-field .form-control { padding-right: 2.6rem; }
+.pw-toggle {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  border: none; background: none; color: var(--c-text-faint);
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+  display: grid; place-items: center;
+}
+.pw-toggle:hover { background: var(--c-surface-2); color: var(--c-text); }
+
+/* Strength meter */
+.pw-strength { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.pw-bars { display: flex; gap: 4px; flex: 1; }
+.pw-bars span { flex: 1; height: 5px; border-radius: var(--radius-pill); background: var(--c-surface-2); }
+.pw-bars.s1 span:nth-child(-n+1),
+.pw-bars.s2 span:nth-child(-n+2),
+.pw-bars.s3 span:nth-child(-n+3),
+.pw-bars.s4 span:nth-child(-n+4) { background: currentColor; }
+.pw-strength.lvl-1 { color: var(--c-danger); }
+.pw-strength.lvl-2 { color: var(--c-warning); }
+.pw-strength.lvl-3 { color: var(--c-primary); }
+.pw-strength.lvl-4 { color: var(--c-success); }
+.pw-strength .pw-label { font-size: 0.74rem; font-weight: 700; min-width: 50px; text-align: right; }
+
+/* Wizard action buttons */
+.auth-actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
+.auth-actions .btn { flex: 1; }
+.auth-actions .btn-back { flex: 0 0 auto; }
+
+.auth-foot { text-align: center; margin-top: var(--space-4); font-size: 0.9rem; color: var(--c-text-muted); }
+.auth-foot a { font-weight: 600; }
+.auth-link-row { display: flex; justify-content: flex-end; margin: -0.25rem 0 var(--space-3); }
+.auth-link-row a { font-size: 0.82rem; font-weight: 600; }
+
+/* Status / success screens (check-email, welcome, reset done) */
+.auth-success { text-align: center; }
+.auth-success .as-icon {
+  width: 72px; height: 72px; border-radius: 50%; margin: 0 auto var(--space-4);
+  display: grid; place-items: center; font-size: 2rem; color: #fff; background: var(--grad-button);
+}
+.auth-success .as-icon.ok { background: var(--grad-green); }
+.auth-success h1 { font-size: 1.45rem; margin-bottom: var(--space-2); }
+.auth-success p { color: var(--c-text-muted); margin-bottom: var(--space-2); }
+.auth-success .as-actions { margin-top: var(--space-5); }
+.auth-success .as-actions .btn { width: 100%; }
+.email-pill { font-weight: 700; color: var(--c-text); }
 .demo-hint {
   background: var(--c-primary-light);
   border-radius: var(--radius-sm);

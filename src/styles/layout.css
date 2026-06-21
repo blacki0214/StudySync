@@ -209,10 +209,11 @@
   color: var(--c-text-faint);
 }
 
-/* ---------------- Main column ---------------- */
+/* ---------------- Main column ----------------
+   The sidebar was removed; the top bar is the only chrome, so the main column
+   spans the full width and the content is centred with a comfortable max width. */
 .app-main {
   flex: 1;
-  margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -222,6 +223,7 @@
   flex: 1;
   max-width: 1320px;
   width: 100%;
+  margin: 0 auto;
 }
 
 .page-header {

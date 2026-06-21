@@ -22,6 +22,7 @@ import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { timeAgo } from '../utils/formatDate.js'
 import { editorCollaborators, editorComments, editorHistory } from '../data/sampleEditor.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
+import AppSelect from '../components/common/AppSelect.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
 
 const route = useRoute()
@@ -36,6 +37,12 @@ const ready = ref(false)
 const docRef = ref(null)
 const activeTab = ref('online')
 const aiOpen = ref(false)
+const font = ref('Inter')
+const fontOptions = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Serif', label: 'Serif' },
+  { value: 'Mono', label: 'Mono' }
+]
 
 const subject = computed(() => subjectStore.getById(activeNote.value?.subject_id))
 
@@ -201,7 +208,7 @@ function runTool(t) {
           <i v-else class="bi" :class="t.icon"></i>
         </button>
       </template>
-      <select class="tb-font"><option>Inter</option><option>Serif</option><option>Mono</option></select>
+      <AppSelect v-model="font" class="tb-font-select" :options="fontOptions" aria-label="Font" />
     </div>
 
     <!-- Document + side panel -->

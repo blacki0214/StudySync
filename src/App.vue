@@ -13,7 +13,6 @@ import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUiStore } from './stores/uiStore.js'
 import { usePaletteStore } from './stores/paletteStore.js'
-import AppSidebar from './components/common/AppSidebar.vue'
 import AppNavbar from './components/common/AppNavbar.vue'
 import CommandPalette from './components/common/CommandPalette.vue'
 
@@ -45,14 +44,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
   </div>
 
   <div v-else class="app-shell">
-    <AppSidebar />
-    <button
-      v-if="ui.sidebarOpen"
-      class="sidebar-backdrop d-md-none"
-      aria-label="Close menu"
-      @click="ui.closeSidebar()"
-    ></button>
-
     <div class="app-main">
       <AppNavbar />
       <main class="app-content">

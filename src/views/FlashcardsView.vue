@@ -14,6 +14,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
 import { generateFlashcards } from '../utils/flashcardGenerator.js'
+import AppSelect from '../components/common/AppSelect.vue'
 import StatCard from '../components/common/StatCard.vue'
 import BarChart from '../components/charts/BarChart.vue'
 import QuizGenerator from '../components/ai/QuizGenerator.vue'
@@ -23,6 +24,8 @@ const route = useRoute()
 const { t } = useI18n()
 const content = useContentStore()
 const subjectByCode = (code) => content.subjectByCode(code)
+// Note picker options (value is the note object, matched by identity).
+const noteOptions = computed(() => content.notes.map((n) => ({ value: n, label: n.title })))
 
 const tab = ref('study')
 const stats = computed(() => {
@@ -175,9 +178,7 @@ onMounted(async () => {
     <div v-else-if="tab==='quiz'">
       <div class="field-inline">
         <label>{{ t('flashcards.fromNote') }}</label>
-        <select v-model="noteForGen" class="form-select note-select">
-          <option v-for="n in content.notes" :key="n.id" :value="n">{{ n.title }}</option>
-        </select>
+        <AppSelect v-model="noteForGen" class="note-select" :options="noteOptions" :aria-label="t('flashcards.fromNote')" />
       </div>
       <QuizGenerator v-if="noteForGen" :content="noteForGen.content" />
     </div>
@@ -187,9 +188,7 @@ onMounted(async () => {
       <div class="col-12 col-xl-8">
         <div class="field-inline">
           <label>{{ t('flashcards.generateFromNote') }}</label>
-          <select v-model="noteForGen" class="form-select note-select">
-            <option v-for="n in content.notes" :key="n.id" :value="n">{{ n.title }}</option>
-          </select>
+          <AppSelect v-model="noteForGen" class="note-select" :options="noteOptions" :aria-label="t('flashcards.generateFromNote')" />
           <span class="badge-soft">{{ t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
         </div>
         <div class="row g-3">

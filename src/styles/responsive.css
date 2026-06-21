@@ -39,8 +39,9 @@
   .app-main {
     margin-left: 0;
   }
-  .navbar-toggle {
-    display: inline-flex;
+  /* Keep just the logo mark on phones to save space in the top bar. */
+  .navbar-brand-text {
+    display: none;
   }
   .navbar-search {
     max-width: none;
