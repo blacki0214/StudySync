@@ -281,6 +281,9 @@
   border-radius: 10px;
   overflow: hidden;
   box-shadow: var(--shadow);
+  /* Never wrap a wide code box beside a floated image — always drop below it.
+     (Paragraph text still flows beside wrapped images.) */
+  clear: both;
 }
 .doc-surface .ProseMirror .code-nv-bar {
   height: 2rem;
