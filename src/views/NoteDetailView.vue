@@ -20,6 +20,9 @@ import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import Placeholder from '@tiptap/extension-placeholder'
+import FontFamily from '@tiptap/extension-font-family'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
@@ -30,11 +33,15 @@ import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
 import { timeAgo } from '../utils/formatDate.js'
-import { lineDiff } from '../utils/lineDiff.js'
+import { htmlToText } from '../utils/html.js'
+import { formatDateTime } from '../utils/formatDate.js'
 import { CommentMark } from '../components/notes/CommentMark.js'
+import { FontSize } from '../components/notes/FontSize.js'
+import AppSelect from '../components/common/AppSelect.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
 import ShareDialog from '../components/notes/ShareDialog.vue'
+import VersionHistory from '../components/notes/VersionHistory.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,10 +85,24 @@ const commentDraft = ref('')
 let pendingRange = null
 let pendingQuote = ''
 
-// History diff viewer.
-const diffOpen = ref(false)
-const diffRows = ref([])
-const diffVersion = ref(null)
+// Version history viewer.
+const historyOpen = ref(false)
+
+// Toolbar: paragraph style, font family, font size.
+const fontSizePx = ref(16)
+const styleOptions = computed(() => [
+  { value: 'p', label: t('editor.normalText') },
+  { value: 'h1', label: t('editor.heading1') },
+  { value: 'h2', label: t('editor.heading2') },
+  { value: 'h3', label: t('editor.heading3') }
+])
+const fontOptions = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Times New Roman', label: 'Times' },
+  { value: 'Courier New', label: 'Mono' }
+]
 
 let ydoc = null
 let provider = null
@@ -136,7 +157,11 @@ onMounted(async () => {
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
     Color,
+    FontFamily,
+    FontSize,
     Highlight.configure({ multicolor: true }),
+    TaskList,
+    TaskItem.configure({ nested: true }),
     CommentMark,
     Placeholder.configure({ placeholder: t('editor.placeholder') }),
     Collaboration.configure({ document: ydoc })
@@ -190,8 +215,10 @@ function normalizeVersion(row) {
     id: row.id,
     version: row.version_number,
     author: row.author?.full_name || row.author_name || '',
+    color: colorFor(row.edited_by || row.author?.full_name || row.author_name || ''),
     ago: timeAgo(row.created_at),
-    content: row.content
+    date: formatDateTime(row.created_at),
+    content: row.content // HTML snapshot
   }
 }
 function maybeSnapshot() {
@@ -199,7 +226,7 @@ function maybeSnapshot() {
   if (now - lastSnapshotAt < 25000) return // at most one snapshot / 25s of typing
   lastSnapshotAt = now
   noteService
-    .addVersion({ noteId: note.value.id, content: editor.value.getText(), editedBy: me.value.id, authorName: me.value.full_name })
+    .addVersion({ noteId: note.value.id, content: editor.value.getHTML(), editedBy: me.value.id, authorName: me.value.full_name })
     .then((row) => { if (row) history.value.unshift(normalizeVersion(row)) })
     .catch(() => {})
 }
@@ -207,11 +234,26 @@ function onLocalEdit() {
   scheduleSave()
   maybeSnapshot()
 }
-function openDiff(version, index) {
-  const prev = history.value[index + 1] // next in newest-first list = older
-  diffVersion.value = version
-  diffRows.value = lineDiff(prev?.content || '', version.content || '')
-  diffOpen.value = true
+
+// Toolbar: paragraph style / font family / font size.
+const currentStyle = computed(() => {
+  editorTick.value
+  const e = editor.value
+  if (!e) return 'p'
+  if (e.isActive('heading', { level: 1 })) return 'h1'
+  if (e.isActive('heading', { level: 2 })) return 'h2'
+  if (e.isActive('heading', { level: 3 })) return 'h3'
+  return 'p'
+})
+function applyStyle(v) {
+  if (v === 'p') chain().setParagraph().run()
+  else chain().toggleHeading({ level: Number(v.slice(1)) }).run()
+}
+const currentFont = computed(() => { editorTick.value; return editor.value?.getAttributes('textStyle').fontFamily || 'Inter' })
+function setFont(v) { chain().setFontFamily(v).run() }
+function changeFontSize(delta) {
+  fontSizePx.value = Math.min(72, Math.max(8, fontSizePx.value + delta))
+  chain().setFontSize(fontSizePx.value + 'px').run()
 }
 
 // --- Inline comments -------------------------------------------------------
@@ -308,11 +350,13 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
         <button class="tb-btn" :title="t('editor.redo')" @click="chain().redo().run()"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
       <div class="tb-sep"></div>
-      <div class="tb-group">
-        <button class="tb-btn tb-btn-text" :class="{ on: isActive('paragraph') }" :title="t('editor.paragraph')" @click="chain().setParagraph().run()">P</button>
-        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 1 }) }" :title="t('editor.heading1')" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
-        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 2 }) }" :title="t('editor.heading2')" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
-        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 3 }) }" :title="t('editor.heading3')" @click="chain().toggleHeading({ level: 3 }).run()">H3</button>
+      <!-- Paragraph style + font + size -->
+      <AppSelect class="tb-style" :model-value="currentStyle" :options="styleOptions" :aria-label="t('editor.style')" @update:model-value="applyStyle" />
+      <AppSelect class="tb-font2" :model-value="currentFont" :options="fontOptions" :aria-label="t('editor.font')" @update:model-value="setFont" />
+      <div class="tb-group tb-size">
+        <button class="tb-btn" :title="t('editor.smaller')" @click="changeFontSize(-1)"><i class="bi bi-dash"></i></button>
+        <span class="tb-size-val">{{ fontSizePx }}</span>
+        <button class="tb-btn" :title="t('editor.larger')" @click="changeFontSize(1)"><i class="bi bi-plus"></i></button>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
@@ -320,24 +364,14 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
         <button class="tb-btn" :class="{ on: isActive('italic') }" :title="t('editor.italic')" @click="chain().toggleItalic().run()"><i class="bi bi-type-italic"></i></button>
         <button class="tb-btn" :class="{ on: isActive('underline') }" :title="t('editor.underline')" @click="chain().toggleUnderline().run()"><i class="bi bi-type-underline"></i></button>
         <button class="tb-btn" :class="{ on: isActive('strike') }" :title="t('editor.strikethrough')" @click="chain().toggleStrike().run()"><i class="bi bi-type-strikethrough"></i></button>
-      </div>
-      <div class="tb-sep"></div>
-      <div class="tb-group">
         <label class="tb-btn tb-color" :title="t('editor.textColor')"><i class="bi bi-fonts"></i><input type="color" @input="chain().setColor($event.target.value).run()" /></label>
         <label class="tb-btn tb-color" :title="t('editor.highlight')"><i class="bi bi-highlighter"></i><input type="color" @input="chain().toggleHighlight({ color: $event.target.value }).run()" /></label>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('bulletList') }" :title="t('editor.bulletList')" @click="chain().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('orderedList') }" :title="t('editor.numberList')" @click="chain().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
-      </div>
-      <div class="tb-sep"></div>
-      <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('blockquote') }" :title="t('editor.quote')" @click="chain().toggleBlockquote().run()"><i class="bi bi-quote"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="t('editor.codeBlock')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
         <button class="tb-btn" :class="{ on: isActive('link') }" :title="t('editor.link')" @click="setLink"><i class="bi bi-link-45deg"></i></button>
+        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
         <button class="tb-btn" :title="t('editor.image')" @click="setImage"><i class="bi bi-image"></i></button>
-        <button class="tb-btn" :title="t('editor.divider')" @click="chain().setHorizontalRule().run()"><i class="bi bi-dash-lg"></i></button>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
@@ -347,8 +381,13 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
+        <button class="tb-btn" :class="{ on: isActive('taskList') }" :title="t('editor.checklist')" @click="chain().toggleTaskList().run()"><i class="bi bi-check2-square"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('bulletList') }" :title="t('editor.bulletList')" @click="chain().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('orderedList') }" :title="t('editor.numberList')" @click="chain().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('blockquote') }" :title="t('editor.quote')" @click="chain().toggleBlockquote().run()"><i class="bi bi-quote"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="t('editor.codeBlock')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
+        <button class="tb-btn" :title="t('editor.divider')" @click="chain().setHorizontalRule().run()"><i class="bi bi-dash-lg"></i></button>
         <button class="tb-btn" :title="t('editor.clearFormat')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
-        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
       </div>
     </div>
 
@@ -388,18 +427,21 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
           </div>
         </div>
 
-        <!-- History (who changed what, when — click to see the diff) -->
+        <!-- History (friendly timeline; click to open full version history) -->
         <div v-else>
-          <p class="panel-caption">{{ t('editor.historyHint') }}</p>
           <p v-if="!history.length" class="pr-status">{{ t('editor.noHistory') }}</p>
-          <button v-for="(h, i) in history" :key="h.id" class="history-row history-btn" @click="openDiff(h, i)">
-            <span class="v-tag">v{{ h.version }}</span>
-            <div>
-              <div class="pr-name">{{ h.author || t('editor.someone') }}</div>
-              <div class="hist-meta">{{ h.ago }}</div>
-            </div>
-            <i class="bi bi-clock-history hist-go"></i>
-          </button>
+          <template v-else>
+            <button class="btn btn-outline-soft w-100 history-open-btn" @click="historyOpen = true">
+              <i class="bi bi-clock-history"></i>{{ t('editor.openHistory') }}
+            </button>
+            <button v-for="h in history.slice(0, 6)" :key="h.id" class="history-row history-btn" @click="historyOpen = true">
+              <span class="hist-dot" :style="{ background: h.color }">{{ initials(h.author) }}</span>
+              <div>
+                <div class="pr-name">{{ h.author || t('editor.someone') }}</div>
+                <div class="hist-meta">{{ h.ago }}</div>
+              </div>
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -424,21 +466,7 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
       </div>
     </div>
 
-    <!-- Version diff viewer -->
-    <div v-if="diffOpen" class="modal d-block" tabindex="-1" style="background: rgba(15,23,42,.5)" @click.self="diffOpen = false">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ t('editor.versionBy', { version: diffVersion?.version, author: diffVersion?.author || t('editor.someone') }) }} · {{ diffVersion?.ago }}</h5>
-            <button class="btn-close" @click="diffOpen = false"></button>
-          </div>
-          <div class="modal-body">
-            <p class="panel-caption">{{ t('editor.diffHint') }}</p>
-            <pre class="diff-view"><code v-for="(row, i) in diffRows" :key="i" class="diff-line" :class="'diff-' + row.type">{{ row.type === 'add' ? '+ ' : row.type === 'del' ? '- ' : '  ' }}{{ row.text }}</code></pre>
-          </div>
-          <div class="modal-footer"><button class="btn btn-brand" @click="diffOpen = false">{{ t('common.close') }}</button></div>
-        </div>
-      </div>
-    </div>
+    <!-- Friendly version history -->
+    <VersionHistory v-if="historyOpen" :versions="history" @close="historyOpen = false" />
   </div>
 </template>
