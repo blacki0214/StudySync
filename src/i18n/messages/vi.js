@@ -8,6 +8,7 @@ export default {
     subjects: 'Môn học',
     mySubjects: 'Môn của tôi',
     collabNotes: 'Ghi chú nhóm',
+    tasks: 'Nhiệm vụ',
     studyRooms: 'Phòng học',
     flashcards: 'Thẻ ghi nhớ',
     community: 'Cộng đồng',
@@ -34,7 +35,41 @@ export default {
     notes: 'ghi chú',
     cancel: 'Huỷ',
     close: 'Đóng',
+    done: 'Xong',
     viewSubject: 'Xem môn học'
+  },
+
+  tasks: {
+    title: 'Nhiệm vụ của tôi',
+    subtitle: 'Theo dõi mọi việc bạn cần học và hoàn thành.',
+    table: 'Bảng',
+    board: 'Bảng Kanban',
+    newTask: 'Nhiệm vụ mới',
+    add: 'Thêm',
+    searchPlaceholder: 'Tìm nhiệm vụ…',
+    allStatuses: 'Tất cả trạng thái',
+    allPriorities: 'Tất cả mức độ',
+    summary: '{total} nhiệm vụ · {active} đang làm · {done} hoàn tất',
+    emptyTitle: 'Chưa có nhiệm vụ — thêm nhiệm vụ đầu tiên.',
+    untitled: 'Nhiệm vụ chưa đặt tên',
+    unassigned: 'Chưa giao',
+    addDetails: 'Thêm chi tiết…',
+    descPlaceholder: 'Thêm mô tả, liên kết hoặc ghi chú…',
+    openTask: 'Mở nhiệm vụ',
+    editTask: 'Sửa nhiệm vụ',
+    delete: 'Xoá',
+    col: {
+      title: 'Tên nhiệm vụ',
+      status: 'Trạng thái',
+      assignee: 'Người được giao',
+      due: 'Hạn chót',
+      priority: 'Mức độ ưu tiên',
+      type: 'Loại nhiệm vụ',
+      description: 'Mô tả'
+    },
+    status: { notStarted: 'Chưa bắt đầu', inProgress: 'Đang thực hiện', done: 'Hoàn tất' },
+    priority: { low: 'Thấp', medium: 'Trung bình', high: 'Cao' },
+    type: { general: 'Chung', feature: 'Tính năng', bugfix: 'Sửa lỗi', polish: 'Tinh chỉnh', research: 'Nghiên cứu' }
   },
 
   hub: {
@@ -293,6 +328,8 @@ export default {
   },
 
   workspace: {
+    sectionStudy: 'Học tập',
+    sectionTasks: 'Nhiệm vụ',
     loading: 'Đang mở không gian…',
     notFound: 'Không tìm thấy môn học.',
     sub: '{n} nguồn',

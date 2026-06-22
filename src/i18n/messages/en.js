@@ -8,6 +8,7 @@ export default {
     subjects: 'Subjects',
     mySubjects: 'My Subjects',
     collabNotes: 'Collab Notes',
+    tasks: 'Tasks',
     studyRooms: 'Study Rooms',
     flashcards: 'Flashcards',
     community: 'Community',
@@ -34,7 +35,41 @@ export default {
     notes: 'notes',
     cancel: 'Cancel',
     close: 'Close',
+    done: 'Done',
     viewSubject: 'View subject'
+  },
+
+  tasks: {
+    title: 'My Tasks',
+    subtitle: 'Track everything you need to study and get done.',
+    table: 'Table',
+    board: 'Board',
+    newTask: 'New task',
+    add: 'Add',
+    searchPlaceholder: 'Search tasks…',
+    allStatuses: 'All statuses',
+    allPriorities: 'All priorities',
+    summary: '{total} tasks · {active} in progress · {done} done',
+    emptyTitle: 'No tasks yet — add your first one.',
+    untitled: 'Untitled task',
+    unassigned: 'Unassigned',
+    addDetails: 'Add details…',
+    descPlaceholder: 'Add a description, links or notes…',
+    openTask: 'Open task',
+    editTask: 'Edit task',
+    delete: 'Delete',
+    col: {
+      title: 'Task name',
+      status: 'Status',
+      assignee: 'Assignee',
+      due: 'Due date',
+      priority: 'Priority',
+      type: 'Type',
+      description: 'Description'
+    },
+    status: { notStarted: 'Not started', inProgress: 'In progress', done: 'Done' },
+    priority: { low: 'Low', medium: 'Medium', high: 'High' },
+    type: { general: 'General', feature: 'Feature', bugfix: 'Bug fix', polish: 'Polish', research: 'Research' }
   },
 
   hub: {
@@ -294,6 +329,8 @@ export default {
   },
 
   workspace: {
+    sectionStudy: 'Study',
+    sectionTasks: 'Tasks',
     loading: 'Opening workspace…',
     notFound: 'Subject not found.',
     sub: '{n} sources',

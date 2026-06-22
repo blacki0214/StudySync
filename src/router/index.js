@@ -27,6 +27,7 @@ const routes = [
   { path: '/subjects/:id', name: 'subject-hub', component: () => import('../views/SubjectHubView.vue'), props: true },
   { path: '/subjects/:id/workspace', name: 'subject-workspace', component: () => import('../views/SubjectWorkspaceView.vue'), props: true },
   { path: '/notes', name: 'notes', component: () => import('../views/NotesView.vue') },
+  { path: '/tasks', name: 'tasks', component: () => import('../views/TasksView.vue') },
   { path: '/notes/:id', name: 'note-detail', component: () => import('../views/NoteDetailView.vue'), props: true },
   // Shareable note link — opens inside the app; visitors must log in (the guard
   // redirects to /login?redirect=/share/:id), then edit/view per the link's permission.

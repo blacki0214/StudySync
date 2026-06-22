@@ -21,6 +21,7 @@ import FlashcardGenerator from '../components/ai/FlashcardGenerator.vue'
 import QuizGenerator from '../components/ai/QuizGenerator.vue'
 import KeywordExtractor from '../components/ai/KeywordExtractor.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
+import TaskManager from '../components/tasks/TaskManager.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
@@ -30,6 +31,7 @@ const aiStore = useAiStore()
 
 const ready = ref(false)
 const busy = ref(false)
+const section = ref('study') // 'study' | 'tasks'
 const tab = ref('summary')
 const selected = ref([]) // selected document ids
 const showExport = ref(false)
@@ -116,7 +118,19 @@ function doExport(kind) {
       </div>
     </header>
 
-    <div class="workspace-grid">
+    <!-- Section switch: study workspace vs. task tracker -->
+    <div class="ws-section-switch">
+      <button class="tvs-btn" :class="{ active: section==='study' }" @click="section='study'">
+        <i class="bi bi-journal-text"></i>{{ t('workspace.sectionStudy') }}
+      </button>
+      <button class="tvs-btn" :class="{ active: section==='tasks' }" @click="section='tasks'">
+        <i class="bi bi-check2-square"></i>{{ t('workspace.sectionTasks') }}
+      </button>
+    </div>
+
+    <TaskManager v-if="section==='tasks'" :subject-id="props.id" />
+
+    <div v-else class="workspace-grid">
       <!-- Left: sources -->
       <aside class="ws-col ws-sources">
         <DocumentUploader :busy="busy" @add="add" />

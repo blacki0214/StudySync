@@ -18,6 +18,7 @@ const links = [
   { to: '/hub', icon: 'bi-compass', key: 'nav.hub' },
   { to: '/subjects', icon: 'bi-journal-bookmark-fill', key: 'nav.subjects' },
   { to: '/notes', icon: 'bi-file-earmark-text', key: 'nav.collabNotes', badge: 'live', badgeType: 'live' },
+  { to: '/tasks', icon: 'bi-check2-square', key: 'nav.tasks' },
   { to: '/rooms', icon: 'bi-people-fill', key: 'nav.studyRooms', badge: '3', badgeType: 'count' },
   { to: '/flashcards', icon: 'bi-stars', key: 'nav.flashcards' },
   { to: '/community', icon: 'bi-chat-square-text', key: 'nav.community' },
