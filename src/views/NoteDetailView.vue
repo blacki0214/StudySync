@@ -14,7 +14,7 @@ import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import { ResizableImage } from '../components/notes/ResizableImage.js'
 import TextAlign from '@tiptap/extension-text-align'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
@@ -160,7 +160,7 @@ onMounted(async () => {
     CodeBlockLowlight.configure({ lowlight }),
     Underline,
     Link.configure({ openOnClick: false }),
-    Image,
+    ResizableImage,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
     TextStyle,
     Color,
