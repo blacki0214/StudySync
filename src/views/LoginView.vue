@@ -54,7 +54,7 @@ async function submit() {
       <form @submit.prevent="submit">
         <div class="form-group">
           <label>{{ t('auth.email') }}</label>
-          <input v-model="email" type="email" class="form-control" :placeholder="t('auth.emailPlaceholder')" />
+          <input v-model="email" type="email" class="form-control" />
         </div>
         <div class="form-group">
           <label>{{ t('auth.password') }}</label>
@@ -63,7 +63,6 @@ async function submit() {
               v-model="password"
               :type="showPw ? 'text' : 'password'"
               class="form-control"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             />
             <button type="button" class="pw-toggle" :aria-label="showPw ? t('auth.hidePassword') : t('auth.showPassword')" @click="showPw = !showPw">
               <i class="bi" :class="showPw ? 'bi-eye-slash' : 'bi-eye'"></i>
