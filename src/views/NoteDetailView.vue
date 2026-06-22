@@ -345,6 +345,22 @@ async function renameTitle(e) {
   try { await noteService.renameNote(note.value.id, name) } catch { /* keep optimistic value */ }
 }
 
+// Clicking the empty area of the page (below the content, or next to a floated
+// image / after a trailing image) should place the caret there to type — adding
+// a paragraph at the end if the document doesn't end in editable text.
+function onSurfaceClick(e) {
+  if (!editor.value || !canEdit.value) return
+  const cl = e.target?.classList
+  if (!cl || !(cl.contains('doc-surface') || cl.contains('ProseMirror'))) return // clicked real content
+  const { state } = editor.value
+  const end = state.doc.content.size
+  if (state.doc.lastChild?.isTextblock) {
+    editor.value.chain().focus().setTextSelection(end).run()
+  } else {
+    editor.value.chain().focus().insertContentAt(end, { type: 'paragraph' }).setTextSelection(end + 1).run()
+  }
+}
+
 // Toolbar command helpers.
 function chain() { return editor.value.chain().focus() }
 function setLink() {
@@ -496,7 +512,7 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
 
     <!-- Document + side panel -->
     <div class="editor-grid">
-      <EditorContent :editor="editor" class="doc-surface" />
+      <EditorContent :editor="editor" class="doc-surface" @click="onSurfaceClick" />
 
       <div class="side-panel">
         <div class="seg-tabs">
