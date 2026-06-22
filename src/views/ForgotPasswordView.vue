@@ -1,13 +1,13 @@
-<script setup>
+﻿<script setup>
 /**
- * ForgotPasswordView — request a password-reset email. On success we show a
+ * ForgotPasswordView â€” request a password-reset email. On success we show a
  * neutral "check your email" message (we don't reveal whether the email exists).
  */
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { validateEmail } from '../utils/validation.js'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t } = useI18n()
 const auth = useAuthStore()

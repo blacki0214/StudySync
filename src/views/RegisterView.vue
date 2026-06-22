@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 /**
- * RegisterView — a multi-step signup wizard (name → details → role → purpose →
+ * RegisterView â€” a multi-step signup wizard (name â†’ details â†’ role â†’ purpose â†’
  * account), then an email-confirmation screen. Centered single-column layout.
  * All data is persisted via authService (Supabase, or localStorage in demo mode).
  */
@@ -11,7 +11,7 @@ import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { validateEmail, validatePassword, validatePhone, passwordStrength } from '../utils/validation.js'
 import AppSelect from '../components/common/AppSelect.vue'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -56,7 +56,7 @@ const monthOptions = computed(() =>
   }))
 )
 const yearOptions = Array.from({ length: 96 }, (_, i) => {
-  const y = thisYear - 5 - i // sensible DOB range: 5–100 years ago
+  const y = thisYear - 5 - i // sensible DOB range: 5â€“100 years ago
   return { value: String(y), label: String(y) }
 })
 

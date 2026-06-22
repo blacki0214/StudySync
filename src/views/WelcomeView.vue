@@ -1,13 +1,13 @@
-<script setup>
+﻿<script setup>
 /**
- * WelcomeView — the landing page after a user confirms their email. Supabase
+ * WelcomeView â€” the landing page after a user confirms their email. Supabase
  * processes the confirmation token in the URL and creates a session; we refresh
  * the auth store so the "Go to app" button drops straight into the Hub.
  */
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t } = useI18n()
 const auth = useAuthStore()

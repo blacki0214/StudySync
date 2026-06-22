@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 /**
- * AppSidebar — primary navigation, achievements XP card and the signed-in user
+ * AppSidebar â€” primary navigation, achievements XP card and the signed-in user
  * footer. Matches the Figma. Collapses to an off-canvas drawer on mobile via the
  * uiStore.
  */
@@ -8,7 +8,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/authStore.js'
 import { useUiStore } from '../../stores/uiStore.js'
-import logoMark from '../../assets/images/logo-mark.png'
+import logoMark from '../../assets/images/logo_2.png'
 
 const auth = useAuthStore()
 const ui = useUiStore()

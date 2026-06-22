@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 /**
- * AppNavbar — the single top bar that now drives the whole app: brand, global
+ * AppNavbar â€” the single top bar that now drives the whole app: brand, global
  * search, the apps launcher (all features), language switcher, dark-mode toggle,
  * notifications and the account menu (profile + log out). The left sidebar was
  * removed, so navigation lives in the launcher and this account menu.
@@ -12,7 +12,7 @@ import { useUiStore } from '../../stores/uiStore.js'
 import { usePaletteStore } from '../../stores/paletteStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
 import AppLauncher from './AppLauncher.vue'
-import logoMark from '../../assets/images/logo-mark.png'
+import logoMark from '../../assets/images/logo_2.png'
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -20,7 +20,7 @@ const palette = usePaletteStore()
 const router = useRouter()
 const { t, locale } = useI18n()
 
-// The search box is a trigger for the global command palette (⌘K).
+// The search box is a trigger for the global command palette (âŒ˜K).
 function openPalette(e) {
   e.target.blur()
   palette.show()
@@ -56,7 +56,7 @@ function initials(name) {
         @focus="openPalette"
         @click="palette.show()"
       />
-      <span class="kbd">⌘K</span>
+      <span class="kbd">âŒ˜K</span>
     </div>
 
     <div class="navbar-actions">

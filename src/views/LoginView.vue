@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 /**
- * LoginView — centered email/password sign-in with a forgot-password link and a
+ * LoginView â€” centered email/password sign-in with a forgot-password link and a
  * show/hide password toggle. Validates client-side, then delegates to the store.
  */
 import { ref } from 'vue'
@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { validateEmail, validatePassword, firstError } from '../utils/validation.js'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -63,7 +63,7 @@ async function submit() {
               v-model="password"
               :type="showPw ? 'text' : 'password'"
               class="form-control"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             />
             <button type="button" class="pw-toggle" :aria-label="showPw ? t('auth.hidePassword') : t('auth.showPassword')" @click="showPw = !showPw">
               <i class="bi" :class="showPw ? 'bi-eye-slash' : 'bi-eye'"></i>

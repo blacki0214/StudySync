@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 /**
- * ResetPasswordView — the page the reset email links to. Supabase establishes a
+ * ResetPasswordView â€” the page the reset email links to. Supabase establishes a
  * short-lived recovery session from the URL automatically; the user just sets a
  * new password here.
  */
@@ -8,7 +8,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { validatePassword, passwordStrength } from '../utils/validation.js'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t } = useI18n()
 const auth = useAuthStore()

@@ -1,9 +1,9 @@
-<script setup>
-/** LandingView — public marketing page that introduces the platform. */
+﻿<script setup>
+/** LandingView â€” public marketing page that introduces the platform. */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SUPPORTED, setLocale } from '../i18n/index.js'
-import logoMark from '../assets/images/logo-mark.png'
+import logoMark from '../assets/images/logo_2.png'
 
 const { t, locale } = useI18n()
 
@@ -61,6 +61,6 @@ const features = computed(() => [
       </div>
     </section>
 
-    <footer class="app-footer">© {{ new Date().getFullYear() }} StudySync — COS30043 Interface Design and Development.</footer>
+    <footer class="app-footer">Â© {{ new Date().getFullYear() }} StudySync â€” COS30043 Interface Design and Development.</footer>
   </div>
 </template>
