@@ -332,12 +332,24 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   max-height: 88vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
+.vh-content .modal-header { flex-shrink: 0; }
 .vh-head-actions { display: flex; align-items: center; gap: var(--space-3); }
-.vh-toggle { font-size: 0.85rem; color: var(--c-text-muted); display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; cursor: pointer; }
-.vh-body { display: grid; grid-template-columns: 240px 1fr; gap: 0; padding: 0; max-height: 72vh; }
-.vh-timeline { border-right: 1px solid var(--c-border); overflow-y: auto; padding: var(--space-2); background: var(--c-surface); }
+/* "Show changes" is a real toggle pill so it's easy to find and its state is obvious. */
+.vh-toggle-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.85rem; font-weight: 600;
+  padding: 0.35rem 0.8rem; border-radius: var(--radius-pill);
+  border: 1px solid var(--c-border-strong); background: var(--c-surface);
+  color: var(--c-text-muted); cursor: pointer; transition: all 0.15s;
+}
+.vh-toggle-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+.vh-toggle-btn.active { background: var(--grad-button); border-color: transparent; color: #fff; box-shadow: var(--shadow-brand); }
+.vh-body { display: grid; grid-template-columns: 240px 1fr; gap: 0; padding: 0; flex: 1; min-height: 0; }
+.vh-timeline { border-right: 1px solid var(--c-border); overflow-y: auto; min-height: 0; padding: var(--space-2); background: var(--c-surface); }
 .vh-item { display: flex; align-items: center; gap: var(--space-2); width: 100%; border: none; background: none; text-align: left; padding: 0.5rem; border-radius: var(--radius-sm); cursor: pointer; }
 .vh-item:hover { background: var(--c-surface-2); }
 .vh-item.active { background: var(--c-primary-light); }
@@ -345,7 +357,7 @@
 .vh-meta { display: flex; flex-direction: column; min-width: 0; }
 .vh-author { font-weight: 600; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vh-date { font-size: 0.72rem; color: var(--c-text-faint); }
-.vh-pane { overflow-y: auto; padding: var(--space-5); background: var(--c-surface); }
+.vh-pane { overflow-y: auto; min-height: 0; padding: var(--space-5); background: var(--c-surface); }
 .vh-pane-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--c-border); }
 .vh-doc { line-height: 1.7; color: var(--c-text); }
 .vh-doc h1 { font-size: 1.7rem; margin: 0 0 0.4rem; }
@@ -354,10 +366,27 @@
 .vh-doc p { margin: 0 0 var(--space-3); }
 .vh-doc ul, .vh-doc ol { padding-left: 1.4rem; margin: 0 0 var(--space-3); }
 .vh-doc blockquote { border-left: 3px solid var(--c-border-strong); padding-left: var(--space-3); color: var(--c-text-muted); }
-/* Friendly track-changes (no +/- characters) */
+/* Friendly track-changes with a summary bar + gutter markers so edits stand out. */
 .vh-changes { font-size: 0.92rem; }
-.vh-line { padding: 0.1rem 0.5rem; border-radius: 4px; line-height: 1.6; white-space: pre-wrap; }
-.vh-add { background: rgba(16, 185, 129, 0.16); }
-.vh-del { background: rgba(239, 68, 68, 0.12); color: var(--c-text-muted); text-decoration: line-through; }
-.vh-same { color: var(--c-text); }
+.vh-diff-summary {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-bottom: var(--space-3); padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--c-border);
+}
+.vh-diff-stat {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-weight: 700; font-size: 0.82rem; padding: 0.2rem 0.6rem; border-radius: var(--radius-pill);
+}
+.vh-diff-stat.add { color: var(--c-success); background: rgba(16, 185, 129, 0.14); }
+.vh-diff-stat.del { color: var(--c-danger); background: rgba(239, 68, 68, 0.12); }
+.vh-diff-hint { font-size: 0.8rem; color: var(--c-text-faint); }
+.vh-line {
+  position: relative; padding: 0.15rem 0.5rem 0.15rem 1.7rem;
+  border-radius: 4px; line-height: 1.6; white-space: pre-wrap;
+}
+.vh-add { background: rgba(16, 185, 129, 0.14); border-left: 3px solid var(--c-success); }
+.vh-add::before { content: '+'; position: absolute; left: 0.55rem; color: var(--c-success); font-weight: 700; }
+.vh-del { background: rgba(239, 68, 68, 0.10); border-left: 3px solid var(--c-danger); color: var(--c-text-muted); text-decoration: line-through; }
+.vh-del::before { content: '\2212'; position: absolute; left: 0.55rem; color: var(--c-danger); font-weight: 700; text-decoration: none; }
+.vh-same { color: var(--c-text-muted); opacity: 0.75; }
 @media (max-width: 720px) { .vh-body { grid-template-columns: 1fr; } .vh-timeline { max-height: 160px; } }

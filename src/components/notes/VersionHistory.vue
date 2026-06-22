@@ -22,6 +22,10 @@ const previous = computed(() => props.versions[selected.value + 1] || null)
 const diffRows = computed(() =>
   lineDiff(htmlToText(previous.value?.content || ''), htmlToText(current.value?.content || ''))
 )
+const diffStats = computed(() => ({
+  added: diffRows.value.filter((r) => r.type === 'add').length,
+  removed: diffRows.value.filter((r) => r.type === 'del').length,
+}))
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 }
@@ -34,7 +38,15 @@ function initials(name) {
         <div class="modal-header">
           <h5 class="modal-title"><i class="bi bi-clock-history"></i> {{ t('editor.versionHistory') }}</h5>
           <div class="vh-head-actions">
-            <label class="vh-toggle"><input type="checkbox" v-model="showChanges" /> {{ t('editor.showChanges') }}</label>
+            <button
+              type="button"
+              class="vh-toggle-btn"
+              :class="{ active: showChanges }"
+              @click="showChanges = !showChanges"
+            >
+              <i class="bi" :class="showChanges ? 'bi-eye-fill' : 'bi-eye'"></i>
+              {{ t('editor.showChanges') }}
+            </button>
             <button class="btn-close" @click="emit('close')"></button>
           </div>
         </div>
@@ -70,8 +82,14 @@ function initials(name) {
               <div v-if="!showChanges" class="vh-doc" v-html="current.content"></div>
 
               <div v-else class="vh-changes">
-                <p class="panel-caption">{{ t('editor.changesHint') }}</p>
-                <div v-for="(row, i) in diffRows" :key="i" class="vh-line" :class="'vh-' + row.type">{{ row.text || ' ' }}</div>
+                <div class="vh-diff-summary">
+                  <span class="vh-diff-stat add"><i class="bi bi-plus-lg"></i> {{ diffStats.added }}</span>
+                  <span class="vh-diff-stat del"><i class="bi bi-dash-lg"></i> {{ diffStats.removed }}</span>
+                  <span class="vh-diff-hint">{{ t('editor.changesHint') }}</span>
+                </div>
+                <div class="vh-changes-scroll">
+                  <div v-for="(row, i) in diffRows" :key="i" class="vh-line" :class="'vh-' + row.type">{{ row.text || ' ' }}</div>
+                </div>
               </div>
             </template>
           </section>
