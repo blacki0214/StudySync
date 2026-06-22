@@ -177,6 +177,8 @@ onMounted(async () => {
   editor.value = new Editor({
     editable: canEdit.value,
     extensions,
+    // Turn off the browser's red spellcheck squiggles inside the document.
+    editorProps: { attributes: { spellcheck: 'false' } },
     onUpdate: ({ editor }) => { plainContent.value = editor.getText() },
     onTransaction: () => { editorTick.value++ }
   })

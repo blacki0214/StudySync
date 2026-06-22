@@ -271,11 +271,36 @@
   border-left: 3px solid var(--c-border-strong); margin: var(--space-3) 0;
   padding: 0.2rem 0 0.2rem var(--space-4); color: var(--c-text-muted);
 }
+/* VS Code / macOS-window style code block: dark editor surface with a title bar
+   of traffic-light dots. Stays dark in both themes so it reads as an IDE pane. */
 .doc-surface .ProseMirror pre {
-  background: var(--c-surface-2); border: 1px solid var(--c-border); border-radius: var(--radius-sm);
-  padding: var(--space-3) var(--space-4); font-family: var(--font-mono); font-size: 0.85em; overflow-x: auto;
+  position: relative;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border: 1px solid #2d2d2d;
+  border-radius: 10px;
+  padding: 2.6rem 1.1rem 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  line-height: 1.6;
+  overflow-x: auto;
+  box-shadow: var(--shadow);
 }
-.doc-surface .ProseMirror pre code { background: none; border: none; padding: 0; }
+.doc-surface .ProseMirror pre::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2rem;
+  background: #2a2a2a; border-bottom: 1px solid #3a3a3a;
+  border-radius: 10px 10px 0 0;
+}
+/* The three window dots (red drawn here; yellow + green via box-shadow). */
+.doc-surface .ProseMirror pre::after {
+  content: '';
+  position: absolute; top: 0.7rem; left: 1rem;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 18px 0 0 #ffbd2e, 36px 0 0 #27c93f;
+}
+.doc-surface .ProseMirror pre code { background: none; border: none; padding: 0; color: inherit; }
 .doc-surface .ProseMirror hr { border: none; border-top: 1px solid var(--c-border); margin: var(--space-5) 0; }
 .doc-surface .ProseMirror img { max-width: 100%; border-radius: var(--radius-sm); }
 .doc-surface .ProseMirror mark { background: #fef08a; border-radius: 3px; padding: 0 2px; }
