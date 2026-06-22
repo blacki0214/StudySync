@@ -192,6 +192,18 @@ export const noteService = {
     if (error) throw error
   },
 
+  /** Rename a note (lightweight title-only write). */
+  async renameNote(id, title) {
+    const now = new Date().toISOString()
+    if (!isSupabaseConfigured) {
+      const note = demoNotes.find((n) => n.id === id)
+      if (note) { note.title = title; note.updated_at = now }
+      return
+    }
+    const { error } = await supabase.from('notes').update({ title, updated_at: now }).eq('id', id)
+    if (error) throw error
+  },
+
   /** Enable/disable a shareable link and set its permission (read|edit). */
   async setShare(id, { enabled, permission }) {
     if (!isSupabaseConfigured) {

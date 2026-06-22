@@ -304,6 +304,18 @@ const hasSelection = computed(() => {
   return !!s && s.from !== s.to
 })
 
+// Inline title rename: the heading is contenteditable; save on blur/Enter.
+async function renameTitle(e) {
+  const name = (e.target.textContent || '').replace(/\s+/g, ' ').trim()
+  if (!name || name === note.value.title) {
+    e.target.textContent = note.value.title // restore if blank/unchanged
+    return
+  }
+  note.value.title = name
+  e.target.textContent = name
+  try { await noteService.renameNote(note.value.id, name) } catch { /* keep optimistic value */ }
+}
+
 // Toolbar command helpers.
 function chain() { return editor.value.chain().focus() }
 function setLink() {
@@ -378,7 +390,19 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
           <template v-else>{{ note.title }}</template>
           / {{ note.week || 'Notes' }}
         </div>
-        <h1 class="eh-title">{{ note.title }}</h1>
+        <!-- v-once: render the title once, then we manage its text manually so
+             frequent re-renders (presence/typing) can't clobber in-progress edits. -->
+        <h1
+          v-if="canEdit"
+          v-once
+          class="eh-title eh-title-edit"
+          contenteditable="true"
+          spellcheck="false"
+          :title="t('editor.renameHint')"
+          @keydown.enter.prevent="$event.target.blur()"
+          @blur="renameTitle"
+        >{{ note.title }}</h1>
+        <h1 v-else class="eh-title">{{ note.title }}</h1>
       </div>
       <div class="eh-actions">
         <span v-if="canEdit" class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>

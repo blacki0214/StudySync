@@ -149,6 +149,7 @@ export default {
     font: 'Font', fontSize: 'Size', sizeSmall: 'Small', sizeNormal: 'Normal', sizeLarge: 'Large', sizeHuge: 'Huge',
     linkUrl: 'Link URL:', imageUrl: 'Image URL:',
     imageTooLarge: 'Image is too large (max 5 MB).', imageFailed: 'Could not insert that image.',
+    renameHint: 'Click to rename',
     typing: 'typing…', viewing: 'viewing', editing: 'editing', you: '(you)', justYou: "It's just you here right now.",
     someoneTyping: 'Someone is typing…',
     placeholder: 'Start writing… everyone with the note sees your edits live.',
