@@ -23,6 +23,7 @@ const fileInput = ref(null)
 const menuOpen = ref(false)
 
 const align = computed(() => props.node.attrs.align || 'left')
+const wrap = computed(() => props.node.attrs.wrap || 'none')
 const editable = computed(() => props.editor.isEditable)
 const imgStyle = computed(() => ({
   width: props.node.attrs.width ? props.node.attrs.width + 'px' : undefined,
@@ -34,6 +35,7 @@ function rotate(delta) {
   props.updateAttributes({ rotate: r })
 }
 function setAlign(a) { props.updateAttributes({ align: a }) }
+function setWrap(w) { props.updateAttributes({ wrap: w }) }
 function setSize(px) { props.updateAttributes({ width: px }) }
 function resetSize() { props.updateAttributes({ width: null }); menuOpen.value = false }
 function remove() { props.deleteNode() }
@@ -92,7 +94,7 @@ function startResize(e) {
 </script>
 
 <template>
-  <node-view-wrapper ref="root" class="img-nv" :class="['align-' + align, { selected }]">
+  <node-view-wrapper ref="root" class="img-nv" :class="['align-' + align, 'wrap-' + wrap, { selected }]">
     <div class="img-nv-frame">
       <img ref="imgEl" :src="node.attrs.src" :alt="node.attrs.alt || ''" :style="imgStyle" draggable="false" />
 
@@ -100,6 +102,10 @@ function startResize(e) {
         <button type="button" title="Align left" :class="{ on: align === 'left' }" @click="setAlign('left')"><i class="bi bi-text-left"></i></button>
         <button type="button" title="Align center" :class="{ on: align === 'center' }" @click="setAlign('center')"><i class="bi bi-text-center"></i></button>
         <button type="button" title="Align right" :class="{ on: align === 'right' }" @click="setAlign('right')"><i class="bi bi-text-right"></i></button>
+        <span class="img-nv-sep"></span>
+        <button type="button" title="No wrap (own line)" :class="{ on: wrap === 'none' }" @click="setWrap('none')"><i class="bi bi-distribute-vertical"></i></button>
+        <button type="button" title="Wrap text — image left" :class="{ on: wrap === 'left' }" @click="setWrap('left')"><i class="bi bi-layout-sidebar-inset"></i></button>
+        <button type="button" title="Wrap text — image right" :class="{ on: wrap === 'right' }" @click="setWrap('right')"><i class="bi bi-layout-sidebar-inset-reverse"></i></button>
         <span class="img-nv-sep"></span>
         <button type="button" class="img-nv-size" title="Small" @click="setSize(200)">S</button>
         <button type="button" class="img-nv-size" title="Medium" @click="setSize(380)">M</button>

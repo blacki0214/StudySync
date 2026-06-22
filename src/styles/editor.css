@@ -336,6 +336,9 @@
 .img-nv { margin: var(--space-3) 0; }
 .img-nv.align-center { text-align: center; }
 .img-nv.align-right { text-align: right; }
+/* Text wrap: float the image so paragraphs flow beside it. */
+.img-nv.wrap-left { float: left; margin: 0.25rem var(--space-4) var(--space-2) 0; max-width: 60%; text-align: left; }
+.img-nv.wrap-right { float: right; margin: 0.25rem 0 var(--space-2) var(--space-4); max-width: 60%; text-align: left; }
 .img-nv-frame { position: relative; display: inline-block; max-width: 100%; line-height: 0; }
 .img-nv-frame img { display: block; max-width: 100%; border-radius: var(--radius-sm); }
 .img-nv.selected .img-nv-frame { outline: 2px solid var(--c-primary); outline-offset: 2px; border-radius: var(--radius-sm); }

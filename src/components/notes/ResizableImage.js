@@ -31,6 +31,12 @@ export const ResizableImage = Image.extend({
         default: 'left',
         parseHTML: (el) => el.getAttribute('data-align') || 'left',
         renderHTML: () => ({})
+      },
+      // Text wrapping: 'none' = own line; 'left'/'right' = float so text flows beside it.
+      wrap: {
+        default: 'none',
+        parseHTML: (el) => el.getAttribute('data-wrap') || 'none',
+        renderHTML: () => ({})
       }
     }
   },
@@ -38,13 +44,20 @@ export const ResizableImage = Image.extend({
   // Render a single <img> carrying width/rotate/align as inline style + data-*,
   // so a saved note shows the same thing even when rendered without the editor.
   renderHTML({ node, HTMLAttributes }) {
-    const { width, rotate, align } = node.attrs
-    const styles = ['display:block', 'max-width:100%']
+    const { width, rotate, align, wrap } = node.attrs
+    const styles = ['max-width:100%']
     if (width) styles.push(`width:${width}px`)
     if (rotate) styles.push(`transform:rotate(${rotate}deg)`)
-    if (align === 'center') styles.push('margin-left:auto', 'margin-right:auto')
-    else if (align === 'right') styles.push('margin-left:auto')
-    return ['img', mergeAttributes(HTMLAttributes, { style: styles.join(';'), 'data-align': align, 'data-rotate': rotate })]
+    if (wrap === 'left') {
+      styles.push('float:left', 'margin:0.25rem 1rem 0.5rem 0')
+    } else if (wrap === 'right') {
+      styles.push('float:right', 'margin:0.25rem 0 0.5rem 1rem')
+    } else {
+      styles.push('display:block')
+      if (align === 'center') styles.push('margin-left:auto', 'margin-right:auto')
+      else if (align === 'right') styles.push('margin-left:auto')
+    }
+    return ['img', mergeAttributes(HTMLAttributes, { style: styles.join(';'), 'data-align': align, 'data-rotate': rotate, 'data-wrap': wrap })]
   },
 
   addNodeView() {
