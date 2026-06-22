@@ -219,7 +219,7 @@ export const noteService = {
     if (error) throw error
   },
 
-  /** List the version history for a note, newest first. */
+  /** List the version history for a note, newest first (with author info). */
   async listVersions(noteId) {
     if (!isSupabaseConfigured) {
       return [...(demoVersions[noteId] || [])].sort(
@@ -228,9 +228,36 @@ export const noteService = {
     }
     const { data, error } = await supabase
       .from('note_versions')
-      .select('*')
+      .select('*, author:profiles(full_name)')
       .eq('note_id', noteId)
       .order('version_number', { ascending: false })
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Append a version snapshot tagged with who edited and when (for the edit
+   * history / diff view). version_number auto-increments per note.
+   */
+  async addVersion({ noteId, content, editedBy, authorName, summary = '' }) {
+    if (!isSupabaseConfigured) {
+      const list = (demoVersions[noteId] ||= [])
+      const vn = (list.reduce((m, v) => Math.max(m, v.version_number), 0) || 0) + 1
+      const row = {
+        id: nextDemoId('ver'), note_id: noteId, content, version_number: vn,
+        summary, edited_by: editedBy, author: { full_name: authorName }, created_at: new Date().toISOString()
+      }
+      list.push(row)
+      return row
+    }
+    const { data: last } = await supabase
+      .from('note_versions').select('version_number').eq('note_id', noteId)
+      .order('version_number', { ascending: false }).limit(1).maybeSingle()
+    const vn = (last?.version_number || 0) + 1
+    const { data, error } = await supabase
+      .from('note_versions')
+      .insert({ note_id: noteId, content, version_number: vn, summary, edited_by: editedBy })
+      .select('*, author:profiles(full_name)').single()
     if (error) throw error
     return data
   }

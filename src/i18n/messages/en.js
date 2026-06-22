@@ -33,6 +33,7 @@ export default {
     students: 'students',
     notes: 'notes',
     cancel: 'Cancel',
+    close: 'Close',
     viewSubject: 'View subject'
   },
 
@@ -152,6 +153,13 @@ export default {
     placeholder: 'Start writing… everyone with the note sees your edits live.',
     noComments: 'No comments yet.',
     noHistory: 'No saved versions yet.',
+    comment: 'Comment on selection', someone: 'Someone',
+    commentsHint: 'Select text, then click the comment button to discuss it.',
+    deleteComment: 'Delete comment', addComment: 'Add comment',
+    commentPlaceholder: 'Write a comment… (Ctrl+Enter to post)', postComment: 'Comment',
+    historyHint: 'Snapshots are saved as people edit — click one to see what changed.',
+    versionBy: 'v{version} by {author}',
+    diffHint: 'Lines added (+) and removed (−) since the previous version.',
     online: 'Online',
     comments: 'Comments',
     history: 'History',

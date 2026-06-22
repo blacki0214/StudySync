@@ -275,3 +275,35 @@
   left: -1px; line-height: normal; padding: 0.1rem 0.3rem; position: absolute; top: -1.4em;
   user-select: none; white-space: nowrap;
 }
+
+/* Commented text highlight */
+.comment-mark { background: rgba(245, 158, 11, 0.22); border-bottom: 2px solid #f59e0b; cursor: pointer; }
+
+/* Comment cards (side panel + composer) */
+.comment-card { border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-2); }
+.comment-head { display: flex; align-items: center; gap: var(--space-2); }
+.comment-head .cm-av { width: 26px; height: 26px; font-size: 0.66rem; }
+.comment-head .cm-ago { font-size: 0.74rem; color: var(--c-text-faint); }
+.comment-head .cm-del { margin-left: auto; border: none; background: none; color: var(--c-text-faint); width: 24px; height: 24px; border-radius: 6px; }
+.comment-head .cm-del:hover { color: var(--c-danger); background: var(--c-surface-2); }
+.cm-quote {
+  font-size: 0.82rem; color: var(--c-text-muted); border-left: 3px solid #f59e0b;
+  padding: 0.1rem 0 0.1rem var(--space-2); margin: var(--space-2) 0; cursor: pointer; font-style: italic;
+}
+.cm-text { font-size: 0.9rem; color: var(--c-text); white-space: pre-wrap; }
+
+/* History buttons */
+.history-btn { width: 100%; border: none; background: none; text-align: left; cursor: pointer; }
+.history-btn:hover { background: var(--c-surface-2); border-radius: var(--radius-sm); }
+.history-row { display: flex; align-items: center; gap: var(--space-3); padding: 0.55rem 0.4rem; }
+.history-row .hist-go { margin-left: auto; color: var(--c-text-faint); }
+.history-row .v-tag { background: var(--c-primary-light); color: var(--c-primary-dark); border-radius: 6px; padding: 0.1rem 0.45rem; font-size: 0.74rem; font-weight: 700; }
+.history-row .hist-meta { font-size: 0.76rem; color: var(--c-text-faint); }
+
+/* Diff viewer */
+.diff-view { background: var(--c-surface-2); border: 1px solid var(--c-border); border-radius: var(--radius-sm); padding: var(--space-3); max-height: 420px; overflow: auto; margin: 0; }
+.diff-line { display: block; font-family: var(--font-mono); font-size: 0.82rem; white-space: pre-wrap; line-height: 1.5; }
+.diff-add { background: rgba(16, 185, 129, 0.15); color: var(--c-success); }
+.diff-del { background: rgba(239, 68, 68, 0.14); color: var(--c-danger); }
+.diff-same { color: var(--c-text-muted); }
+.tb-btn.disabled, .tb-btn:disabled { opacity: 0.4; cursor: not-allowed; }

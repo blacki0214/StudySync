@@ -33,6 +33,7 @@ export default {
     students: 'sinh viên',
     notes: 'ghi chú',
     cancel: 'Huỷ',
+    close: 'Đóng',
     viewSubject: 'Xem môn học'
   },
 
@@ -146,6 +147,13 @@ export default {
     placeholder: 'Bắt đầu viết… mọi người trong ghi chú thấy bạn sửa trực tiếp.',
     noComments: 'Chưa có bình luận.',
     noHistory: 'Chưa có phiên bản đã lưu.',
+    comment: 'Bình luận đoạn đã chọn', someone: 'Ai đó',
+    commentsHint: 'Chọn văn bản rồi bấm nút bình luận để thảo luận.',
+    deleteComment: 'Xoá bình luận', addComment: 'Thêm bình luận',
+    commentPlaceholder: 'Viết bình luận… (Ctrl+Enter để gửi)', postComment: 'Bình luận',
+    historyHint: 'Bản chụp được lưu khi mọi người chỉnh sửa — bấm để xem thay đổi.',
+    versionBy: 'v{version} bởi {author}',
+    diffHint: 'Dòng thêm (+) và xoá (−) so với phiên bản trước.',
     liveAutosaved: 'Trực tiếp · đã tự lưu',
     saving: 'Đang lưu…',
     conflict: 'Xung đột',

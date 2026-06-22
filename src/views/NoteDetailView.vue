@@ -24,12 +24,14 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
 import { noteService } from '../services/noteService.js'
+import { commentService } from '../services/commentService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
 import { timeAgo } from '../utils/formatDate.js'
-import { editorComments, editorHistory } from '../data/sampleEditor.js'
+import { lineDiff } from '../utils/lineDiff.js'
+import { CommentMark } from '../components/notes/CommentMark.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
 import ShareDialog from '../components/notes/ShareDialog.vue'
@@ -53,6 +55,7 @@ function initials(name) {
 const ready = ref(false)
 const note = ref(null)
 const editor = shallowRef(null)
+const editorTick = ref(0) // bumped on every transaction so toolbar state stays reactive
 const plainContent = ref('')
 const saveStatus = ref('saved')
 const onlineUsers = ref([])
@@ -66,13 +69,25 @@ const canEdit = computed(() => (isShared.value ? note.value?.share_permission ==
 const subject = computed(() => subjectStore.getById(note.value?.subject_id))
 const statusLabel = computed(() => (saveStatus.value === 'saving' ? t('editor.saving') : t('editor.liveAutosaved')))
 
-// History tab: real version snapshots in live mode, sample in demo.
-const comments = computed(() => (isSupabaseConfigured ? [] : editorComments))
-const history = ref(isSupabaseConfigured ? [] : editorHistory)
+const comments = ref([])
+const history = ref([])
+
+// Inline comment composer.
+const showComposer = ref(false)
+const commentDraft = ref('')
+let pendingRange = null
+let pendingQuote = ''
+
+// History diff viewer.
+const diffOpen = ref(false)
+const diffRows = ref([])
+const diffVersion = ref(null)
 
 let ydoc = null
 let provider = null
 let saveTimer = null
+let unsubComments = null
+let lastSnapshotAt = 0
 
 function updateOnline() {
   if (!provider) { onlineUsers.value = [{ name: me.value.full_name, color: colorFor(me.value.id) }]; return }
@@ -122,6 +137,7 @@ onMounted(async () => {
     TextStyle,
     Color,
     Highlight.configure({ multicolor: true }),
+    CommentMark,
     Placeholder.configure({ placeholder: t('editor.placeholder') }),
     Collaboration.configure({ document: ydoc })
   ]
@@ -135,10 +151,8 @@ onMounted(async () => {
   editor.value = new Editor({
     editable: canEdit.value,
     extensions,
-    onUpdate: ({ editor }) => {
-      plainContent.value = editor.getText()
-      if (canEdit.value) scheduleSave()
-    }
+    onUpdate: ({ editor }) => { plainContent.value = editor.getText() },
+    onTransaction: () => { editorTick.value++ }
   })
 
   // Seed legacy notes (HTML content but no CRDT state yet) exactly once.
@@ -147,21 +161,105 @@ onMounted(async () => {
   }
   plainContent.value = editor.value.getText()
 
-  if (isSupabaseConfigured) {
-    const v = await noteService.listVersions(note.value.id)
-    history.value = v.map((row) => ({
-      id: row.id, version: row.version_number, summary: row.summary || 'Edited',
-      author: '', ago: timeAgo(row.created_at)
-    }))
-  }
+  // Save + snapshot ONLY on local edits (origin !== our provider), so version
+  // history is attributed to the person who actually typed.
+  ydoc.on('update', (_u, origin) => {
+    if (origin !== provider && canEdit.value) onLocalEdit()
+  })
+
+  await loadComments()
+  unsubComments = commentService.subscribe(note.value.id, loadComments)
+
+  const versions = await noteService.listVersions(note.value.id)
+  history.value = versions.map(normalizeVersion)
+
   ready.value = true
 })
 
 onBeforeUnmount(() => {
   clearTimeout(saveTimer)
+  unsubComments?.()
   editor.value?.destroy()
   provider?.destroy()
   ydoc?.destroy()
+})
+
+// --- History (authored, throttled snapshots) -------------------------------
+function normalizeVersion(row) {
+  return {
+    id: row.id,
+    version: row.version_number,
+    author: row.author?.full_name || row.author_name || '',
+    ago: timeAgo(row.created_at),
+    content: row.content
+  }
+}
+function maybeSnapshot() {
+  const now = Date.now()
+  if (now - lastSnapshotAt < 25000) return // at most one snapshot / 25s of typing
+  lastSnapshotAt = now
+  noteService
+    .addVersion({ noteId: note.value.id, content: editor.value.getText(), editedBy: me.value.id, authorName: me.value.full_name })
+    .then((row) => { if (row) history.value.unshift(normalizeVersion(row)) })
+    .catch(() => {})
+}
+function onLocalEdit() {
+  scheduleSave()
+  maybeSnapshot()
+}
+function openDiff(version, index) {
+  const prev = history.value[index + 1] // next in newest-first list = older
+  diffVersion.value = version
+  diffRows.value = lineDiff(prev?.content || '', version.content || '')
+  diffOpen.value = true
+}
+
+// --- Inline comments -------------------------------------------------------
+async function loadComments() {
+  comments.value = await commentService.list(note.value.id)
+}
+function startComment() {
+  const { from, to } = editor.value.state.selection
+  if (from === to) return // need a selection
+  pendingRange = { from, to }
+  pendingQuote = editor.value.state.doc.textBetween(from, to, ' ').slice(0, 200)
+  commentDraft.value = ''
+  showComposer.value = true
+}
+async function submitComment() {
+  if (!commentDraft.value.trim() || !pendingRange) return
+  const commentId = 'c-' + Math.random().toString(36).slice(2, 10)
+  editor.value.chain().focus().setTextSelection(pendingRange).setComment(commentId).run()
+  const row = await commentService.add({
+    noteId: note.value.id, commentId, authorId: me.value.id, authorName: me.value.full_name,
+    quote: pendingQuote, body: commentDraft.value.trim()
+  })
+  comments.value.push(row)
+  showComposer.value = false
+  pendingRange = null
+  activeTab.value = 'comments'
+}
+async function removeComment(c) {
+  await commentService.remove(c.id)
+  comments.value = comments.value.filter((x) => x.id !== c.id)
+  editor.value?.commands.unsetCommentById(c.comment_id)
+}
+function locateComment(c) {
+  // Select the marked range so the user can see which text it refers to.
+  const type = editor.value.state.schema.marks.comment
+  let found = null
+  editor.value.state.doc.descendants((node, pos) => {
+    if (found || !node.isText) return
+    if (node.marks.some((m) => m.type === type && m.attrs.commentId === c.comment_id)) {
+      found = { from: pos, to: pos + node.nodeSize }
+    }
+  })
+  if (found) editor.value.chain().focus().setTextSelection(found).run()
+}
+const hasSelection = computed(() => {
+  editorTick.value
+  const s = editor.value?.state.selection
+  return !!s && s.from !== s.to
 })
 
 // Toolbar command helpers.
@@ -176,7 +274,7 @@ function setImage() {
   const url = prompt(t('editor.imageUrl'))
   if (url) chain().setImage({ src: url }).run()
 }
-function isActive(name, attrs) { return editor.value?.isActive(name, attrs) }
+function isActive(name, attrs) { editorTick.value; return editor.value?.isActive(name, attrs) }
 </script>
 
 <template>
@@ -250,6 +348,7 @@ function isActive(name, attrs) { return editor.value?.isActive(name, attrs) }
       <div class="tb-sep"></div>
       <div class="tb-group">
         <button class="tb-btn" :title="t('editor.clearFormat')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
+        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
       </div>
     </div>
 
@@ -273,30 +372,73 @@ function isActive(name, attrs) { return editor.value?.isActive(name, attrs) }
           </div>
         </div>
 
-        <!-- Comments -->
+        <!-- Comments (inline, anchored to the text) -->
         <div v-else-if="activeTab==='comments'">
+          <p class="panel-caption">{{ t('editor.commentsHint') }}</p>
           <p v-if="!comments.length" class="pr-status">{{ t('editor.noComments') }}</p>
-          <div v-for="cm in comments" :key="cm.id" class="comment-row">
-            <img :src="cm.avatar" class="avatar-ring cm-avatar" :alt="cm.author" />
-            <div>
-              <div class="pr-name">{{ cm.author }} <span class="cm-ago">· {{ cm.ago }}</span></div>
-              <div class="cm-text">{{ cm.text }}</div>
+          <div v-for="cm in comments" :key="cm.id" class="comment-card">
+            <div class="comment-head">
+              <span class="user-avatar cm-av">{{ initials(cm.author_name) }}</span>
+              <span class="pr-name">{{ cm.author_name || t('editor.someone') }}</span>
+              <span class="cm-ago">· {{ timeAgo(cm.created_at) }}</span>
+              <button class="cm-del" :title="t('editor.deleteComment')" @click="removeComment(cm)"><i class="bi bi-x-lg"></i></button>
             </div>
+            <div v-if="cm.quote" class="cm-quote" @click="locateComment(cm)">“{{ cm.quote }}”</div>
+            <div class="cm-text">{{ cm.body }}</div>
           </div>
         </div>
 
-        <!-- History -->
+        <!-- History (who changed what, when — click to see the diff) -->
         <div v-else>
+          <p class="panel-caption">{{ t('editor.historyHint') }}</p>
           <p v-if="!history.length" class="pr-status">{{ t('editor.noHistory') }}</p>
-          <div v-for="h in history" :key="h.id" class="history-row">
+          <button v-for="(h, i) in history" :key="h.id" class="history-row history-btn" @click="openDiff(h, i)">
             <span class="v-tag">v{{ h.version }}</span>
-            <div><div class="pr-name">{{ h.summary }}</div><div class="hist-meta">{{ h.author }} {{ h.author ? '·' : '' }} {{ h.ago }}</div></div>
-          </div>
+            <div>
+              <div class="pr-name">{{ h.author || t('editor.someone') }}</div>
+              <div class="hist-meta">{{ h.ago }}</div>
+            </div>
+            <i class="bi bi-clock-history hist-go"></i>
+          </button>
         </div>
       </div>
     </div>
 
     <AiToolsDrawer v-model:open="aiOpen" :content="plainContent" :note-id="note.id" />
     <ShareDialog v-if="shareOpen" :note="note" @close="shareOpen = false" />
+
+    <!-- Add-comment composer -->
+    <div v-if="showComposer" class="modal d-block" tabindex="-1" style="background: rgba(15,23,42,.5)" @click.self="showComposer = false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header"><h5 class="modal-title"><i class="bi bi-chat-left-text"></i> {{ t('editor.addComment') }}</h5><button class="btn-close" @click="showComposer = false"></button></div>
+          <div class="modal-body">
+            <div v-if="pendingQuote" class="cm-quote">“{{ pendingQuote }}”</div>
+            <textarea v-model="commentDraft" class="form-control" rows="4" :placeholder="t('editor.commentPlaceholder')" @keydown.ctrl.enter="submitComment"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-soft" @click="showComposer = false">{{ t('common.cancel') }}</button>
+            <button class="btn btn-brand" :disabled="!commentDraft.trim()" @click="submitComment">{{ t('editor.postComment') }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Version diff viewer -->
+    <div v-if="diffOpen" class="modal d-block" tabindex="-1" style="background: rgba(15,23,42,.5)" @click.self="diffOpen = false">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ t('editor.versionBy', { version: diffVersion?.version, author: diffVersion?.author || t('editor.someone') }) }} · {{ diffVersion?.ago }}</h5>
+            <button class="btn-close" @click="diffOpen = false"></button>
+          </div>
+          <div class="modal-body">
+            <p class="panel-caption">{{ t('editor.diffHint') }}</p>
+            <pre class="diff-view"><code v-for="(row, i) in diffRows" :key="i" class="diff-line" :class="'diff-' + row.type">{{ row.type === 'add' ? '+ ' : row.type === 'del' ? '- ' : '  ' }}{{ row.text }}</code></pre>
+          </div>
+          <div class="modal-footer"><button class="btn btn-brand" @click="diffOpen = false">{{ t('common.close') }}</button></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

@@ -14,6 +14,7 @@
 -- ============================================================================
 
 -- Reset (safe to re-run). Order matters because of foreign keys.
+drop table if exists public.note_comments    cascade;
 drop table if exists public.quiz_attempts    cascade;
 drop table if exists public.submissions      cascade;
 drop table if exists public.assignments      cascade;
@@ -123,6 +124,19 @@ create table public.note_versions (
   summary        text,
   edited_by      uuid references public.profiles (id) on delete set null,
   created_at     timestamptz not null default now()
+);
+
+-- 5b. note_comments (inline comments anchored to a CommentMark in the doc) ----
+create table public.note_comments (
+  id          uuid primary key default gen_random_uuid(),
+  comment_id  text not null,                 -- id of the mark in the document
+  note_id     uuid references public.notes(id) on delete cascade,
+  author_id   uuid references public.profiles(id) on delete set null,
+  author_name text,
+  quote       text,
+  body        text not null,
+  resolved    boolean default false,
+  created_at  timestamptz not null default now()
 );
 
 -- 6. decks + deck_cards (Flashcards page) ------------------------------------
@@ -325,6 +339,7 @@ alter publication supabase_realtime add table public.notes;
 alter publication supabase_realtime add table public.note_versions;
 alter publication supabase_realtime add table public.documents;
 alter publication supabase_realtime add table public.class_announcements;
+alter publication supabase_realtime add table public.note_comments;
 
 -- ----------------------------------------------------------------------------
 -- Row Level Security. Reads are public (it's a sharing platform); writes are
@@ -435,3 +450,10 @@ create policy "sub delete" on public.submissions for delete to authenticated usi
 
 create policy "attempt read"   on public.quiz_attempts for select using (user_id = auth.uid() or public.is_class_owner(class_id));
 create policy "attempt insert" on public.quiz_attempts for insert to authenticated with check (user_id = auth.uid());
+
+-- Inline note comments: readable by anyone who can open the note; authenticated write.
+alter table public.note_comments enable row level security;
+create policy "comments read"   on public.note_comments for select using (true);
+create policy "comments insert" on public.note_comments for insert to authenticated with check (true);
+create policy "comments update" on public.note_comments for update to authenticated using (true);
+create policy "comments delete" on public.note_comments for delete to authenticated using (true);
