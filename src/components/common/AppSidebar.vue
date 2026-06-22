@@ -38,10 +38,6 @@ const links = [
 ]
 
 const user = computed(() => auth.user || {})
-const xpPct = computed(() => {
-  if (!user.value.xp || !user.value.xpNext) return 0
-  return Math.min((user.value.xp / user.value.xpNext) * 100, 100)
-})
 
 function initials(name) {
   if (!name) return '?'
@@ -99,13 +95,6 @@ async function logout() {
         </span>
       </router-link>
     </nav>
-
-    <div class="xp-card">
-      <div class="xp-trophy"><i class="bi bi-trophy-fill"></i></div>
-      <div class="xp-title">{{ t('nav.levelScholar', { level: user.level || 1 }) }}</div>
-      <div class="xp-meta">{{ (user.xp || 0).toLocaleString() }} / {{ (user.xpNext || 0).toLocaleString() }} XP</div>
-      <div class="xp-bar"><div class="xp-fill" :style="{ width: xpPct + '%' }"></div></div>
-    </div>
 
     <!-- Footer controls: theme · language · notifications -->
     <div class="sidebar-controls">
