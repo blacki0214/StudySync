@@ -13,7 +13,10 @@ import { useAuthStore } from '../../stores/authStore.js'
 import { useUiStore } from '../../stores/uiStore.js'
 import { usePaletteStore } from '../../stores/paletteStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
+import { shortcut } from '../../utils/platform.js'
 import logoMark from '../../assets/images/logo_2.png'
+
+const searchShortcut = shortcut('K')
 
 const auth = useAuthStore()
 const ui = useUiStore()
@@ -77,7 +80,7 @@ async function logout() {
     <button class="sidebar-search" @click="palette.show()">
       <i class="bi bi-search"></i>
       <span>{{ t('nav.search') }}</span>
-      <span class="kbd">⌘K</span>
+      <span class="kbd">{{ searchShortcut }}</span>
     </button>
 
     <div class="sidebar-section-label">{{ t('nav.workspace') }}</div>
