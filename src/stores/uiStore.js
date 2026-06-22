@@ -10,13 +10,13 @@ import { defineStore } from 'pinia'
 
 const THEME_KEY = 'studysync_theme'
 const MODE_KEY = 'studysync_sidebar_mode'
-const MODES = ['full', 'mini', 'closed']
+const MODES = ['full', 'mini']
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
     theme: 'light',
     sidebarOpen: false, // mobile off-canvas drawer
-    // Desktop sidebar size: 'full' (labels) | 'mini' (icons only) | 'closed' (hidden)
+    // Desktop sidebar size: 'full' (labels) | 'mini' (icons only)
     sidebarMode: MODES.includes(localStorage.getItem(MODE_KEY)) ? localStorage.getItem(MODE_KEY) : 'full'
   }),
 
@@ -51,7 +51,7 @@ export const useUiStore = defineStore('ui', {
     closeSidebar() {
       this.sidebarOpen = false
     },
-    /** Desktop: set the sidebar size mode ('full' | 'mini' | 'closed'), persisted. */
+    /** Desktop: set the sidebar size mode ('full' | 'mini'), persisted. */
     setSidebarMode(mode) {
       if (!MODES.includes(mode)) return
       this.sidebarMode = mode

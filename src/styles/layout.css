@@ -52,15 +52,6 @@
 }
 .sidebar-collapse-btn:hover { background: var(--c-hover); color: var(--c-text); }
 
-/* Floating button to bring the sidebar back when minimised. */
-.sidebar-reopen {
-  position: fixed; top: var(--space-4); left: var(--space-3); z-index: 1041;
-  width: 36px; height: 36px; border-radius: var(--radius-sm);
-  border: 1px solid var(--c-border-strong); background: var(--c-surface); color: var(--c-text-muted);
-  display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-sm);
-  transition: background 0.2s var(--ease-fluid), color 0.2s var(--ease-fluid);
-}
-.sidebar-reopen:hover { background: var(--c-hover); color: var(--c-text); }
 .sidebar-brand .brand-mark {
   width: 44px;
   height: 44px;
@@ -313,12 +304,8 @@
   margin: 0 auto;
 }
 
-/* Desktop sidebar size modes: closed (hidden) and mini (icons only). */
+/* Desktop sidebar size mode: mini (icons only). */
 @media (min-width: 769px) {
-  /* Closed → slide off-screen, content reclaims full width. */
-  .app-shell.sidebar-closed .app-sidebar { transform: translateX(-100%); }
-  .app-shell.sidebar-closed .app-main { margin-left: 0; }
-
   /* Mini → narrow icon rail. */
   .app-shell.sidebar-mini .app-sidebar {
     width: var(--sidebar-mini-width);
@@ -361,10 +348,6 @@
   }
   .app-shell.sidebar-mini .sidebar-user:hover { background: none; }
   .app-shell.sidebar-mini .sidebar-user .su-avatar { width: 34px; height: 34px; }
-}
-/* On mobile the reopen button is redundant (the top strip has the menu button). */
-@media (max-width: 768px) {
-  .sidebar-reopen { display: none; }
 }
 
 .sidebar-user .su-name,

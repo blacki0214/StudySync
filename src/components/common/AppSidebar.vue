@@ -66,9 +66,6 @@ async function logout() {
         <button v-else class="sidebar-collapse-btn" :title="t('nav.minimizeSidebar')" :aria-label="t('nav.minimizeSidebar')" @click="ui.setSidebarMode('mini')">
           <i class="bi bi-chevron-double-left"></i>
         </button>
-        <button class="sidebar-collapse-btn" :title="t('nav.closeSidebar')" :aria-label="t('nav.closeSidebar')" @click="ui.setSidebarMode('closed')">
-          <i class="bi bi-x-lg"></i>
-        </button>
       </div>
     </div>
 
