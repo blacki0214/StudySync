@@ -97,8 +97,6 @@ async function logout() {
       </router-link>
     </nav>
 
-    <div class="sidebar-spacer"></div>
-
     <div class="xp-card">
       <div class="xp-trophy"><i class="bi bi-trophy-fill"></i></div>
       <div class="xp-title">{{ t('nav.levelScholar', { level: user.level || 1 }) }}</div>
