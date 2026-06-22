@@ -27,6 +27,8 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight, common } from 'lowlight'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
+import CodeBlockView from '../components/notes/CodeBlockView.vue'
 import * as Y from 'yjs'
 import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
@@ -157,7 +159,10 @@ onMounted(async () => {
 
   const extensions = [
     StarterKit.configure({ history: false, codeBlock: false }), // history → Collaboration; codeBlock → lowlight
-    CodeBlockLowlight.configure({ lowlight }),
+    CodeBlockLowlight.extend({
+      draggable: true, // allow moving the block via its title-bar drag handle
+      addNodeView() { return VueNodeViewRenderer(CodeBlockView) }
+    }).configure({ lowlight }),
     Underline,
     Link.configure({ openOnClick: false }),
     ResizableImage,
