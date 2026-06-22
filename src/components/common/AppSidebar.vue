@@ -146,7 +146,7 @@ async function logout() {
         </div>
         <i class="bi bi-chevron-expand su-caret"></i>
       </button>
-      <ul class="dropdown-menu profile-menu w-100">
+      <ul class="dropdown-menu profile-menu">
         <li><router-link class="dropdown-item" to="/profile" @click="ui.closeSidebar()"><i class="bi bi-person"></i>{{ t('nav.profile') }}</router-link></li>
         <li><hr class="dropdown-divider" /></li>
         <li><button class="dropdown-item text-danger" @click="logout"><i class="bi bi-box-arrow-right"></i>{{ t('nav.logout') }}</button></li>

@@ -234,6 +234,9 @@
 }
 
 .sidebar-account { width: 100%; }
+/* Account dropdown: a readable fixed-width menu in BOTH full and mini modes
+   (never squeezed to the rail width). */
+.sidebar-account .profile-menu { min-width: 220px; }
 .sidebar-user {
   display: flex;
   align-items: center;
@@ -342,6 +345,7 @@
     border: none; background: none; box-shadow: none; color: var(--c-text-muted);
   }
   .app-shell.sidebar-mini .sidebar-search:hover { background: var(--c-hover); color: var(--c-text); }
+  .app-shell.sidebar-mini .sidebar-search:focus { outline: none; box-shadow: none; }
   .app-shell.sidebar-mini .sidebar-controls { flex-direction: column; align-items: center; gap: var(--space-1); }
   /* Account: drop the bordered pill — show just the avatar, centred. */
   .app-shell.sidebar-mini .sidebar-account { display: flex; justify-content: center; }
