@@ -61,10 +61,10 @@ async function logout() {
       </router-link>
       <div class="sidebar-head-actions">
         <button v-if="ui.sidebarMode === 'mini'" class="sidebar-collapse-btn" :title="t('nav.expandSidebar')" :aria-label="t('nav.expandSidebar')" @click="ui.setSidebarMode('full')">
-          <i class="bi bi-chevron-double-right"></i>
+          <i class="bi bi-list"></i>
         </button>
         <button v-else class="sidebar-collapse-btn" :title="t('nav.minimizeSidebar')" :aria-label="t('nav.minimizeSidebar')" @click="ui.setSidebarMode('mini')">
-          <i class="bi bi-list"></i>
+          <i class="bi bi-chevron-double-left"></i>
         </button>
       </div>
     </div>
