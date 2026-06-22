@@ -20,6 +20,8 @@ export default {
     levelScholar: 'Level {level} Scholar',
     search: 'Search',
     searchPlaceholder: 'Search notes, subjects, rooms...',
+    collapseSidebar: 'Collapse sidebar',
+    openSidebar: 'Open sidebar',
     lightMode: 'Switch to light mode',
     darkMode: 'Switch to dark mode',
     notifications: 'Notifications',

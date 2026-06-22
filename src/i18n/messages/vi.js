@@ -20,6 +20,8 @@ export default {
     levelScholar: 'Học giả cấp {level}',
     search: 'Tìm kiếm',
     searchPlaceholder: 'Tìm ghi chú, môn học, phòng...',
+    collapseSidebar: 'Thu gọn thanh bên',
+    openSidebar: 'Mở thanh bên',
     lightMode: 'Chuyển sang giao diện sáng',
     darkMode: 'Chuyển sang giao diện tối',
     notifications: 'Thông báo',

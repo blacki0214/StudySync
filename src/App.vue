@@ -46,8 +46,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     </router-view>
   </div>
 
-  <div v-else class="app-shell">
+  <div v-else class="app-shell" :class="{ 'sidebar-collapsed': ui.sidebarCollapsed }">
     <AppSidebar />
+
+    <!-- Reopen button shown when the sidebar is minimised (desktop). -->
+    <button v-if="ui.sidebarCollapsed" class="sidebar-reopen" :title="t('nav.openSidebar')" :aria-label="t('nav.openSidebar')" @click="ui.toggleCollapse()">
+      <i class="bi bi-chevron-double-right"></i>
+    </button>
 
     <!-- Mobile drawer scrim -->
     <div v-if="ui.sidebarOpen" class="sidebar-scrim" @click="ui.closeSidebar()"></div>

@@ -9,11 +9,13 @@
 import { defineStore } from 'pinia'
 
 const THEME_KEY = 'studysync_theme'
+const COLLAPSE_KEY = 'studysync_sidebar_collapsed'
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
     theme: 'light',
-    sidebarOpen: false
+    sidebarOpen: false, // mobile off-canvas drawer
+    sidebarCollapsed: localStorage.getItem(COLLAPSE_KEY) === '1' // desktop minimise
   }),
 
   getters: {
@@ -46,6 +48,11 @@ export const useUiStore = defineStore('ui', {
     },
     closeSidebar() {
       this.sidebarOpen = false
+    },
+    /** Desktop: minimise/expand the sidebar (persisted). */
+    toggleCollapse() {
+      this.sidebarCollapsed = !this.sidebarCollapsed
+      localStorage.setItem(COLLAPSE_KEY, this.sidebarCollapsed ? '1' : '0')
     }
   }
 })

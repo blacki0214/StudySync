@@ -24,15 +24,40 @@
   transition: transform 0.25s var(--ease-fluid);
 }
 
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0 var(--space-2) var(--space-5);
+  padding: 0 0 0 var(--space-2);
   color: inherit;
   text-decoration: none;
+  min-width: 0;
 }
 .sidebar-brand:hover { text-decoration: none; color: inherit; }
+.sidebar-collapse-btn {
+  flex-shrink: 0; border: none; background: none; color: var(--c-text-faint);
+  width: 30px; height: 30px; border-radius: var(--radius-sm); cursor: pointer;
+  display: grid; place-items: center; font-size: 1rem;
+  transition: background 0.2s var(--ease-fluid), color 0.2s var(--ease-fluid);
+}
+.sidebar-collapse-btn:hover { background: var(--c-hover); color: var(--c-text); }
+
+/* Floating button to bring the sidebar back when minimised. */
+.sidebar-reopen {
+  position: fixed; top: var(--space-4); left: var(--space-3); z-index: 1041;
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border-strong); background: var(--c-surface); color: var(--c-text-muted);
+  display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: background 0.2s var(--ease-fluid), color 0.2s var(--ease-fluid);
+}
+.sidebar-reopen:hover { background: var(--c-hover); color: var(--c-text); }
 .sidebar-brand .brand-mark {
   width: 44px;
   height: 44px;
@@ -275,6 +300,16 @@
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* Desktop: minimise the sidebar off-screen and reclaim the full width. */
+@media (min-width: 769px) {
+  .app-shell.sidebar-collapsed .app-sidebar { transform: translateX(-100%); }
+  .app-shell.sidebar-collapsed .app-main { margin-left: 0; }
+}
+/* On mobile the reopen button is redundant (the top strip has the menu button). */
+@media (max-width: 768px) {
+  .sidebar-reopen { display: none; }
 }
 
 .sidebar-user .su-name,

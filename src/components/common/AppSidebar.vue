@@ -52,13 +52,18 @@ async function logout() {
 
 <template>
   <aside class="app-sidebar" :class="{ open: ui.sidebarOpen }">
-    <router-link to="/hub" class="sidebar-brand" @click="ui.closeSidebar()">
-      <img :src="logoMark" class="brand-mark" alt="StudySync logo" />
-      <div>
-        <div class="brand-name">StudySync</div>
-        <div class="brand-sub">Vietnam</div>
-      </div>
-    </router-link>
+    <div class="sidebar-head">
+      <router-link to="/hub" class="sidebar-brand" @click="ui.closeSidebar()">
+        <img :src="logoMark" class="brand-mark" alt="StudySync logo" />
+        <div>
+          <div class="brand-name">StudySync</div>
+          <div class="brand-sub">Vietnam</div>
+        </div>
+      </router-link>
+      <button class="sidebar-collapse-btn" :title="t('nav.collapseSidebar')" :aria-label="t('nav.collapseSidebar')" @click="ui.toggleCollapse()">
+        <i class="bi bi-chevron-double-left"></i>
+      </button>
+    </div>
 
     <!-- Global search → command palette -->
     <button class="sidebar-search" @click="palette.show()">
