@@ -30,7 +30,7 @@ import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useAuthStore } from '../stores/authStore.js'
-import { isSupabaseConfigured } from '../services/supabaseClient.js'
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
 import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
@@ -312,9 +312,56 @@ function setLink() {
   if (url === '') chain().unsetLink().run()
   else chain().extendMarkRange('link').setLink({ href: url }).run()
 }
+// Image insert is an upload, not a URL prompt: the user picks a file from their
+// device. Live mode uploads to the public `note-images` Storage bucket; demo
+// mode (and any upload failure) falls back to inlining the image as a data URL,
+// so it always works offline too.
+const imageInput = ref(null)
+const uploadingImage = ref(false)
 function setImage() {
-  const url = prompt(t('editor.imageUrl'))
-  if (url) chain().setImage({ src: url }).run()
+  imageInput.value?.click()
+}
+async function onImagePicked(e) {
+  const file = e.target.files?.[0]
+  e.target.value = '' // let the same file be picked again later
+  if (!file) return
+  if (!file.type.startsWith('image/')) return
+  if (file.size > 5 * 1024 * 1024) {
+    alert(t('editor.imageTooLarge'))
+    return
+  }
+  uploadingImage.value = true
+  try {
+    const src = await uploadImage(file)
+    if (src) chain().setImage({ src }).run()
+  } catch {
+    alert(t('editor.imageFailed'))
+  } finally {
+    uploadingImage.value = false
+  }
+}
+async function uploadImage(file) {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+      const path = `${auth.user?.id || 'anon'}/${Date.now()}-${safe}`
+      const { error } = await supabase.storage.from('note-images').upload(path, file)
+      if (!error) {
+        const { data } = supabase.storage.from('note-images').getPublicUrl(path)
+        if (data?.publicUrl) return data.publicUrl
+      }
+      // Bucket missing or upload denied → fall back to an inline data URL.
+    } catch { /* fall through */ }
+  }
+  return await fileToDataUrl(file)
+}
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 function isActive(name, attrs) { editorTick.value; return editor.value?.isActive(name, attrs) }
 </script>
@@ -371,7 +418,10 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
       <div class="tb-group">
         <button class="tb-btn" :class="{ on: isActive('link') }" :title="t('editor.link')" @click="setLink"><i class="bi bi-link-45deg"></i></button>
         <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
-        <button class="tb-btn" :title="t('editor.image')" @click="setImage"><i class="bi bi-image"></i></button>
+        <button class="tb-btn" :class="{ disabled: uploadingImage }" :disabled="uploadingImage" :title="t('editor.image')" @click="setImage">
+          <i class="bi" :class="uploadingImage ? 'bi-arrow-repeat spin' : 'bi-image'"></i>
+        </button>
+        <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">

@@ -142,6 +142,7 @@ export default {
     clearFormat: 'Xoá định dạng', textColor: 'Màu chữ', highlight: 'Tô sáng',
     font: 'Phông', fontSize: 'Cỡ', sizeSmall: 'Nhỏ', sizeNormal: 'Thường', sizeLarge: 'Lớn', sizeHuge: 'Rất lớn',
     linkUrl: 'URL liên kết:', imageUrl: 'URL hình ảnh:',
+    imageTooLarge: 'Hình ảnh quá lớn (tối đa 5 MB).', imageFailed: 'Không thể chèn hình ảnh này.',
     typing: 'đang gõ…', viewing: 'đang xem', editing: 'đang sửa', you: '(bạn)', justYou: 'Hiện chỉ có mình bạn ở đây.',
     someoneTyping: 'Có người đang gõ…',
     placeholder: 'Bắt đầu viết… mọi người trong ghi chú thấy bạn sửa trực tiếp.',
