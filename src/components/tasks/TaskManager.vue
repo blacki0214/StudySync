@@ -37,6 +37,7 @@ const filtered = computed(() => {
 })
 const editingTask = computed(() => store.tasks.find((task) => task.id === editingId.value) || null)
 const counts = computed(() => store.counts)
+const completion = computed(() => counts.value.total ? Math.round((counts.value.done / counts.value.total) * 1000) / 10 : 0)
 
 onMounted(() => store.load({ subjectId: props.subjectId }))
 onBeforeUnmount(() => store.teardown())
@@ -78,11 +79,6 @@ async function deleteTask(id) {
       <button class="btn btn-brand" @click="createTask()"><i class="bi bi-plus-lg"></i>{{ t('tasks.newTask') }}</button>
     </div>
 
-    <!-- Summary -->
-    <div class="task-summary">
-      <span>{{ t('tasks.summary', { total: counts.total, done: counts.done, active: counts.in_progress }) }}</span>
-    </div>
-
     <!-- Empty state -->
     <div v-if="!store.loading && !store.tasks.length" class="task-empty">
       <i class="bi bi-check2-circle"></i>
@@ -108,6 +104,14 @@ async function deleteTask(id) {
         @create="createTask($event)"
       />
     </template>
+
+    <!-- Completion footer (Notion-style) -->
+    <div v-if="store.tasks.length" class="task-completion">
+      <span class="tc-label">{{ t('tasks.completed') }}</span>
+      <div class="tc-bar"><div class="tc-fill" :style="{ width: completion + '%' }"></div></div>
+      <span class="tc-pct">{{ completion }}%</span>
+      <span class="tc-counts">{{ t('tasks.summary', { total: counts.total, done: counts.done, active: counts.in_progress }) }}</span>
+    </div>
 
     <!-- Editor drawer -->
     <TaskEditor

@@ -30,16 +30,16 @@
   --grad-green: linear-gradient(135deg, #34d399, #059669);
   --grad-orange: linear-gradient(135deg, #fbbf24, #f59e0b);
 
-  /* ---- Surfaces & text ---- */
-  --c-bg: #f8f9fc;
+  /* ---- Surfaces & text (Notion-calm: warm near-black ink, hairline dividers) ---- */
+  --c-bg: #ffffff;
   --c-surface: #ffffff;
-  --c-surface-2: #f8fafc;
-  /* Slightly firmer hairlines: Notion leans on borders, not shadows, for structure. */
-  --c-border: #e8eaf0;
-  --c-border-strong: #dfe3ea;
-  --c-text: #0f172a;
-  --c-text-muted: #64748b;
-  --c-text-faint: #94a3b8;
+  --c-surface-2: #f7f7f5;            /* Notion's warm hover/zebra grey */
+  --c-border: #ececea;
+  --c-border-strong: #e3e3e0;
+  --c-text: #2f3437;                 /* Notion ink */
+  --c-text-muted: #6b6f76;
+  --c-text-faint: #9b9fa6;
+  --c-hover: rgba(55, 53, 47, 0.06); /* universal subtle hover wash */
 
   /* ---- Status ---- */
   --c-success: #16a34a;
@@ -78,7 +78,10 @@
   --sidebar-width: 256px;
   --navbar-height: 68px;
 
-  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Premium spring-like easing for all interactive motion (per design system). */
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
   --font-mono: 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
 }
 
@@ -86,21 +89,23 @@
    Dark theme — flipped by the top-bar toggle (data-theme="dark" on <html>).
    --------------------------------------------------------------------------- */
 [data-theme='dark'] {
-  --c-primary-light: #1e1b4b;
-  --c-primary-tint: #1e1b3a;
+  --c-primary-light: #2a2456;
+  --c-primary-tint: #211d40;
 
-  --c-bg: #0b1120;
-  --c-surface: #111827;
-  --c-surface-2: #0f1626;
-  --c-border: #1f2937;
-  --c-border-strong: #334155;
-  --c-text: #e5e7eb;
-  --c-text-muted: #94a3b8;
-  --c-text-faint: #64748b;
+  /* Notion dark: near-black charcoal, translucent white ink + hairlines. */
+  --c-bg: #191919;
+  --c-surface: #202020;
+  --c-surface-2: #2a2a2a;
+  --c-border: rgba(255, 255, 255, 0.094);
+  --c-border-strong: rgba(255, 255, 255, 0.16);
+  --c-text: rgba(255, 255, 255, 0.88);
+  --c-text-muted: rgba(255, 255, 255, 0.56);
+  --c-text-faint: rgba(255, 255, 255, 0.36);
+  --c-hover: rgba(255, 255, 255, 0.055);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* Smooth the theme transition. */

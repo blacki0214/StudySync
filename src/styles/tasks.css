@@ -25,7 +25,7 @@
   display: inline-flex; align-items: center; gap: 0.4rem;
   border: none; background: none; color: var(--c-text-muted);
   font-weight: 600; font-size: 0.85rem; padding: 0.35rem 0.85rem;
-  border-radius: var(--radius-pill); cursor: pointer; transition: all 0.15s;
+  border-radius: var(--radius-pill); cursor: pointer; transition: background 0.25s var(--ease-fluid), color 0.25s var(--ease-fluid);
 }
 .tvs-btn.active { background: var(--c-surface); color: var(--c-primary); box-shadow: var(--shadow-sm); }
 .task-search {
@@ -35,7 +35,17 @@
 }
 .task-search input { border: none; background: none; outline: none; color: var(--c-text); font-size: 0.86rem; width: 160px; }
 .task-filter { min-width: 140px; }
-.task-summary { color: var(--c-text-muted); font-size: 0.85rem; }
+
+/* Completion footer — Notion's "Completed XX%" with a slim progress bar. */
+.task-completion {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding-top: var(--space-2); color: var(--c-text-muted); font-size: 0.8rem;
+}
+.tc-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.68rem; font-weight: 700; color: var(--c-text-faint); }
+.tc-bar { width: 160px; height: 6px; border-radius: var(--radius-pill); background: var(--c-surface-2); overflow: hidden; }
+.tc-fill { height: 100%; border-radius: var(--radius-pill); background: var(--c-success); transition: width 0.5s var(--ease-fluid); }
+.tc-pct { font-weight: 700; color: var(--c-text); }
+.tc-counts { margin-left: auto; color: var(--c-text-faint); }
 
 /* ---------------- Chips ---------------- */
 .task-chip {
@@ -48,10 +58,10 @@
 .st-not-started { background: var(--c-surface-2); color: var(--c-text-muted); border: 1px solid var(--c-border-strong); }
 .st-in-progress { background: rgba(59, 130, 246, 0.14); color: #2563eb; }
 .st-done        { background: rgba(16, 185, 129, 0.16); color: #059669; }
-/* Priority */
-.pr-low    { background: rgba(16, 185, 129, 0.14); color: #059669; }
-.pr-medium { background: rgba(245, 158, 11, 0.16); color: #b45309; }
-.pr-high   { background: rgba(239, 68, 68, 0.14); color: #dc2626; }
+/* Priority (matches the Notion screenshot: Low blue · Medium amber · High red) */
+.pr-low    { background: rgba(59, 130, 246, 0.16); color: #2563eb; }
+.pr-medium { background: rgba(245, 158, 11, 0.18); color: #b45309; }
+.pr-high   { background: rgba(239, 68, 68, 0.16); color: #dc2626; }
 /* Type */
 .ty-general  { background: var(--c-surface-2); color: var(--c-text-muted); border: 1px solid var(--c-border-strong); }
 .ty-feature  { background: rgba(139, 92, 246, 0.16); color: #7c3aed; }
@@ -130,10 +140,10 @@
 .task-card {
   background: var(--c-surface); border: 1px solid var(--c-border-strong);
   border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer;
-  transition: border-color 0.12s, background 0.12s, transform 0.05s;
+  transition: border-color 0.25s var(--ease-fluid), background 0.25s var(--ease-fluid), transform 0.25s var(--ease-fluid);
 }
 .task-card:hover { border-color: var(--c-primary); background: var(--c-surface); }
-.task-card:active { transform: scale(0.99); }
+.task-card:active { transform: scale(0.985); }
 .task-card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: var(--space-2); color: var(--c-text); }
 .task-card-meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: var(--space-2); }
 .task-card-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }

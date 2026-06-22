@@ -20,7 +20,8 @@
   flex-direction: column;
   padding: var(--space-5) var(--space-4) var(--space-4);
   z-index: 1040;
-  transition: transform 0.25s ease;
+  overflow-y: auto;
+  transition: transform 0.25s var(--ease-fluid);
 }
 
 .sidebar-brand {
@@ -28,7 +29,10 @@
   align-items: center;
   gap: var(--space-3);
   padding: 0 var(--space-2) var(--space-5);
+  color: inherit;
+  text-decoration: none;
 }
+.sidebar-brand:hover { text-decoration: none; color: inherit; }
 .sidebar-brand .brand-mark {
   width: 44px;
   height: 44px;
@@ -171,17 +175,57 @@
   flex: 1;
 }
 
+/* Global search trigger (opens the ⌘K palette). */
+.sidebar-search {
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; border: 1px solid var(--c-border-strong); background: var(--c-surface);
+  color: var(--c-text-faint); border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem; font-size: 0.86rem; font-weight: 500; cursor: pointer;
+  margin-bottom: var(--space-3); transition: background 0.2s var(--ease-fluid), border-color 0.2s var(--ease-fluid);
+}
+.sidebar-search:hover { background: var(--c-hover); border-color: var(--c-primary); }
+.sidebar-search .kbd {
+  margin-left: auto; font-size: 0.68rem; font-weight: 600; color: var(--c-text-faint);
+  background: var(--c-surface-2); border: 1px solid var(--c-border); border-radius: 5px; padding: 0.05rem 0.35rem;
+}
+
+/* Footer controls row: theme · language · notifications. */
+.sidebar-controls {
+  display: flex; align-items: center; gap: var(--space-1);
+  padding: var(--space-2) 0; border-top: 1px solid var(--c-border); margin-top: var(--space-3);
+}
+.sidebar-ctl {
+  position: relative; display: inline-flex; align-items: center; gap: 0.3rem;
+  border: none; background: none; color: var(--c-text-muted); cursor: pointer;
+  height: 34px; padding: 0 0.5rem; border-radius: var(--radius-sm);
+  transition: background 0.2s var(--ease-fluid), color 0.2s var(--ease-fluid);
+}
+.sidebar-ctl:hover { background: var(--c-hover); color: var(--c-text); }
+.sidebar-ctl .ctl-lang { font-size: 0.74rem; font-weight: 700; }
+.sidebar-ctl .notif-dot {
+  position: absolute; top: 6px; right: 7px; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--c-danger); border: 2px solid var(--c-surface);
+}
+
+.sidebar-account { width: 100%; }
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--c-border);
-  margin-top: var(--space-4);
+  width: 100%;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.5rem;
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s var(--ease-fluid);
 }
-.sidebar-user:hover { text-decoration: none; color: inherit; }
+.sidebar-user:hover { text-decoration: none; color: inherit; background: var(--c-hover); }
+.sidebar-user .su-meta { min-width: 0; flex: 1; }
+.sidebar-user .su-caret { color: var(--c-text-faint); font-size: 0.9rem; }
 .sidebar-user .su-avatar {
   position: relative;
   width: 38px;
@@ -216,13 +260,14 @@
 }
 
 /* ---------------- Main column ----------------
-   The sidebar was removed; the top bar is the only chrome, so the main column
-   spans the full width and the content is centred with a comfortable max width. */
+   The fixed Notion-style sidebar is the only chrome; the main column is offset
+   by the sidebar width and centres its content at a comfortable max width. */
 .app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  margin-left: var(--sidebar-width);
 }
 .app-content {
   padding: var(--space-6);
@@ -230,6 +275,33 @@
   max-width: 1320px;
   width: 100%;
   margin: 0 auto;
+}
+
+.sidebar-user .su-name,
+.sidebar-user .su-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------------- Mobile top strip (replaces the navbar on phones) ---------------- */
+.mobile-bar { display: none; }
+.mobile-menu-btn {
+  border: none; background: none; color: var(--c-text); width: 40px; height: 40px;
+  border-radius: var(--radius-sm); display: grid; place-items: center; font-size: 1.25rem; cursor: pointer;
+}
+.mobile-menu-btn:hover { background: var(--c-hover); }
+.mobile-brand { display: flex; align-items: center; gap: 0.5rem; color: var(--c-text); font-weight: 800; text-decoration: none; }
+.mobile-brand img { width: 26px; height: 26px; border-radius: 7px; }
+
+/* Off-canvas drawer scrim (mobile only). */
+.sidebar-scrim { display: none; }
+@media (max-width: 768px) {
+  .app-main { margin-left: 0; }
+  .mobile-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--c-border);
+    background: var(--c-surface); position: sticky; top: 0; z-index: 1020;
+  }
+  .sidebar-scrim {
+    display: block; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); z-index: 1035;
+  }
 }
 
 .page-header {
