@@ -325,12 +325,19 @@
 .hist-dot { width: 30px; height: 30px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-size: 0.66rem; font-weight: 700; flex-shrink: 0; }
 
 /* ---- Version history modal ---- */
-.vh-modal { background: rgba(15, 23, 42, 0.5); }
-.vh-content { max-height: 88vh; }
+.vh-modal { background: rgba(15, 23, 42, 0.6); z-index: 1080; }
+.vh-content {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-height: 88vh;
+  overflow: hidden;
+}
 .vh-head-actions { display: flex; align-items: center; gap: var(--space-3); }
 .vh-toggle { font-size: 0.85rem; color: var(--c-text-muted); display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; cursor: pointer; }
 .vh-body { display: grid; grid-template-columns: 240px 1fr; gap: 0; padding: 0; max-height: 72vh; }
-.vh-timeline { border-right: 1px solid var(--c-border); overflow-y: auto; padding: var(--space-2); }
+.vh-timeline { border-right: 1px solid var(--c-border); overflow-y: auto; padding: var(--space-2); background: var(--c-surface); }
 .vh-item { display: flex; align-items: center; gap: var(--space-2); width: 100%; border: none; background: none; text-align: left; padding: 0.5rem; border-radius: var(--radius-sm); cursor: pointer; }
 .vh-item:hover { background: var(--c-surface-2); }
 .vh-item.active { background: var(--c-primary-light); }
@@ -338,7 +345,7 @@
 .vh-meta { display: flex; flex-direction: column; min-width: 0; }
 .vh-author { font-weight: 600; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vh-date { font-size: 0.72rem; color: var(--c-text-faint); }
-.vh-pane { overflow-y: auto; padding: var(--space-5); }
+.vh-pane { overflow-y: auto; padding: var(--space-5); background: var(--c-surface); }
 .vh-pane-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--c-border); }
 .vh-doc { line-height: 1.7; color: var(--c-text); }
 .vh-doc h1 { font-size: 1.7rem; margin: 0 0 0.4rem; }
