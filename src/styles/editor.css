@@ -341,6 +341,7 @@
 /* "Show changes" is a real toggle pill so it's easy to find and its state is obvious. */
 .vh-toggle-btn {
   display: inline-flex; align-items: center; gap: 0.4rem;
+  margin-left: var(--space-4);
   font-size: 0.85rem; font-weight: 600;
   padding: 0.35rem 0.8rem; border-radius: var(--radius-pill);
   border: 1px solid var(--c-border-strong); background: var(--c-surface);
@@ -380,13 +381,18 @@
 .vh-diff-stat.add { color: var(--c-success); background: rgba(16, 185, 129, 0.14); }
 .vh-diff-stat.del { color: var(--c-danger); background: rgba(239, 68, 68, 0.12); }
 .vh-diff-hint { font-size: 0.8rem; color: var(--c-text-faint); }
-.vh-line {
-  position: relative; padding: 0.15rem 0.5rem 0.15rem 1.7rem;
-  border-radius: 4px; line-height: 1.6; white-space: pre-wrap;
+/* Inline, Google-Docs-style track changes: the document keeps its layout and
+   edits are shown in place — removed words struck through, new words inline. */
+.vh-diff-doc {
+  line-height: 1.9; color: var(--c-text);
+  white-space: pre-wrap; word-break: break-word;
 }
-.vh-add { background: rgba(16, 185, 129, 0.14); border-left: 3px solid var(--c-success); }
-.vh-add::before { content: '+'; position: absolute; left: 0.55rem; color: var(--c-success); font-weight: 700; }
-.vh-del { background: rgba(239, 68, 68, 0.10); border-left: 3px solid var(--c-danger); color: var(--c-text-muted); text-decoration: line-through; }
-.vh-del::before { content: '\2212'; position: absolute; left: 0.55rem; color: var(--c-danger); font-weight: 700; text-decoration: none; }
-.vh-same { color: var(--c-text-muted); opacity: 0.75; }
+.vh-ins {
+  background: rgba(16, 185, 129, 0.18); color: var(--c-success);
+  text-decoration: none; border-radius: 3px; padding: 0 1px;
+}
+.vh-del-inline {
+  background: rgba(239, 68, 68, 0.12); color: var(--c-danger);
+  text-decoration: line-through; border-radius: 3px; padding: 0 1px;
+}
 @media (max-width: 720px) { .vh-body { grid-template-columns: 1fr; } .vh-timeline { max-height: 160px; } }

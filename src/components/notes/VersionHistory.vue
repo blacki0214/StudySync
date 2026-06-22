@@ -7,8 +7,8 @@
  */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { lineDiff } from '../../utils/lineDiff.js'
-import { htmlToText } from '../../utils/html.js'
+import { wordDiff } from '../../utils/wordDiff.js'
+import { htmlToBlockText } from '../../utils/html.js'
 
 const props = defineProps({ versions: { type: Array, default: () => [] } })
 const emit = defineEmits(['close'])
@@ -19,12 +19,12 @@ const showChanges = ref(false)
 
 const current = computed(() => props.versions[selected.value] || null)
 const previous = computed(() => props.versions[selected.value + 1] || null)
-const diffRows = computed(() =>
-  lineDiff(htmlToText(previous.value?.content || ''), htmlToText(current.value?.content || ''))
+const diffTokens = computed(() =>
+  wordDiff(htmlToBlockText(previous.value?.content || ''), htmlToBlockText(current.value?.content || ''))
 )
 const diffStats = computed(() => ({
-  added: diffRows.value.filter((r) => r.type === 'add').length,
-  removed: diffRows.value.filter((r) => r.type === 'del').length,
+  added: diffTokens.value.filter((t) => t.type === 'add' && t.text.trim()).length,
+  removed: diffTokens.value.filter((t) => t.type === 'del' && t.text.trim()).length,
 }))
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
@@ -87,9 +87,7 @@ function initials(name) {
                   <span class="vh-diff-stat del"><i class="bi bi-dash-lg"></i> {{ diffStats.removed }}</span>
                   <span class="vh-diff-hint">{{ t('editor.changesHint') }}</span>
                 </div>
-                <div class="vh-changes-scroll">
-                  <div v-for="(row, i) in diffRows" :key="i" class="vh-line" :class="'vh-' + row.type">{{ row.text || ' ' }}</div>
-                </div>
+                <div class="vh-diff-doc"><template v-for="(tok, i) in diffTokens" :key="i"><ins v-if="tok.type === 'add'" class="vh-ins">{{ tok.text }}</ins><del v-else-if="tok.type === 'del'" class="vh-del-inline">{{ tok.text }}</del><span v-else>{{ tok.text }}</span></template></div>
               </div>
             </template>
           </section>
