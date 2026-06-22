@@ -136,7 +136,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-6) var(--space-6) var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-8);
   min-height: 520px;
 }
 .doc-surface:focus { outline: none; }
@@ -261,8 +261,8 @@
 /* ----------------------------------------------------------------------------
    Tiptap (ProseMirror) editable surface + collaboration cursors. */
 .tb-btn.on { background: var(--c-primary-light); color: var(--c-primary-dark); }
-.doc-surface .ProseMirror { outline: none; min-height: 460px; }
-.doc-surface .ProseMirror > * + * { margin-top: 0.2rem; }
+.doc-surface .ProseMirror { outline: none; min-height: 460px; font-size: 1.02rem; line-height: 1.7; color: var(--c-text); }
+.doc-surface .ProseMirror > * + * { margin-top: 0.45rem; }
 .doc-surface .ProseMirror h3 { font-size: 1.08rem; margin: var(--space-5) 0 var(--space-2); }
 .doc-surface .ProseMirror ul,
 .doc-surface .ProseMirror ol { padding-left: 1.4rem; line-height: 1.8; }

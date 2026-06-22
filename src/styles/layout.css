@@ -73,26 +73,32 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.62rem 0.7rem;
+  padding: 0.5rem 0.6rem;
   border-radius: var(--radius-sm);
   color: var(--c-text-muted);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.9rem;
+  transition: background 0.12s, color 0.12s;
 }
 .sidebar-link:hover {
   background: var(--c-surface-2);
   color: var(--c-text);
   text-decoration: none;
 }
+/* Notion-style active: neutral grey fill + strong text, not a coloured chip. */
 .sidebar-link.router-link-active {
-  background: var(--c-primary-light);
-  color: var(--c-primary-dark);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font-weight: 600;
 }
+.sidebar-link.router-link-active i { color: var(--c-primary); }
 .sidebar-link i {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   width: 20px;
   text-align: center;
+  color: var(--c-text-faint);
 }
+.sidebar-link:hover i { color: var(--c-text-muted); }
 .sidebar-link .link-badge {
   margin-left: auto;
   font-size: 0.62rem;

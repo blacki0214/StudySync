@@ -16,5 +16,7 @@ Thumbs.db
 
 # Claude Code — never push AI assistant instructions/config to GitHub
 .claude/
+.agents/
+skills-lock.json
 CLAUDE.md
 CLAUDE.local.md

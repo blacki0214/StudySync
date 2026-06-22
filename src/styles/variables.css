@@ -34,8 +34,9 @@
   --c-bg: #f8f9fc;
   --c-surface: #ffffff;
   --c-surface-2: #f8fafc;
-  --c-border: #eef0f4;
-  --c-border-strong: #e2e8f0;
+  /* Slightly firmer hairlines: Notion leans on borders, not shadows, for structure. */
+  --c-border: #e8eaf0;
+  --c-border-strong: #dfe3ea;
   --c-text: #0f172a;
   --c-text-muted: #64748b;
   --c-text-faint: #94a3b8;
@@ -67,9 +68,10 @@
   --radius-pill: 999px;
 
   /* ---- Shadows ---- */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
+  /* Flatter, Notion-like elevation — barely-there for cards, real depth only for overlays. */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
   --shadow-brand: 0 8px 24px rgba(99, 102, 241, 0.35);
 
   /* ---- Layout ---- */
