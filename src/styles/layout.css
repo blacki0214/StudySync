@@ -329,14 +329,27 @@
   .app-shell.sidebar-mini .su-meta,
   .app-shell.sidebar-mini .su-caret { display: none; }
 
-  /* Centre the icon-only controls. */
+  /* Centre the icon-only controls and make them all uniform square buttons. */
   .app-shell.sidebar-mini .sidebar-head { flex-direction: column; gap: var(--space-2); }
   .app-shell.sidebar-mini .sidebar-brand { padding: 0; justify-content: center; }
   .app-shell.sidebar-mini .sidebar-head-actions { justify-content: center; }
-  .app-shell.sidebar-mini .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
-  .app-shell.sidebar-mini .sidebar-search { justify-content: center; padding-left: 0; padding-right: 0; }
-  .app-shell.sidebar-mini .sidebar-controls { flex-direction: column; align-items: center; }
-  .app-shell.sidebar-mini .sidebar-user { justify-content: center; padding-left: 0; padding-right: 0; }
+  .app-shell.sidebar-mini .sidebar-link {
+    justify-content: center; width: 40px; height: 40px; padding: 0; margin: 0 auto;
+  }
+  /* Search: drop the bordered box — it becomes a plain icon button like the rest. */
+  .app-shell.sidebar-mini .sidebar-search {
+    justify-content: center; width: 40px; height: 40px; padding: 0; margin: 0 auto var(--space-2);
+    border: none; background: none; box-shadow: none; color: var(--c-text-muted);
+  }
+  .app-shell.sidebar-mini .sidebar-search:hover { background: var(--c-hover); color: var(--c-text); }
+  .app-shell.sidebar-mini .sidebar-controls { flex-direction: column; align-items: center; gap: var(--space-1); }
+  /* Account: drop the bordered pill — show just the avatar, centred. */
+  .app-shell.sidebar-mini .sidebar-account { display: flex; justify-content: center; }
+  .app-shell.sidebar-mini .sidebar-user {
+    justify-content: center; width: auto; padding: 3px; border: none; background: none;
+  }
+  .app-shell.sidebar-mini .sidebar-user:hover { background: none; }
+  .app-shell.sidebar-mini .sidebar-user .su-avatar { width: 34px; height: 34px; }
 }
 /* On mobile the reopen button is redundant (the top strip has the menu button). */
 @media (max-width: 768px) {
