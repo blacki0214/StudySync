@@ -174,6 +174,24 @@ export const noteService = {
     return { status: 'saved', note: updated }
   },
 
+  /**
+   * Persist the collaborative editor's content. With CRDT (Yjs) merging there's
+   * no version conflict to resolve, so this is a straight write of the rendered
+   * HTML + the encoded Yjs state.
+   */
+  async saveNote({ id, content, ydoc = null }) {
+    const now = new Date().toISOString()
+    if (!isSupabaseConfigured) {
+      const note = demoNotes.find((n) => n.id === id)
+      if (note) { note.content = content; note.updated_at = now }
+      return
+    }
+    const patch = { content, updated_at: now }
+    if (ydoc != null) patch.ydoc = ydoc
+    const { error } = await supabase.from('notes').update(patch).eq('id', id)
+    if (error) throw error
+  },
+
   /** Enable/disable a shareable link and set its permission (read|edit). */
   async setShare(id, { enabled, permission }) {
     if (!isSupabaseConfigured) {

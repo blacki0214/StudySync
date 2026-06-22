@@ -104,6 +104,7 @@ create table public.notes (
   week          text,
   read_minutes  int  default 0,
   content       text not null default '',
+  ydoc          text,                         -- persisted Yjs CRDT state (base64)
   visibility    text not null default 'public',
   share_enabled    boolean default false,
   share_permission text default 'read',      -- read | edit (for shared links)

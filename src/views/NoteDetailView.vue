@@ -1,339 +1,261 @@
 <script setup>
 /**
- * NoteDetailView — the Collab Notes editor (matches the Figma).
- *
- * Visual: breadcrumb + title, "Live · auto-saved" status, collaborator avatars,
- * a formatting toolbar, a rich prose document, and a right panel with
- * Online / Comments / History tabs.
- *
- * Functional: the document is a contenteditable surface. Every edit flows into
- * the noteStore, which still performs the debounced auto-save, optimistic update
- * and version-conflict detection from the collaborative-editing implementation.
- * The toolbar uses execCommand to apply inline formatting.
+ * NoteDetailView — the collaborative editor, now built on Tiptap (ProseMirror)
+ * with a Yjs CRDT for real-time editing. Edits sync as tiny binary deltas over a
+ * Supabase Realtime channel (see services/yjsProvider.js), so multiple people
+ * edit live with merge-safe, low-latency updates and coloured remote cursors —
+ * like Google Docs / Notion. No version-conflict logic is needed: the CRDT
+ * converges automatically.
  */
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { storeToRefs } from 'pinia'
-import { useNoteStore } from '../stores/noteStore.js'
+import { Editor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import TextAlign from '@tiptap/extension-text-align'
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
+import Placeholder from '@tiptap/extension-placeholder'
+import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import * as Y from 'yjs'
+import { noteService } from '../services/noteService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
-import { useContentStore } from '../stores/contentStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
+import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
 import { timeAgo } from '../utils/formatDate.js'
-import { htmlToText } from '../utils/html.js'
 import { editorComments, editorHistory } from '../data/sampleEditor.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
-import AppSelect from '../components/common/AppSelect.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
 import ShareDialog from '../components/notes/ShareDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
-const noteStore = useNoteStore()
 const subjectStore = useSubjectStore()
-const content = useContentStore()
 const auth = useAuthStore()
 
-const { activeNote, draft, saveStatus, conflict, baseVersion, versions, onlineUsers, typingUsers, remoteHtml, remoteSeq } = storeToRefs(noteStore)
-const ready = ref(false)
-const pendingHtml = ref(null) // remote content waiting to apply until we blur
-const docRef = ref(null)
-const activeTab = ref('online')
-const aiOpen = ref(false)
-const shareOpen = ref(false)
-
-// Shared-link mode (public /share/:id route, may be anonymous).
-const isShared = computed(() => route.name === 'note-share')
-const canEdit = computed(() =>
-  isShared.value ? activeNote.value?.share_permission === 'edit' : true
-)
-const font = ref('Inter')
-const fontOptions = [
-  { value: 'Inter', label: 'Inter' },
-  { value: 'Serif', label: 'Serif' },
-  { value: 'Mono', label: 'Mono' }
-]
-
-const subject = computed(() => subjectStore.getById(activeNote.value?.subject_id))
-
-// Rich seeded document for the flagship note (matches the mockup). Other notes
-// fall back to their plain paragraphs.
-const flagshipHtml = `
-  <p class="doc-sub">Last edited just now by Linh · 12 min read</p>
-  <h2>1. Why consensus matters</h2>
-  <p>In a decentralised network, no single authority decides which transactions are valid. Consensus
-  algorithms let geographically distributed nodes agree on a <mark>single shared state</mark> despite the
-  presence of faulty or malicious participants (Byzantine actors).</p>
-  <p>Two dominant families exist: <strong>Proof-of-Work</strong> (PoW) — first used in Bitcoin (2009) —
-  and <strong>Proof-of-Stake</strong> (PoS), popularised by Ethereum's 2022 Merge. <span class="mention">Linh</span></p>
-  <h2>2. Proof-of-Work</h2>
-  <p>Miners race to find a nonce such that <code>SHA-256(block_header) &lt; target</code>. The first to
-  succeed proposes the next block and earns a reward.</p>
-  <div class="doc-callout">
-    <div class="dc-label">Tuấn highlighted</div>
-    <div>Energy use scales with hash rate — currently ~150 TWh/yr for Bitcoin, comparable to Argentina.</div>
-  </div>
-  <h2>3. Proof-of-Stake</h2>
-  <ul>
-    <li>Validators lock collateral ("stake") as economic security.</li>
-    <li>Slashing destroys part of the stake for dishonest behaviour.</li>
-    <li>Finality guarantees a committed block will never be reverted.</li>
-  </ul>
-`
-
-// Online presence is now real (see presenceList). Inline comments remain a
-// visual mock with no backing table — shown only in demo mode.
-const comments = isSupabaseConfigured ? [] : editorComments
-
-// Version history IS real (note_versions). In live mode we map the store's
-// versions; in demo mode we use the seeded sample history.
-const history = computed(() => {
-  if (!isSupabaseConfigured) return editorHistory
-  return versions.value.map((v) => ({
-    id: v.id,
-    version: v.version_number,
-    summary: v.summary || 'Edited',
-    author: content.userById(v.edited_by)?.full_name || '',
-    ago: timeAgo(v.created_at)
-  }))
-})
-
-onMounted(async () => {
-  if (isSupabaseConfigured) content.ensureLoaded()
-  if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
-  try {
-    await noteStore.openNote(route.params.id)
-  } catch {
-    router.replace('/notes')
-    return
-  }
-  ready.value = true
-  await nextTick()
-  // Seed the contenteditable surface once. Content is rich HTML; legacy notes
-  // (plain text) and the demo flagship note are handled gracefully.
-  if (docRef.value) {
-    const c = activeNote.value.content || ''
-    docRef.value.innerHTML =
-      activeNote.value.id === 'note-1' ? flagshipHtml
-      : /<[a-z][\s\S]*>/i.test(c) ? c                       // already HTML
-      : c ? c.split(/(?<=[.!?])\s+/).map((s) => `<p>${s}</p>`).join('') // legacy text
-      : '<p><br></p>'                                       // empty
-  }
-})
-
-onUnmounted(() => noteStore.closeNote())
-
-// Push edits into the collaborative store. We store the rich HTML so formatting
-// (headings, bold, colours, lists…) persists across reloads.
-function onDocInput() {
-  if (!canEdit.value) return
-  if (docRef.value) noteStore.updateDraft({ content: docRef.value.innerHTML })
+const CURSOR_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#d946ef', '#3b82f6', '#ef4444', '#14b8a6']
+function colorFor(id) {
+  let h = 0
+  for (let i = 0; i < (id || '').length; i++) h = (h << 5) - h + id.charCodeAt(i)
+  return CURSOR_COLORS[Math.abs(h) % CURSOR_COLORS.length]
 }
-// Plain-text version of the draft for the rule-based AI tools.
-const plainContent = computed(() => htmlToText(draft.value.content))
-
-// Live collaboration: when a peer types (or the DB sends an authoritative
-// update), refresh the editor surface — but never clobber the user's own
-// cursor. If they're focused, stash it and apply on blur.
-watch(remoteSeq, () => {
-  if (!docRef.value) return
-  const html = remoteHtml.value
-  if (document.activeElement === docRef.value) {
-    pendingHtml.value = html
-  } else if (docRef.value.innerHTML !== html) {
-    docRef.value.innerHTML = html
-  }
-})
-function onDocBlur() {
-  if (pendingHtml.value != null && docRef.value) {
-    docRef.value.innerHTML = pendingHtml.value
-    pendingHtml.value = null
-  }
-}
-
-// Who's here + are they typing (real presence in live mode).
-const presenceList = computed(() => onlineUsers.value || [])
-const someoneTyping = computed(() =>
-  (typingUsers.value || []).some((id) => id !== (auth.user?.id || 'anon'))
-)
-function presenceStatus(u) {
-  return (typingUsers.value || []).includes(u.id) ? t('editor.typing') : t('editor.viewing')
-}
-
-// Toolbar formatting via the classic contenteditable command API. styleWithCSS
-// makes colours/sizes apply as inline styles (so they render reliably).
-function exec(cmd, value = null) {
-  try { document.execCommand('styleWithCSS', false, true) } catch { /* ignore */ }
-  document.execCommand(cmd, false, value)
-  docRef.value?.focus()
-  onDocInput()
-}
-function runTool(tool) {
-  if (tool.cmd === 'createLink') {
-    const url = prompt(t('editor.linkUrl'))
-    if (url) exec('createLink', url)
-  } else if (tool.cmd === 'insertImage') {
-    const url = prompt(t('editor.imageUrl'))
-    if (url) exec('insertImage', url)
-  } else {
-    exec(tool.cmd, tool.val || null)
-  }
-}
-function setColor(e) { exec('foreColor', e.target.value) }
-function setHighlight(e) { exec('hiliteColor', e.target.value) }
-
-// Font family + size selects drive the document live.
-const FONT_MAP = { Inter: "Inter, sans-serif", Serif: 'Georgia, serif', Mono: 'monospace' }
-const SIZE_MAP = { sm: '2', md: '3', lg: '5', xl: '6' }
-const fontSize = ref('md')
-watch(font, (v) => exec('fontName', FONT_MAP[v] || v))
-watch(fontSize, (v) => exec('fontSize', SIZE_MAP[v] || '3'))
-
-const fontSizeOptions = [
-  { value: 'sm', label: t('editor.sizeSmall') },
-  { value: 'md', label: t('editor.sizeNormal') },
-  { value: 'lg', label: t('editor.sizeLarge') },
-  { value: 'xl', label: t('editor.sizeHuge') }
-]
-
-const statusLabel = computed(() =>
-  saveStatus.value === 'saving'
-    ? t('editor.saving')
-    : saveStatus.value === 'conflict'
-      ? t('editor.conflict')
-      : t('editor.liveAutosaved')
-)
-
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 }
 
-// Toolbar buttons, grouped (separators drawn between groups).
-const toolGroups = [
-  [
-    { cmd: 'undo', icon: 'bi-arrow-counterclockwise', title: 'editor.undo' },
-    { cmd: 'redo', icon: 'bi-arrow-clockwise', title: 'editor.redo' }
-  ],
-  [
-    { cmd: 'formatBlock', val: 'p', label: 'P', text: true, title: 'editor.paragraph' },
-    { cmd: 'formatBlock', val: 'h1', label: 'H1', text: true, title: 'editor.heading1' },
-    { cmd: 'formatBlock', val: 'h2', label: 'H2', text: true, title: 'editor.heading2' },
-    { cmd: 'formatBlock', val: 'h3', label: 'H3', text: true, title: 'editor.heading3' }
-  ],
-  [
-    { cmd: 'bold', icon: 'bi-type-bold', title: 'editor.bold' },
-    { cmd: 'italic', icon: 'bi-type-italic', title: 'editor.italic' },
-    { cmd: 'underline', icon: 'bi-type-underline', title: 'editor.underline' },
-    { cmd: 'strikeThrough', icon: 'bi-type-strikethrough', title: 'editor.strikethrough' }
-  ],
-  [
-    { cmd: 'insertUnorderedList', icon: 'bi-list-ul', title: 'editor.bulletList' },
-    { cmd: 'insertOrderedList', icon: 'bi-list-ol', title: 'editor.numberList' }
-  ],
-  [
-    { cmd: 'formatBlock', val: 'blockquote', icon: 'bi-quote', title: 'editor.quote' },
-    { cmd: 'formatBlock', val: 'pre', icon: 'bi-code-slash', title: 'editor.codeBlock' },
-    { cmd: 'createLink', icon: 'bi-link-45deg', title: 'editor.link' },
-    { cmd: 'insertImage', icon: 'bi-image', title: 'editor.image' },
-    { cmd: 'insertHorizontalRule', icon: 'bi-dash-lg', title: 'editor.divider' }
-  ],
-  [
-    { cmd: 'justifyLeft', icon: 'bi-text-left', title: 'editor.alignLeft' },
-    { cmd: 'justifyCenter', icon: 'bi-text-center', title: 'editor.alignCenter' },
-    { cmd: 'justifyRight', icon: 'bi-text-right', title: 'editor.alignRight' }
-  ],
-  [
-    { cmd: 'removeFormat', icon: 'bi-eraser', title: 'editor.clearFormat' }
+const ready = ref(false)
+const note = ref(null)
+const editor = shallowRef(null)
+const plainContent = ref('')
+const saveStatus = ref('saved')
+const onlineUsers = ref([])
+const activeTab = ref('online')
+const aiOpen = ref(false)
+const shareOpen = ref(false)
+
+const me = computed(() => auth.user || { id: 'guest', full_name: 'Guest' })
+const isShared = computed(() => route.name === 'note-share')
+const canEdit = computed(() => (isShared.value ? note.value?.share_permission === 'edit' : true))
+const subject = computed(() => subjectStore.getById(note.value?.subject_id))
+const statusLabel = computed(() => (saveStatus.value === 'saving' ? t('editor.saving') : t('editor.liveAutosaved')))
+
+// History tab: real version snapshots in live mode, sample in demo.
+const comments = computed(() => (isSupabaseConfigured ? [] : editorComments))
+const history = ref(isSupabaseConfigured ? [] : editorHistory)
+
+let ydoc = null
+let provider = null
+let saveTimer = null
+
+function updateOnline() {
+  if (!provider) { onlineUsers.value = [{ name: me.value.full_name, color: colorFor(me.value.id) }]; return }
+  const states = provider.awareness.getStates()
+  onlineUsers.value = Array.from(states.values()).map((s) => s.user).filter(Boolean)
+}
+
+function scheduleSave() {
+  saveStatus.value = 'saving'
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(async () => {
+    try {
+      await noteService.saveNote({
+        id: note.value.id,
+        content: editor.value.getHTML(),
+        ydoc: isSupabaseConfigured && ydoc ? u8ToBase64(Y.encodeStateAsUpdate(ydoc)) : null
+      })
+      saveStatus.value = 'saved'
+    } catch {
+      saveStatus.value = 'idle'
+    }
+  }, 1000)
+}
+
+onMounted(async () => {
+  if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
+  note.value = await noteService.getNote(route.params.id)
+  if (!note.value) { router.replace('/notes'); return }
+
+  // Build the shared CRDT document and (live) the realtime provider.
+  ydoc = new Y.Doc()
+  if (isSupabaseConfigured && note.value.ydoc) {
+    try { Y.applyUpdate(ydoc, base64ToU8(note.value.ydoc)) } catch { /* ignore */ }
+  }
+  if (isSupabaseConfigured) {
+    provider = new SupabaseYjsProvider(note.value.id, ydoc, { user: me.value })
+    provider.awareness.on('change', updateOnline)
+  }
+  updateOnline()
+
+  const extensions = [
+    StarterKit.configure({ history: false }), // history comes from Collaboration (Yjs)
+    Underline,
+    Link.configure({ openOnClick: false }),
+    Image,
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
+    Placeholder.configure({ placeholder: t('editor.placeholder') }),
+    Collaboration.configure({ document: ydoc })
   ]
-]
+  if (provider) {
+    extensions.push(CollaborationCursor.configure({
+      provider,
+      user: { name: me.value.full_name, color: colorFor(me.value.id) }
+    }))
+  }
+
+  editor.value = new Editor({
+    editable: canEdit.value,
+    extensions,
+    onUpdate: ({ editor }) => {
+      plainContent.value = editor.getText()
+      if (canEdit.value) scheduleSave()
+    }
+  })
+
+  // Seed legacy notes (HTML content but no CRDT state yet) exactly once.
+  if (editor.value.isEmpty && note.value.content) {
+    editor.value.commands.setContent(note.value.content, false)
+  }
+  plainContent.value = editor.value.getText()
+
+  if (isSupabaseConfigured) {
+    const v = await noteService.listVersions(note.value.id)
+    history.value = v.map((row) => ({
+      id: row.id, version: row.version_number, summary: row.summary || 'Edited',
+      author: '', ago: timeAgo(row.created_at)
+    }))
+  }
+  ready.value = true
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(saveTimer)
+  editor.value?.destroy()
+  provider?.destroy()
+  ydoc?.destroy()
+})
+
+// Toolbar command helpers.
+function chain() { return editor.value.chain().focus() }
+function setLink() {
+  const url = prompt(t('editor.linkUrl'))
+  if (url === null) return
+  if (url === '') chain().unsetLink().run()
+  else chain().extendMarkRange('link').setLink({ href: url }).run()
+}
+function setImage() {
+  const url = prompt(t('editor.imageUrl'))
+  if (url) chain().setImage({ src: url }).run()
+}
+function isActive(name, attrs) { return editor.value?.isActive(name, attrs) }
 </script>
 
 <template>
   <LoadingSpinner v-if="!ready" :label="t('common.openingEditor')" />
 
-  <div v-else>
+  <div v-else-if="note">
     <!-- Header -->
     <div class="editor-header">
       <div>
         <div class="eh-crumb">
           <router-link v-if="subject" :to="{ name: 'subject-hub', params: { id: subject.id } }" class="eh-crumb-link">{{ subject.code }} · {{ subject.name }}</router-link>
-          <template v-else>{{ activeNote.title }}</template>
-          / {{ activeNote.week || 'Notes' }}
+          <template v-else>{{ note.title }}</template>
+          / {{ note.week || 'Notes' }}
         </div>
-        <h1 class="eh-title">{{ activeNote.title }}</h1>
+        <h1 class="eh-title">{{ note.title }}</h1>
       </div>
       <div class="eh-actions">
         <span v-if="canEdit" class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>
         <span v-else class="badge-soft"><i class="bi bi-eye"></i> {{ t('share.readOnly') }}</span>
-        <span v-if="someoneTyping" class="badge-soft typing-badge"><span class="dot-online"></span>{{ t('editor.someoneTyping') }}</span>
         <template v-if="!isShared">
-          <button class="btn-icon-sq" aria-label="Favourite"><i class="bi bi-star"></i></button>
           <button class="btn btn-outline-soft" @click="shareOpen = true"><i class="bi bi-share"></i>{{ t('editor.share') }}</button>
           <button class="btn btn-brand" @click="aiOpen = true"><i class="bi bi-stars"></i>{{ t('editor.aiTools') }}</button>
         </template>
       </div>
     </div>
 
-    <!-- Conflict banner from the collaborative-editing logic -->
-    <div v-if="conflict" class="conflict-banner">
-      <div class="cb-title"><i class="bi bi-exclamation-triangle-fill"></i>{{ t('editor.conflictTitle') }}</div>
-      <p class="cb-note">{{ t('editor.conflictNote', { current: conflict.currentVersion, base: baseVersion }) }}</p>
-      <div class="cb-actions">
-        <button class="btn btn-brand btn-sm" @click="noteStore.resolveConflictKeepMine">{{ t('editor.keepMine') }}</button>
-        <button class="btn btn-outline-soft btn-sm" @click="noteStore.resolveConflictUseTheirs">{{ t('editor.useTheirs') }}</button>
-      </div>
-    </div>
-
-    <!-- Toolbar (hidden when the link is view-only) -->
-    <div v-if="canEdit" class="editor-toolbar2">
-      <template v-for="(group, gi) in toolGroups" :key="gi">
-        <div class="tb-group">
-          <button
-            v-for="tool in group"
-            :key="tool.cmd + (tool.val || '')"
-            class="tb-btn"
-            :class="{ 'tb-btn-text': tool.text }"
-            :title="t(tool.title)"
-            @mousedown.prevent
-            @click="runTool(tool)"
-          >
-            <span v-if="tool.text">{{ tool.label }}</span>
-            <i v-else class="bi" :class="tool.icon"></i>
-          </button>
-        </div>
-        <div class="tb-sep"></div>
-      </template>
-
-      <!-- Colours -->
+    <!-- Toolbar (hidden when view-only) -->
+    <div v-if="canEdit && editor" class="editor-toolbar2">
       <div class="tb-group">
-        <label class="tb-btn tb-color" :title="t('editor.textColor')">
-          <i class="bi bi-fonts"></i>
-          <input type="color" @input="setColor" />
-        </label>
-        <label class="tb-btn tb-color" :title="t('editor.highlight')">
-          <i class="bi bi-highlighter"></i>
-          <input type="color" @input="setHighlight" />
-        </label>
+        <button class="tb-btn" :title="t('editor.undo')" @click="chain().undo().run()"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="tb-btn" :title="t('editor.redo')" @click="chain().redo().run()"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
-
-      <!-- Font family + size (push to the right) -->
-      <div class="tb-spacer"></div>
-      <AppSelect v-model="font" class="tb-font-select" :options="fontOptions" :aria-label="t('editor.font')" />
-      <AppSelect v-model="fontSize" class="tb-size-select" :options="fontSizeOptions" :aria-label="t('editor.fontSize')" />
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn tb-btn-text" :class="{ on: isActive('paragraph') }" :title="t('editor.paragraph')" @click="chain().setParagraph().run()">P</button>
+        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 1 }) }" :title="t('editor.heading1')" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
+        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 2 }) }" :title="t('editor.heading2')" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
+        <button class="tb-btn tb-btn-text" :class="{ on: isActive('heading', { level: 3 }) }" :title="t('editor.heading3')" @click="chain().toggleHeading({ level: 3 }).run()">H3</button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" :class="{ on: isActive('bold') }" :title="t('editor.bold')" @click="chain().toggleBold().run()"><i class="bi bi-type-bold"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('italic') }" :title="t('editor.italic')" @click="chain().toggleItalic().run()"><i class="bi bi-type-italic"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('underline') }" :title="t('editor.underline')" @click="chain().toggleUnderline().run()"><i class="bi bi-type-underline"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('strike') }" :title="t('editor.strikethrough')" @click="chain().toggleStrike().run()"><i class="bi bi-type-strikethrough"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <label class="tb-btn tb-color" :title="t('editor.textColor')"><i class="bi bi-fonts"></i><input type="color" @input="chain().setColor($event.target.value).run()" /></label>
+        <label class="tb-btn tb-color" :title="t('editor.highlight')"><i class="bi bi-highlighter"></i><input type="color" @input="chain().toggleHighlight({ color: $event.target.value }).run()" /></label>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" :class="{ on: isActive('bulletList') }" :title="t('editor.bulletList')" @click="chain().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('orderedList') }" :title="t('editor.numberList')" @click="chain().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" :class="{ on: isActive('blockquote') }" :title="t('editor.quote')" @click="chain().toggleBlockquote().run()"><i class="bi bi-quote"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="t('editor.codeBlock')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('link') }" :title="t('editor.link')" @click="setLink"><i class="bi bi-link-45deg"></i></button>
+        <button class="tb-btn" :title="t('editor.image')" @click="setImage"><i class="bi bi-image"></i></button>
+        <button class="tb-btn" :title="t('editor.divider')" @click="chain().setHorizontalRule().run()"><i class="bi bi-dash-lg"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" :class="{ on: isActive({ textAlign: 'left' }) }" :title="t('editor.alignLeft')" @click="chain().setTextAlign('left').run()"><i class="bi bi-text-left"></i></button>
+        <button class="tb-btn" :class="{ on: isActive({ textAlign: 'center' }) }" :title="t('editor.alignCenter')" @click="chain().setTextAlign('center').run()"><i class="bi bi-text-center"></i></button>
+        <button class="tb-btn" :class="{ on: isActive({ textAlign: 'right' }) }" :title="t('editor.alignRight')" @click="chain().setTextAlign('right').run()"><i class="bi bi-text-right"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-group">
+        <button class="tb-btn" :title="t('editor.clearFormat')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
+      </div>
     </div>
 
     <!-- Document + side panel -->
     <div class="editor-grid">
-      <div
-        ref="docRef"
-        class="doc-surface"
-        :contenteditable="canEdit"
-        spellcheck="false"
-        @input="onDocInput"
-        @blur="onDocBlur"
-      ></div>
+      <EditorContent :editor="editor" class="doc-surface" />
 
       <div class="side-panel">
         <div class="seg-tabs">
@@ -342,49 +264,39 @@ const toolGroups = [
           <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'">{{ t('editor.history') }}</button>
         </div>
 
-        <!-- Online (real presence) -->
+        <!-- Online (real presence via Yjs awareness) -->
         <div v-if="activeTab==='online'">
-          <div class="panel-caption">{{ t('editor.studentsInNote', { n: presenceList.length }) }}</div>
-          <div v-if="!presenceList.length" class="pr-status">{{ t('editor.justYou') }}</div>
-          <div v-for="c in presenceList" :key="c.id" class="presence-row">
-            <span class="pr-avatar">
-              <span class="pr-fallback">{{ initials(c.full_name) }}</span>
-              <span class="pr-dot" style="background: var(--c-live)"></span>
-            </span>
-            <div>
-              <div class="pr-name">{{ c.full_name }}{{ c.id === (auth.user?.id || 'anon') ? ' ' + t('editor.you') : '' }}</div>
-              <div class="pr-status">{{ presenceStatus(c) }}</div>
-            </div>
+          <div class="panel-caption">{{ t('editor.studentsInNote', { n: onlineUsers.length }) }}</div>
+          <div v-for="(u, i) in onlineUsers" :key="i" class="presence-row">
+            <span class="pr-avatar"><span class="pr-fallback" :style="{ background: u.color }">{{ initials(u.name) }}</span><span class="pr-dot" style="background: var(--c-live)"></span></span>
+            <div><div class="pr-name">{{ u.name }}</div><div class="pr-status">{{ t('editor.editing') }}</div></div>
           </div>
         </div>
 
         <!-- Comments -->
         <div v-else-if="activeTab==='comments'">
+          <p v-if="!comments.length" class="pr-status">{{ t('editor.noComments') }}</p>
           <div v-for="cm in comments" :key="cm.id" class="comment-row">
             <img :src="cm.avatar" class="avatar-ring cm-avatar" :alt="cm.author" />
             <div>
               <div class="pr-name">{{ cm.author }} <span class="cm-ago">· {{ cm.ago }}</span></div>
               <div class="cm-text">{{ cm.text }}</div>
-              <span v-if="cm.resolved" class="badge-soft cm-resolved">{{ t('editor.resolved') }}</span>
             </div>
           </div>
         </div>
 
         <!-- History -->
         <div v-else>
+          <p v-if="!history.length" class="pr-status">{{ t('editor.noHistory') }}</p>
           <div v-for="h in history" :key="h.id" class="history-row">
             <span class="v-tag">v{{ h.version }}</span>
-            <div>
-              <div class="pr-name">{{ h.summary }}</div>
-              <div class="hist-meta">{{ h.author }} · {{ h.ago }}</div>
-            </div>
+            <div><div class="pr-name">{{ h.summary }}</div><div class="hist-meta">{{ h.author }} {{ h.author ? '·' : '' }} {{ h.ago }}</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Manual AI study tools for this note (runs on the live draft) -->
-    <AiToolsDrawer v-model:open="aiOpen" :content="plainContent" :note-id="activeNote.id" />
-    <ShareDialog v-if="shareOpen" :note="activeNote" @close="shareOpen = false" />
+    <AiToolsDrawer v-model:open="aiOpen" :content="plainContent" :note-id="note.id" />
+    <ShareDialog v-if="shareOpen" :note="note" @close="shareOpen = false" />
   </div>
 </template>

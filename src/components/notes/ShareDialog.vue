@@ -6,13 +6,12 @@
  */
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useNoteStore } from '../../stores/noteStore.js'
+import { noteService } from '../../services/noteService.js'
 import AppSelect from '../common/AppSelect.vue'
 
 const props = defineProps({ note: { type: Object, required: true } })
 const emit = defineEmits(['close'])
 const { t } = useI18n()
-const noteStore = useNoteStore()
 
 const enabled = ref(!!props.note.share_enabled)
 const permission = ref(props.note.share_permission || 'read')
@@ -30,7 +29,9 @@ const permissionOptions = computed(() => [
 async function persist() {
   saving.value = true
   try {
-    await noteStore.setShare({ enabled: enabled.value, permission: permission.value })
+    await noteService.setShare(props.note.id, { enabled: enabled.value, permission: permission.value })
+    props.note.share_enabled = enabled.value
+    props.note.share_permission = permission.value
   } finally {
     saving.value = false
   }
