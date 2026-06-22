@@ -25,6 +25,8 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { createLowlight, common } from 'lowlight'
 import * as Y from 'yjs'
 import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
@@ -48,6 +50,9 @@ const router = useRouter()
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const auth = useAuthStore()
+
+// Syntax highlighting for code blocks (IDE-style colours via highlight.js).
+const lowlight = createLowlight(common)
 
 const CURSOR_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#d946ef', '#3b82f6', '#ef4444', '#14b8a6']
 function colorFor(id) {
@@ -151,7 +156,8 @@ onMounted(async () => {
   updateOnline()
 
   const extensions = [
-    StarterKit.configure({ history: false }), // history comes from Collaboration (Yjs)
+    StarterKit.configure({ history: false, codeBlock: false }), // history → Collaboration; codeBlock → lowlight
+    CodeBlockLowlight.configure({ lowlight }),
     Underline,
     Link.configure({ openOnClick: false }),
     Image,

@@ -301,6 +301,34 @@
   box-shadow: 18px 0 0 #ffbd2e, 36px 0 0 #27c93f;
 }
 .doc-surface .ProseMirror pre code { background: none; border: none; padding: 0; color: inherit; }
+
+/* highlight.js token colours — VS Code "Dark+" palette. */
+.doc-surface .ProseMirror pre .hljs-comment,
+.doc-surface .ProseMirror pre .hljs-quote { color: #6a9955; font-style: italic; }
+.doc-surface .ProseMirror pre .hljs-keyword,
+.doc-surface .ProseMirror pre .hljs-selector-tag,
+.doc-surface .ProseMirror pre .hljs-literal,
+.doc-surface .ProseMirror pre .hljs-section,
+.doc-surface .ProseMirror pre .hljs-name { color: #569cd6; }
+.doc-surface .ProseMirror pre .hljs-string,
+.doc-surface .ProseMirror pre .hljs-regexp,
+.doc-surface .ProseMirror pre .hljs-meta .hljs-string { color: #ce9178; }
+.doc-surface .ProseMirror pre .hljs-number,
+.doc-surface .ProseMirror pre .hljs-bullet { color: #b5cea8; }
+.doc-surface .ProseMirror pre .hljs-title,
+.doc-surface .ProseMirror pre .hljs-title.function_,
+.doc-surface .ProseMirror pre .hljs-function .hljs-title { color: #dcdcaa; }
+.doc-surface .ProseMirror pre .hljs-attr,
+.doc-surface .ProseMirror pre .hljs-variable,
+.doc-surface .ProseMirror pre .hljs-template-variable,
+.doc-surface .ProseMirror pre .hljs-attribute { color: #9cdcfe; }
+.doc-surface .ProseMirror pre .hljs-type,
+.doc-surface .ProseMirror pre .hljs-class .hljs-title,
+.doc-surface .ProseMirror pre .hljs-built_in { color: #4ec9b0; }
+.doc-surface .ProseMirror pre .hljs-symbol,
+.doc-surface .ProseMirror pre .hljs-meta { color: #c586c0; }
+.doc-surface .ProseMirror pre .hljs-emphasis { font-style: italic; }
+.doc-surface .ProseMirror pre .hljs-strong { font-weight: 700; }
 .doc-surface .ProseMirror hr { border: none; border-top: 1px solid var(--c-border); margin: var(--space-5) 0; }
 .doc-surface .ProseMirror img { max-width: 100%; border-radius: var(--radius-sm); }
 .doc-surface .ProseMirror mark { background: #fef08a; border-radius: 3px; padding: 0 2px; }
