@@ -41,6 +41,7 @@
   min-width: 0;
 }
 .sidebar-brand:hover { text-decoration: none; color: inherit; }
+.sidebar-head-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .sidebar-collapse-btn {
   flex-shrink: 0; border: none; background: none; color: var(--c-text-faint);
   width: 30px; height: 30px; border-radius: var(--radius-sm); cursor: pointer;
@@ -302,10 +303,40 @@
   margin: 0 auto;
 }
 
-/* Desktop: minimise the sidebar off-screen and reclaim the full width. */
+/* Desktop sidebar size modes: closed (hidden) and mini (icons only). */
 @media (min-width: 769px) {
-  .app-shell.sidebar-collapsed .app-sidebar { transform: translateX(-100%); }
-  .app-shell.sidebar-collapsed .app-main { margin-left: 0; }
+  /* Closed → slide off-screen, content reclaims full width. */
+  .app-shell.sidebar-closed .app-sidebar { transform: translateX(-100%); }
+  .app-shell.sidebar-closed .app-main { margin-left: 0; }
+
+  /* Mini → narrow icon rail. */
+  .app-shell.sidebar-mini .app-sidebar {
+    width: var(--sidebar-mini-width);
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    align-items: stretch;
+  }
+  .app-shell.sidebar-mini .app-main { margin-left: var(--sidebar-mini-width); }
+
+  /* Hide every text element, keep the icons. */
+  .app-shell.sidebar-mini .sidebar-brand-text,
+  .app-shell.sidebar-mini .sidebar-section-label,
+  .app-shell.sidebar-mini .sidebar-link > span,
+  .app-shell.sidebar-mini .sidebar-search > span,
+  .app-shell.sidebar-mini .sidebar-search .kbd,
+  .app-shell.sidebar-mini .xp-card,
+  .app-shell.sidebar-mini .ctl-lang,
+  .app-shell.sidebar-mini .su-meta,
+  .app-shell.sidebar-mini .su-caret { display: none; }
+
+  /* Centre the icon-only controls. */
+  .app-shell.sidebar-mini .sidebar-head { flex-direction: column; gap: var(--space-2); }
+  .app-shell.sidebar-mini .sidebar-brand { padding: 0; justify-content: center; }
+  .app-shell.sidebar-mini .sidebar-head-actions { justify-content: center; }
+  .app-shell.sidebar-mini .sidebar-link { justify-content: center; padding-left: 0; padding-right: 0; }
+  .app-shell.sidebar-mini .sidebar-search { justify-content: center; padding-left: 0; padding-right: 0; }
+  .app-shell.sidebar-mini .sidebar-controls { flex-direction: column; align-items: center; }
+  .app-shell.sidebar-mini .sidebar-user { justify-content: center; padding-left: 0; padding-right: 0; }
 }
 /* On mobile the reopen button is redundant (the top strip has the menu button). */
 @media (max-width: 768px) {

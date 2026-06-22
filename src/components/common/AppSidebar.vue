@@ -55,14 +55,22 @@ async function logout() {
     <div class="sidebar-head">
       <router-link to="/hub" class="sidebar-brand" @click="ui.closeSidebar()">
         <img :src="logoMark" class="brand-mark" alt="StudySync logo" />
-        <div>
+        <div class="sidebar-brand-text">
           <div class="brand-name">StudySync</div>
           <div class="brand-sub">Vietnam</div>
         </div>
       </router-link>
-      <button class="sidebar-collapse-btn" :title="t('nav.collapseSidebar')" :aria-label="t('nav.collapseSidebar')" @click="ui.toggleCollapse()">
-        <i class="bi bi-chevron-double-left"></i>
-      </button>
+      <div class="sidebar-head-actions">
+        <button v-if="ui.sidebarMode === 'mini'" class="sidebar-collapse-btn" :title="t('nav.expandSidebar')" :aria-label="t('nav.expandSidebar')" @click="ui.setSidebarMode('full')">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+        <button v-else class="sidebar-collapse-btn" :title="t('nav.minimizeSidebar')" :aria-label="t('nav.minimizeSidebar')" @click="ui.setSidebarMode('mini')">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="sidebar-collapse-btn" :title="t('nav.closeSidebar')" :aria-label="t('nav.closeSidebar')" @click="ui.setSidebarMode('closed')">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Global search → command palette -->

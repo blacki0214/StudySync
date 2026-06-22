@@ -9,13 +9,15 @@
 import { defineStore } from 'pinia'
 
 const THEME_KEY = 'studysync_theme'
-const COLLAPSE_KEY = 'studysync_sidebar_collapsed'
+const MODE_KEY = 'studysync_sidebar_mode'
+const MODES = ['full', 'mini', 'closed']
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
     theme: 'light',
     sidebarOpen: false, // mobile off-canvas drawer
-    sidebarCollapsed: localStorage.getItem(COLLAPSE_KEY) === '1' // desktop minimise
+    // Desktop sidebar size: 'full' (labels) | 'mini' (icons only) | 'closed' (hidden)
+    sidebarMode: MODES.includes(localStorage.getItem(MODE_KEY)) ? localStorage.getItem(MODE_KEY) : 'full'
   }),
 
   getters: {
@@ -49,10 +51,11 @@ export const useUiStore = defineStore('ui', {
     closeSidebar() {
       this.sidebarOpen = false
     },
-    /** Desktop: minimise/expand the sidebar (persisted). */
-    toggleCollapse() {
-      this.sidebarCollapsed = !this.sidebarCollapsed
-      localStorage.setItem(COLLAPSE_KEY, this.sidebarCollapsed ? '1' : '0')
+    /** Desktop: set the sidebar size mode ('full' | 'mini' | 'closed'), persisted. */
+    setSidebarMode(mode) {
+      if (!MODES.includes(mode)) return
+      this.sidebarMode = mode
+      localStorage.setItem(MODE_KEY, mode)
     }
   }
 })

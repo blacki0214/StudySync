@@ -46,11 +46,11 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     </router-view>
   </div>
 
-  <div v-else class="app-shell" :class="{ 'sidebar-collapsed': ui.sidebarCollapsed }">
+  <div v-else class="app-shell" :class="{ 'sidebar-mini': ui.sidebarMode === 'mini', 'sidebar-closed': ui.sidebarMode === 'closed' }">
     <AppSidebar />
 
-    <!-- Reopen button shown when the sidebar is minimised (desktop). -->
-    <button v-if="ui.sidebarCollapsed" class="sidebar-reopen" :title="t('nav.openSidebar')" :aria-label="t('nav.openSidebar')" @click="ui.toggleCollapse()">
+    <!-- Reopen button shown when the sidebar is fully closed (desktop). -->
+    <button v-if="ui.sidebarMode === 'closed'" class="sidebar-reopen" :title="t('nav.openSidebar')" :aria-label="t('nav.openSidebar')" @click="ui.setSidebarMode('full')">
       <i class="bi bi-chevron-double-right"></i>
     </button>
 
