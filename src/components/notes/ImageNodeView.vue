@@ -14,6 +14,7 @@ const props = defineProps({
   updateAttributes: { type: Function, required: true },
   deleteNode: { type: Function, required: true },
   editor: { type: Object, required: true },
+  getPos: { type: Function, default: null },
   selected: { type: Boolean, default: false }
 })
 
@@ -35,7 +36,24 @@ function rotate(delta) {
   props.updateAttributes({ rotate: r })
 }
 function setAlign(a) { props.updateAttributes({ align: a }) }
-function setWrap(w) { props.updateAttributes({ wrap: w }) }
+function setWrap(w) {
+  props.updateAttributes({ wrap: w })
+  // When wrapping, make sure there's a paragraph beside the image to type into,
+  // and drop the cursor there so the user can immediately write next to it.
+  if (w !== 'none') ensureTextBeside()
+}
+function ensureTextBeside() {
+  const editor = props.editor
+  const pos = props.getPos?.()
+  if (typeof pos !== 'number') return
+  const after = pos + props.node.nodeSize
+  const next = editor.state.doc.nodeAt(after)
+  if (next && next.type.name === 'paragraph') {
+    editor.chain().focus().setTextSelection(after + 1).run()
+  } else {
+    editor.chain().focus().insertContentAt(after, { type: 'paragraph' }).setTextSelection(after + 1).run()
+  }
+}
 function setSize(px) { props.updateAttributes({ width: px }) }
 function resetSize() { props.updateAttributes({ width: null }); menuOpen.value = false }
 function remove() { props.deleteNode() }
