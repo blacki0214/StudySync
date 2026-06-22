@@ -174,6 +174,23 @@ export const noteService = {
     return { status: 'saved', note: updated }
   },
 
+  /** Enable/disable a shareable link and set its permission (read|edit). */
+  async setShare(id, { enabled, permission }) {
+    if (!isSupabaseConfigured) {
+      const note = demoNotes.find((n) => n.id === id)
+      if (note) { note.share_enabled = enabled; note.share_permission = permission }
+      return { share_enabled: enabled, share_permission: permission }
+    }
+    const { data, error } = await supabase
+      .from('notes')
+      .update({ share_enabled: enabled, share_permission: permission })
+      .eq('id', id)
+      .select('share_enabled, share_permission')
+      .single()
+    if (error) throw error
+    return data
+  },
+
   /** Delete a note. */
   async deleteNote(id) {
     if (!isSupabaseConfigured) {

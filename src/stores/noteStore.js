@@ -80,6 +80,13 @@ export const useNoteStore = defineStore('notes', {
       this.notes = this.notes.filter((n) => n.id !== id)
     },
 
+    /** Toggle the shareable link + permission for the active note. */
+    async setShare({ enabled, permission }) {
+      if (!this.activeNote) return
+      const updated = await noteService.setShare(this.activeNote.id, { enabled, permission })
+      this.activeNote = { ...this.activeNote, ...updated }
+    },
+
     /**
      * Open a note for collaborative editing:
      *  1. Load the latest server copy + version history.

@@ -132,6 +132,15 @@ export default {
   },
 
   editor: {
+    undo: 'Hoàn tác', redo: 'Làm lại',
+    paragraph: 'Văn bản thường', heading1: 'Tiêu đề 1', heading2: 'Tiêu đề 2', heading3: 'Tiêu đề 3',
+    bold: 'Đậm', italic: 'Nghiêng', underline: 'Gạch chân', strikethrough: 'Gạch ngang',
+    bulletList: 'Danh sách chấm', numberList: 'Danh sách số',
+    quote: 'Trích dẫn', codeBlock: 'Khối mã', link: 'Chèn liên kết', image: 'Chèn hình', divider: 'Đường kẻ',
+    alignLeft: 'Canh trái', alignCenter: 'Canh giữa', alignRight: 'Canh phải',
+    clearFormat: 'Xoá định dạng', textColor: 'Màu chữ', highlight: 'Tô sáng',
+    font: 'Phông', fontSize: 'Cỡ', sizeSmall: 'Nhỏ', sizeNormal: 'Thường', sizeLarge: 'Lớn', sizeHuge: 'Rất lớn',
+    linkUrl: 'URL liên kết:', imageUrl: 'URL hình ảnh:',
     liveAutosaved: 'Trực tiếp · đã tự lưu',
     saving: 'Đang lưu…',
     conflict: 'Xung đột',
@@ -300,6 +309,20 @@ export default {
     askPlaceholder: 'Đặt một câu hỏi…',
     askNeedsSources: 'Thêm và chọn nguồn để đặt câu hỏi.',
     askNoMatch: 'Không tìm thấy đoạn phù hợp trong nguồn của bạn.'
+  },
+
+  share: {
+    title: 'Chia sẻ ghi chú',
+    anyoneWithLink: 'Bất kỳ ai có liên kết',
+    onHint: 'Bất kỳ ai có liên kết đều mở được ghi chú này.',
+    offHint: 'Chỉ bạn và thành viên lớp mới mở được ghi chú này.',
+    permission: 'Quyền',
+    canView: 'Chỉ xem',
+    canEdit: 'Có thể sửa',
+    link: 'Liên kết',
+    copy: 'Sao chép',
+    done: 'Xong',
+    readOnly: 'Chỉ xem'
   },
 
   classes: {

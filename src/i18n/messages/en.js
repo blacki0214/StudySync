@@ -137,6 +137,16 @@ export default {
     conflict: 'Conflict',
     share: 'Share',
     aiTools: 'AI Tools',
+    // Toolbar
+    undo: 'Undo', redo: 'Redo',
+    paragraph: 'Normal text', heading1: 'Heading 1', heading2: 'Heading 2', heading3: 'Heading 3',
+    bold: 'Bold', italic: 'Italic', underline: 'Underline', strikethrough: 'Strikethrough',
+    bulletList: 'Bulleted list', numberList: 'Numbered list',
+    quote: 'Quote', codeBlock: 'Code block', link: 'Insert link', image: 'Insert image', divider: 'Divider',
+    alignLeft: 'Align left', alignCenter: 'Align center', alignRight: 'Align right',
+    clearFormat: 'Clear formatting', textColor: 'Text colour', highlight: 'Highlight',
+    font: 'Font', fontSize: 'Size', sizeSmall: 'Small', sizeNormal: 'Normal', sizeLarge: 'Large', sizeHuge: 'Huge',
+    linkUrl: 'Link URL:', imageUrl: 'Image URL:',
     online: 'Online',
     comments: 'Comments',
     history: 'History',
@@ -300,6 +310,20 @@ export default {
     askPlaceholder: 'Ask a question…',
     askNeedsSources: 'Add and select sources to ask questions.',
     askNoMatch: 'No matching passages found in your sources.'
+  },
+
+  share: {
+    title: 'Share note',
+    anyoneWithLink: 'Anyone with the link',
+    onHint: 'Anyone with the link can open this note.',
+    offHint: 'Only you and class members can open this note.',
+    permission: 'Permission',
+    canView: 'Can view',
+    canEdit: 'Can edit',
+    link: 'Link',
+    copy: 'Copy',
+    done: 'Done',
+    readOnly: 'View only'
   },
 
   classes: {

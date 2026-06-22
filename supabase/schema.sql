@@ -105,6 +105,8 @@ create table public.notes (
   read_minutes  int  default 0,
   content       text not null default '',
   visibility    text not null default 'public',
+  share_enabled    boolean default false,
+  share_permission text default 'read',      -- read | edit (for shared links)
   likes_count   int  not null default 0,
   version       int  not null default 1,
   updated_at    timestamptz not null default now(),
@@ -361,7 +363,9 @@ end $$;
 create policy "auth insert notes"     on public.notes         for insert to authenticated with check (true);
 create policy "auth update notes"     on public.notes         for update to authenticated using (true);
 create policy "auth delete notes"     on public.notes         for delete to authenticated using (true);
-create policy "auth insert versions"  on public.note_versions for insert to authenticated with check (true);
+-- Shared links: anyone (incl. anonymous) can edit when the link permits it.
+create policy "shared edit notes"     on public.notes         for update using (share_enabled = true and share_permission = 'edit') with check (share_enabled = true and share_permission = 'edit');
+create policy "insert versions"       on public.note_versions for insert with check (true);
 create policy "auth insert posts"     on public.community_posts for insert to authenticated with check (true);
 create policy "auth insert flashcards" on public.flashcards   for insert to authenticated with check (true);
 create policy "auth insert quizzes"   on public.quizzes       for insert to authenticated with check (true);

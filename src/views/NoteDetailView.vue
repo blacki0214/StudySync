@@ -11,7 +11,7 @@
  * and version-conflict detection from the collaborative-editing implementation.
  * The toolbar uses execCommand to apply inline formatting.
  */
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
@@ -20,10 +20,12 @@ import { useSubjectStore } from '../stores/subjectStore.js'
 import { useContentStore } from '../stores/contentStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { timeAgo } from '../utils/formatDate.js'
+import { htmlToText } from '../utils/html.js'
 import { editorCollaborators, editorComments, editorHistory } from '../data/sampleEditor.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AppSelect from '../components/common/AppSelect.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
+import ShareDialog from '../components/notes/ShareDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,6 +39,13 @@ const ready = ref(false)
 const docRef = ref(null)
 const activeTab = ref('online')
 const aiOpen = ref(false)
+const shareOpen = ref(false)
+
+// Shared-link mode (public /share/:id route, may be anonymous).
+const isShared = computed(() => route.name === 'note-share')
+const canEdit = computed(() =>
+  isShared.value ? activeNote.value?.share_permission === 'edit' : true
+)
 const font = ref('Inter')
 const fontOptions = [
   { value: 'Inter', label: 'Inter' },
@@ -101,30 +110,64 @@ onMounted(async () => {
   }
   ready.value = true
   await nextTick()
-  // Seed the contenteditable surface once (avoids v-html clobbering the cursor).
+  // Seed the contenteditable surface once. Content is rich HTML; legacy notes
+  // (plain text) and the demo flagship note are handled gracefully.
   if (docRef.value) {
+    const c = activeNote.value.content || ''
     docRef.value.innerHTML =
-      activeNote.value.id === 'note-1'
-        ? flagshipHtml
-        : activeNote.value.content
-            .split(/(?<=[.!?])\s+/)
-            .map((s) => `<p>${s}</p>`)
-            .join('')
+      activeNote.value.id === 'note-1' ? flagshipHtml
+      : /<[a-z][\s\S]*>/i.test(c) ? c                       // already HTML
+      : c ? c.split(/(?<=[.!?])\s+/).map((s) => `<p>${s}</p>`).join('') // legacy text
+      : '<p><br></p>'                                       // empty
   }
 })
 
 onUnmounted(() => noteStore.closeNote())
 
-// Push edits into the collaborative store (debounced save + versioning runs there).
+// Push edits into the collaborative store. We store the rich HTML so formatting
+// (headings, bold, colours, lists…) persists across reloads.
 function onDocInput() {
-  if (docRef.value) noteStore.updateDraft({ content: docRef.value.innerText })
+  if (!canEdit.value) return
+  if (docRef.value) noteStore.updateDraft({ content: docRef.value.innerHTML })
 }
+// Plain-text version of the draft for the rule-based AI tools.
+const plainContent = computed(() => htmlToText(draft.value.content))
 
-// Toolbar formatting via the classic contenteditable command API.
+// Toolbar formatting via the classic contenteditable command API. styleWithCSS
+// makes colours/sizes apply as inline styles (so they render reliably).
 function exec(cmd, value = null) {
+  try { document.execCommand('styleWithCSS', false, true) } catch { /* ignore */ }
   document.execCommand(cmd, false, value)
   docRef.value?.focus()
+  onDocInput()
 }
+function runTool(tool) {
+  if (tool.cmd === 'createLink') {
+    const url = prompt(t('editor.linkUrl'))
+    if (url) exec('createLink', url)
+  } else if (tool.cmd === 'insertImage') {
+    const url = prompt(t('editor.imageUrl'))
+    if (url) exec('insertImage', url)
+  } else {
+    exec(tool.cmd, tool.val || null)
+  }
+}
+function setColor(e) { exec('foreColor', e.target.value) }
+function setHighlight(e) { exec('hiliteColor', e.target.value) }
+
+// Font family + size selects drive the document live.
+const FONT_MAP = { Inter: "Inter, sans-serif", Serif: 'Georgia, serif', Mono: 'monospace' }
+const SIZE_MAP = { sm: '2', md: '3', lg: '5', xl: '6' }
+const fontSize = ref('md')
+watch(font, (v) => exec('fontName', FONT_MAP[v] || v))
+watch(fontSize, (v) => exec('fontSize', SIZE_MAP[v] || '3'))
+
+const fontSizeOptions = [
+  { value: 'sm', label: t('editor.sizeSmall') },
+  { value: 'md', label: t('editor.sizeNormal') },
+  { value: 'lg', label: t('editor.sizeLarge') },
+  { value: 'xl', label: t('editor.sizeHuge') }
+]
 
 const statusLabel = computed(() =>
   saveStatus.value === 'saving'
@@ -138,35 +181,50 @@ function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 }
 
-const tools = [
-  { cmd: 'formatBlock', val: 'h1', label: 'H1', text: true },
-  { cmd: 'formatBlock', val: 'h2', label: 'H2', text: true },
-  { cmd: 'bold', label: 'B', icon: 'bi-type-bold' },
-  { cmd: 'italic', label: 'I', icon: 'bi-type-italic' },
-  { cmd: 'underline', label: 'U', icon: 'bi-type-underline' },
-  { sep: true },
-  { cmd: 'insertUnorderedList', icon: 'bi-list-ul' },
-  { cmd: 'insertOrderedList', icon: 'bi-list-ol' },
-  { cmd: 'formatBlock', val: 'blockquote', icon: 'bi-quote' },
-  { cmd: 'formatBlock', val: 'pre', icon: 'bi-code-slash' },
-  { cmd: 'createLink', link: true, icon: 'bi-link-45deg' },
-  { cmd: 'noop', icon: 'bi-image' }
+// Toolbar buttons, grouped (separators drawn between groups).
+const toolGroups = [
+  [
+    { cmd: 'undo', icon: 'bi-arrow-counterclockwise', title: 'editor.undo' },
+    { cmd: 'redo', icon: 'bi-arrow-clockwise', title: 'editor.redo' }
+  ],
+  [
+    { cmd: 'formatBlock', val: 'p', label: 'P', text: true, title: 'editor.paragraph' },
+    { cmd: 'formatBlock', val: 'h1', label: 'H1', text: true, title: 'editor.heading1' },
+    { cmd: 'formatBlock', val: 'h2', label: 'H2', text: true, title: 'editor.heading2' },
+    { cmd: 'formatBlock', val: 'h3', label: 'H3', text: true, title: 'editor.heading3' }
+  ],
+  [
+    { cmd: 'bold', icon: 'bi-type-bold', title: 'editor.bold' },
+    { cmd: 'italic', icon: 'bi-type-italic', title: 'editor.italic' },
+    { cmd: 'underline', icon: 'bi-type-underline', title: 'editor.underline' },
+    { cmd: 'strikeThrough', icon: 'bi-type-strikethrough', title: 'editor.strikethrough' }
+  ],
+  [
+    { cmd: 'insertUnorderedList', icon: 'bi-list-ul', title: 'editor.bulletList' },
+    { cmd: 'insertOrderedList', icon: 'bi-list-ol', title: 'editor.numberList' }
+  ],
+  [
+    { cmd: 'formatBlock', val: 'blockquote', icon: 'bi-quote', title: 'editor.quote' },
+    { cmd: 'formatBlock', val: 'pre', icon: 'bi-code-slash', title: 'editor.codeBlock' },
+    { cmd: 'createLink', icon: 'bi-link-45deg', title: 'editor.link' },
+    { cmd: 'insertImage', icon: 'bi-image', title: 'editor.image' },
+    { cmd: 'insertHorizontalRule', icon: 'bi-dash-lg', title: 'editor.divider' }
+  ],
+  [
+    { cmd: 'justifyLeft', icon: 'bi-text-left', title: 'editor.alignLeft' },
+    { cmd: 'justifyCenter', icon: 'bi-text-center', title: 'editor.alignCenter' },
+    { cmd: 'justifyRight', icon: 'bi-text-right', title: 'editor.alignRight' }
+  ],
+  [
+    { cmd: 'removeFormat', icon: 'bi-eraser', title: 'editor.clearFormat' }
+  ]
 ]
-
-function runTool(t) {
-  if (t.link) {
-    const url = prompt('Link URL:')
-    if (url) exec('createLink', url)
-  } else if (t.cmd !== 'noop') {
-    exec(t.cmd, t.val || null)
-  }
-}
 </script>
 
 <template>
   <LoadingSpinner v-if="!ready" :label="t('common.openingEditor')" />
 
-  <div v-else>
+  <div v-else :class="{ 'shared-page': isShared }">
     <!-- Header -->
     <div class="editor-header">
       <div>
@@ -178,14 +236,13 @@ function runTool(t) {
         <h1 class="eh-title">{{ activeNote.title }}</h1>
       </div>
       <div class="eh-actions">
-        <span class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>
-        <span class="collab-avatars">
-          <img v-for="c in collaborators.filter(c=>c.avatar)" :key="c.id" :src="c.avatar" class="ca" :alt="c.name" />
-          <span class="ca" style="background:#f59e0b">B</span>
-        </span>
-        <button class="btn-icon-sq" aria-label="Favourite"><i class="bi bi-star"></i></button>
-        <button class="btn btn-outline-soft"><i class="bi bi-share"></i>{{ t('editor.share') }}</button>
-        <button class="btn btn-brand" @click="aiOpen = true"><i class="bi bi-stars"></i>{{ t('editor.aiTools') }}</button>
+        <span v-if="canEdit" class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>
+        <span v-else class="badge-soft"><i class="bi bi-eye"></i> {{ t('share.readOnly') }}</span>
+        <template v-if="!isShared">
+          <button class="btn-icon-sq" aria-label="Favourite"><i class="bi bi-star"></i></button>
+          <button class="btn btn-outline-soft" @click="shareOpen = true"><i class="bi bi-share"></i>{{ t('editor.share') }}</button>
+          <button class="btn btn-brand" @click="aiOpen = true"><i class="bi bi-stars"></i>{{ t('editor.aiTools') }}</button>
+        </template>
       </div>
     </div>
 
@@ -199,29 +256,55 @@ function runTool(t) {
       </div>
     </div>
 
-    <!-- Toolbar -->
-    <div class="editor-toolbar2">
-      <template v-for="(t, i) in tools" :key="i">
-        <div v-if="t.sep" class="tb-sep"></div>
-        <button v-else class="tb-btn" :title="t.label || t.cmd" @click="runTool(t)">
-          <span v-if="t.text">{{ t.label }}</span>
-          <i v-else class="bi" :class="t.icon"></i>
-        </button>
+    <!-- Toolbar (hidden when the link is view-only) -->
+    <div v-if="canEdit" class="editor-toolbar2">
+      <template v-for="(group, gi) in toolGroups" :key="gi">
+        <div class="tb-group">
+          <button
+            v-for="tool in group"
+            :key="tool.cmd + (tool.val || '')"
+            class="tb-btn"
+            :class="{ 'tb-btn-text': tool.text }"
+            :title="t(tool.title)"
+            @mousedown.prevent
+            @click="runTool(tool)"
+          >
+            <span v-if="tool.text">{{ tool.label }}</span>
+            <i v-else class="bi" :class="tool.icon"></i>
+          </button>
+        </div>
+        <div class="tb-sep"></div>
       </template>
-      <AppSelect v-model="font" class="tb-font-select" :options="fontOptions" aria-label="Font" />
+
+      <!-- Colours -->
+      <div class="tb-group">
+        <label class="tb-btn tb-color" :title="t('editor.textColor')">
+          <i class="bi bi-fonts"></i>
+          <input type="color" @input="setColor" />
+        </label>
+        <label class="tb-btn tb-color" :title="t('editor.highlight')">
+          <i class="bi bi-highlighter"></i>
+          <input type="color" @input="setHighlight" />
+        </label>
+      </div>
+
+      <!-- Font family + size (push to the right) -->
+      <div class="tb-spacer"></div>
+      <AppSelect v-model="font" class="tb-font-select" :options="fontOptions" :aria-label="t('editor.font')" />
+      <AppSelect v-model="fontSize" class="tb-size-select" :options="fontSizeOptions" :aria-label="t('editor.fontSize')" />
     </div>
 
     <!-- Document + side panel -->
-    <div class="editor-grid">
+    <div class="editor-grid" :class="{ 'editor-grid-solo': isShared }">
       <div
         ref="docRef"
         class="doc-surface"
-        contenteditable="true"
+        :contenteditable="canEdit"
         spellcheck="false"
         @input="onDocInput"
       ></div>
 
-      <div class="side-panel">
+      <div v-if="!isShared" class="side-panel">
         <div class="seg-tabs">
           <button class="seg-tab" :class="{ active: activeTab==='online' }" @click="activeTab='online'">{{ t('editor.online') }}</button>
           <button class="seg-tab" :class="{ active: activeTab==='comments' }" @click="activeTab='comments'">{{ t('editor.comments') }}</button>
@@ -270,6 +353,7 @@ function runTool(t) {
     </div>
 
     <!-- Manual AI study tools for this note (runs on the live draft) -->
-    <AiToolsDrawer v-model:open="aiOpen" :content="draft.content" :note-id="activeNote.id" />
+    <AiToolsDrawer v-model:open="aiOpen" :content="plainContent" :note-id="activeNote.id" />
+    <ShareDialog v-if="shareOpen" :note="activeNote" @close="shareOpen = false" />
   </div>
 </template>

@@ -6,14 +6,16 @@
 import { computed } from 'vue'
 import { analyzeDifficulty } from '../../utils/difficultyAnalyzer.js'
 import { timeAgo } from '../../utils/formatDate.js'
+import { htmlToText } from '../../utils/html.js'
 
 const props = defineProps({
   note: { type: Object, required: true },
   subjectCode: { type: String, default: '' }
 })
 
-const difficulty = computed(() => analyzeDifficulty(props.note.content).level)
-const excerpt = computed(() => props.note.content.slice(0, 180))
+const plain = computed(() => htmlToText(props.note.content))
+const difficulty = computed(() => analyzeDifficulty(plain.value).level)
+const excerpt = computed(() => plain.value.slice(0, 180))
 </script>
 
 <template>
