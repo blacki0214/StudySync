@@ -37,7 +37,8 @@ function remove() { props.deleteNode() }
 function startResize(e) {
   const startX = e.clientX
   const startW = imgEl.value?.clientWidth || props.node.attrs.width || 320
-  const max = root.value?.closest('.ProseMirror')?.clientWidth || 900
+  // Use the img DOM node (not the component ref) to find the editor width.
+  const max = imgEl.value?.closest('.ProseMirror')?.clientWidth || 900
   const onMove = (ev) => {
     const w = Math.max(80, Math.min(max, Math.round(startW + (ev.clientX - startX))))
     props.updateAttributes({ width: w })
@@ -68,7 +69,15 @@ function startResize(e) {
         <button type="button" title="Delete" class="danger" @click="remove"><i class="bi bi-trash"></i></button>
       </div>
 
-      <span v-if="editable && selected" class="img-nv-handle" contenteditable="false" @pointerdown.prevent="startResize"></span>
+      <span
+        v-if="editable && selected"
+        class="img-nv-handle"
+        contenteditable="false"
+        draggable="false"
+        @pointerdown.prevent.stop="startResize"
+        @mousedown.prevent.stop
+        @dragstart.prevent.stop
+      ></span>
     </div>
   </node-view-wrapper>
 </template>
