@@ -27,6 +27,7 @@ import { useAuthStore } from './authStore.js'
 let channel = null
 let saveTimer = null
 let typingTimer = null
+let contentTimer = null
 
 export const useNoteStore = defineStore('notes', {
   state: () => ({
@@ -43,7 +44,13 @@ export const useNoteStore = defineStore('notes', {
 
     onlineUsers: [], // presence list for the active note
     typingUsers: [], // user ids currently typing
-    versions: [] // version history for the active note
+    versions: [], // version history for the active note
+
+    // Live content the editor surface should adopt (from a peer's keystrokes or
+    // an authoritative DB update). `remoteSeq` increments so the view re-applies
+    // even when the html is identical.
+    remoteHtml: '',
+    remoteSeq: 0
   }),
 
   getters: {
@@ -110,6 +117,7 @@ export const useNoteStore = defineStore('notes', {
         user: auth.user || { id: 'anon', full_name: 'Anonymous' },
         handlers: {
           onRemoteUpdate: (row) => this.handleRemoteUpdate(row),
+          onRemoteContent: ({ html }) => this.handleRemoteContent(html),
           onPresenceChange: (users) => {
             this.onlineUsers = users
           },
@@ -134,6 +142,15 @@ export const useNoteStore = defineStore('notes', {
           channel?.broadcastTyping(false)
           typingTimer = null
         }, 1500)
+      }
+
+      // Live-broadcast the content so peers see edits instantly (throttled).
+      if (!contentTimer) {
+        channel?.broadcastContent(this.draft.content)
+        contentTimer = setTimeout(() => {
+          channel?.broadcastContent(this.draft.content)
+          contentTimer = null
+        }, 200)
       }
 
       this.scheduleAutoSave()
@@ -228,11 +245,25 @@ export const useNoteStore = defineStore('notes', {
         this.activeNote = row
         this.baseVersion = row.version
         this.draft = { title: row.title, content: row.content }
+        // Refresh the editor surface with the authoritative content.
+        this.remoteHtml = row.content
+        this.remoteSeq++
       } else {
         this.saveStatus = 'conflict'
         this.conflict = { currentVersion: row.version }
       }
       this.syncListEntry(row)
+    },
+
+    /**
+     * A peer's live keystrokes arrived over broadcast. Surface them to the
+     * editor (via remoteSeq) WITHOUT marking us dirty or scheduling a save —
+     * the peer who is typing owns the save.
+     */
+    handleRemoteContent(html) {
+      if (!this.activeNote) return
+      this.remoteHtml = html
+      this.remoteSeq++
     },
 
     handleTypingSignal(userId, isTyping) {
@@ -252,7 +283,9 @@ export const useNoteStore = defineStore('notes', {
     closeNote() {
       clearTimeout(saveTimer)
       clearTimeout(typingTimer)
+      clearTimeout(contentTimer)
       typingTimer = null
+      contentTimer = null
       channel?.leave()
       channel = null
       this.resetEditingState()

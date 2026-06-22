@@ -110,6 +110,8 @@
   justify-content: center;
 }
 .shared-page { max-width: 1100px; margin: 0 auto; padding: var(--space-6) var(--space-5); }
+.typing-badge { color: var(--c-primary-dark); animation: pulse-soft 1.4s ease-in-out infinite; }
+@keyframes pulse-soft { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 
 .doc-surface {
   background: var(--c-surface);

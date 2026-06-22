@@ -28,8 +28,9 @@ const routes = [
   { path: '/subjects/:id/workspace', name: 'subject-workspace', component: () => import('../views/SubjectWorkspaceView.vue'), props: true },
   { path: '/notes', name: 'notes', component: () => import('../views/NotesView.vue') },
   { path: '/notes/:id', name: 'note-detail', component: () => import('../views/NoteDetailView.vue'), props: true },
-  // Public shareable note link — works for anonymous visitors (blank layout).
-  { path: '/share/:id', name: 'note-share', component: () => import('../views/NoteDetailView.vue'), props: true, meta: { public: true, layout: 'blank' } },
+  // Shareable note link — opens inside the app; visitors must log in (the guard
+  // redirects to /login?redirect=/share/:id), then edit/view per the link's permission.
+  { path: '/share/:id', name: 'note-share', component: () => import('../views/NoteDetailView.vue'), props: true },
   { path: '/rooms', name: 'rooms', component: () => import('../views/StudyRoomsView.vue') },
   { path: '/rooms/:id', name: 'study-room', component: () => import('../views/StudyRoomView.vue'), props: true },
   { path: '/flashcards', name: 'flashcards', component: () => import('../views/FlashcardsView.vue') },

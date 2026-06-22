@@ -18,10 +18,11 @@ import { storeToRefs } from 'pinia'
 import { useNoteStore } from '../stores/noteStore.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useContentStore } from '../stores/contentStore.js'
+import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
 import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
-import { editorCollaborators, editorComments, editorHistory } from '../data/sampleEditor.js'
+import { editorComments, editorHistory } from '../data/sampleEditor.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AppSelect from '../components/common/AppSelect.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
@@ -33,9 +34,11 @@ const { t } = useI18n()
 const noteStore = useNoteStore()
 const subjectStore = useSubjectStore()
 const content = useContentStore()
+const auth = useAuthStore()
 
-const { activeNote, draft, saveStatus, conflict, baseVersion, versions } = storeToRefs(noteStore)
+const { activeNote, draft, saveStatus, conflict, baseVersion, versions, onlineUsers, typingUsers, remoteHtml, remoteSeq } = storeToRefs(noteStore)
 const ready = ref(false)
+const pendingHtml = ref(null) // remote content waiting to apply until we blur
 const docRef = ref(null)
 const activeTab = ref('online')
 const aiOpen = ref(false)
@@ -80,10 +83,8 @@ const flagshipHtml = `
   </ul>
 `
 
-// The collaborator presence list and inline comments are visual mocks with no
-// backing table. With a real backend connected we don't fake them; in demo mode
-// they stay so the editor's right panel looks populated.
-const collaborators = isSupabaseConfigured ? [] : editorCollaborators
+// Online presence is now real (see presenceList). Inline comments remain a
+// visual mock with no backing table — shown only in demo mode.
 const comments = isSupabaseConfigured ? [] : editorComments
 
 // Version history IS real (note_versions). In live mode we map the store's
@@ -132,6 +133,34 @@ function onDocInput() {
 }
 // Plain-text version of the draft for the rule-based AI tools.
 const plainContent = computed(() => htmlToText(draft.value.content))
+
+// Live collaboration: when a peer types (or the DB sends an authoritative
+// update), refresh the editor surface — but never clobber the user's own
+// cursor. If they're focused, stash it and apply on blur.
+watch(remoteSeq, () => {
+  if (!docRef.value) return
+  const html = remoteHtml.value
+  if (document.activeElement === docRef.value) {
+    pendingHtml.value = html
+  } else if (docRef.value.innerHTML !== html) {
+    docRef.value.innerHTML = html
+  }
+})
+function onDocBlur() {
+  if (pendingHtml.value != null && docRef.value) {
+    docRef.value.innerHTML = pendingHtml.value
+    pendingHtml.value = null
+  }
+}
+
+// Who's here + are they typing (real presence in live mode).
+const presenceList = computed(() => onlineUsers.value || [])
+const someoneTyping = computed(() =>
+  (typingUsers.value || []).some((id) => id !== (auth.user?.id || 'anon'))
+)
+function presenceStatus(u) {
+  return (typingUsers.value || []).includes(u.id) ? t('editor.typing') : t('editor.viewing')
+}
 
 // Toolbar formatting via the classic contenteditable command API. styleWithCSS
 // makes colours/sizes apply as inline styles (so they render reliably).
@@ -224,7 +253,7 @@ const toolGroups = [
 <template>
   <LoadingSpinner v-if="!ready" :label="t('common.openingEditor')" />
 
-  <div v-else :class="{ 'shared-page': isShared }">
+  <div v-else>
     <!-- Header -->
     <div class="editor-header">
       <div>
@@ -238,6 +267,7 @@ const toolGroups = [
       <div class="eh-actions">
         <span v-if="canEdit" class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>
         <span v-else class="badge-soft"><i class="bi bi-eye"></i> {{ t('share.readOnly') }}</span>
+        <span v-if="someoneTyping" class="badge-soft typing-badge"><span class="dot-online"></span>{{ t('editor.someoneTyping') }}</span>
         <template v-if="!isShared">
           <button class="btn-icon-sq" aria-label="Favourite"><i class="bi bi-star"></i></button>
           <button class="btn btn-outline-soft" @click="shareOpen = true"><i class="bi bi-share"></i>{{ t('editor.share') }}</button>
@@ -295,34 +325,35 @@ const toolGroups = [
     </div>
 
     <!-- Document + side panel -->
-    <div class="editor-grid" :class="{ 'editor-grid-solo': isShared }">
+    <div class="editor-grid">
       <div
         ref="docRef"
         class="doc-surface"
         :contenteditable="canEdit"
         spellcheck="false"
         @input="onDocInput"
+        @blur="onDocBlur"
       ></div>
 
-      <div v-if="!isShared" class="side-panel">
+      <div class="side-panel">
         <div class="seg-tabs">
           <button class="seg-tab" :class="{ active: activeTab==='online' }" @click="activeTab='online'">{{ t('editor.online') }}</button>
           <button class="seg-tab" :class="{ active: activeTab==='comments' }" @click="activeTab='comments'">{{ t('editor.comments') }}</button>
           <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'">{{ t('editor.history') }}</button>
         </div>
 
-        <!-- Online -->
+        <!-- Online (real presence) -->
         <div v-if="activeTab==='online'">
-          <div class="panel-caption">{{ t('editor.studentsInNote', { n: collaborators.length }) }}</div>
-          <div v-for="c in collaborators" :key="c.id" class="presence-row">
-            <span class="pr-avatar" :style="{ '--ring': c.ring }">
-              <img v-if="c.avatar" :src="c.avatar" :alt="c.name" />
-              <span v-else class="pr-fallback">{{ c.initials || initials(c.name) }}</span>
-              <span class="pr-dot" :style="{ background: c.dot }"></span>
+          <div class="panel-caption">{{ t('editor.studentsInNote', { n: presenceList.length }) }}</div>
+          <div v-if="!presenceList.length" class="pr-status">{{ t('editor.justYou') }}</div>
+          <div v-for="c in presenceList" :key="c.id" class="presence-row">
+            <span class="pr-avatar">
+              <span class="pr-fallback">{{ initials(c.full_name) }}</span>
+              <span class="pr-dot" style="background: var(--c-live)"></span>
             </span>
             <div>
-              <div class="pr-name">{{ c.name }}</div>
-              <div class="pr-status">{{ c.status }}</div>
+              <div class="pr-name">{{ c.full_name }}{{ c.id === (auth.user?.id || 'anon') ? ' ' + t('editor.you') : '' }}</div>
+              <div class="pr-status">{{ presenceStatus(c) }}</div>
             </div>
           </div>
         </div>

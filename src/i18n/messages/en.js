@@ -147,6 +147,8 @@ export default {
     clearFormat: 'Clear formatting', textColor: 'Text colour', highlight: 'Highlight',
     font: 'Font', fontSize: 'Size', sizeSmall: 'Small', sizeNormal: 'Normal', sizeLarge: 'Large', sizeHuge: 'Huge',
     linkUrl: 'Link URL:', imageUrl: 'Image URL:',
+    typing: 'typing…', viewing: 'viewing', you: '(you)', justYou: "It's just you here right now.",
+    someoneTyping: 'Someone is typing…',
     online: 'Online',
     comments: 'Comments',
     history: 'History',
@@ -315,7 +317,7 @@ export default {
   share: {
     title: 'Share note',
     anyoneWithLink: 'Anyone with the link',
-    onHint: 'Anyone with the link can open this note.',
+    onHint: 'Anyone with the link can open this note (they sign in first).',
     offHint: 'Only you and class members can open this note.',
     permission: 'Permission',
     canView: 'Can view',

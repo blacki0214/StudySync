@@ -141,6 +141,8 @@ export default {
     clearFormat: 'Xoá định dạng', textColor: 'Màu chữ', highlight: 'Tô sáng',
     font: 'Phông', fontSize: 'Cỡ', sizeSmall: 'Nhỏ', sizeNormal: 'Thường', sizeLarge: 'Lớn', sizeHuge: 'Rất lớn',
     linkUrl: 'URL liên kết:', imageUrl: 'URL hình ảnh:',
+    typing: 'đang gõ…', viewing: 'đang xem', you: '(bạn)', justYou: 'Hiện chỉ có mình bạn ở đây.',
+    someoneTyping: 'Có người đang gõ…',
     liveAutosaved: 'Trực tiếp · đã tự lưu',
     saving: 'Đang lưu…',
     conflict: 'Xung đột',
@@ -314,7 +316,7 @@ export default {
   share: {
     title: 'Chia sẻ ghi chú',
     anyoneWithLink: 'Bất kỳ ai có liên kết',
-    onHint: 'Bất kỳ ai có liên kết đều mở được ghi chú này.',
+    onHint: 'Bất kỳ ai có liên kết đều mở được (cần đăng nhập trước).',
     offHint: 'Chỉ bạn và thành viên lớp mới mở được ghi chú này.',
     permission: 'Quyền',
     canView: 'Chỉ xem',

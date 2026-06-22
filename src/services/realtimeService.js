@@ -60,6 +60,12 @@ export function joinNoteChannel({ noteId, user, handlers }) {
     handlers.onTyping?.(payload)
   })
 
+  // 3b. Broadcast live content (every keystroke, throttled by the caller) so
+  //     peers see edits appear immediately — like Google Docs / Notion.
+  channel.on('broadcast', { event: 'content' }, ({ payload }) => {
+    if (payload.userId !== user.id) handlers.onRemoteContent?.(payload)
+  })
+
   channel.subscribe(async (status) => {
     if (status === 'SUBSCRIBED') {
       await channel.track({
@@ -77,6 +83,14 @@ export function joinNoteChannel({ noteId, user, handlers }) {
         type: 'broadcast',
         event: 'typing',
         payload: { userId: user.id, fullName: user.full_name, isTyping }
+      })
+    },
+    /** Broadcast the live document HTML to peers (throttled by the caller). */
+    broadcastContent(html) {
+      channel.send({
+        type: 'broadcast',
+        event: 'content',
+        payload: { userId: user.id, html }
       })
     },
     /** Leave the channel and stop tracking presence. */
@@ -115,6 +129,9 @@ function createDemoChannel({ user, handlers }) {
   return {
     broadcastTyping() {
       /* no-op in demo mode */
+    },
+    broadcastContent() {
+      /* no-op in demo mode (no real peer) */
     },
     leave() {
       clearTimeout(presenceTimer)
