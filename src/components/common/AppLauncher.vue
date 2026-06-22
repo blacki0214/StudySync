@@ -17,6 +17,7 @@ const allFeatures = [
   { to: '/my-subjects', icon: 'bi-folder-fill', grad: 'grad-blue', key: 'nav.mySubjects' },
   { to: '/subjects', icon: 'bi-journal-bookmark-fill', grad: 'grad-green', key: 'nav.subjects' },
   { to: '/notes', icon: 'bi-file-earmark-text', grad: 'grad-fuchsia', key: 'nav.collabNotes' },
+  { to: '/tasks', icon: 'bi-check2-square', grad: 'grad-blue', key: 'nav.tasks' },
   { to: '/rooms', icon: 'bi-people-fill', grad: 'grad-orange', key: 'nav.studyRooms' },
   { to: '/flashcards', icon: 'bi-stars', grad: 'grad-blue', key: 'nav.flashcards' },
   { to: '/community', icon: 'bi-chat-square-text-fill', grad: 'grad-fuchsia', key: 'nav.community' },

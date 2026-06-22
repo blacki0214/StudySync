@@ -57,6 +57,7 @@ const index = computed(() => {
     { icon: 'bi-compass', label: t('nav.hub'), to: '/hub' },
     { icon: 'bi-journal-bookmark', label: t('nav.subjects'), to: '/subjects' },
     { icon: 'bi-file-earmark-text', label: t('nav.collabNotes'), to: '/notes' },
+    { icon: 'bi-check2-square', label: t('nav.tasks'), to: '/tasks' },
     { icon: 'bi-people', label: t('nav.studyRooms'), to: '/rooms' },
     { icon: 'bi-person', label: t('nav.profile'), to: '/profile' }
   ].forEach((p) => entries.push({ type: 'actions', icon: p.icon, label: p.label, sublabel: t('palette.goTo'), run: () => go(p.to) }))
