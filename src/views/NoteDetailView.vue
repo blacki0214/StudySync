@@ -108,6 +108,7 @@ let ydoc = null
 let provider = null
 let saveTimer = null
 let unsubComments = null
+let unsubVersions = null
 let lastSnapshotAt = 0
 
 function updateOnline() {
@@ -195,8 +196,9 @@ onMounted(async () => {
   await loadComments()
   unsubComments = commentService.subscribe(note.value.id, loadComments)
 
-  const versions = await noteService.listVersions(note.value.id)
-  history.value = versions.map(normalizeVersion)
+  await refreshHistory()
+  // Keep the timeline live as collaborators snapshot their edits.
+  unsubVersions = noteService.subscribeVersions(note.value.id, refreshHistory)
 
   ready.value = true
 })
@@ -204,6 +206,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   clearTimeout(saveTimer)
   unsubComments?.()
+  unsubVersions?.()
   editor.value?.destroy()
   provider?.destroy()
   ydoc?.destroy()
@@ -220,6 +223,19 @@ function normalizeVersion(row) {
     date: formatDateTime(row.created_at),
     content: row.content // HTML snapshot
   }
+}
+// Pull the latest version list from the server and map it for the timeline.
+// Used on load, on the realtime version event, and when the user opens History.
+async function refreshHistory() {
+  try {
+    const versions = await noteService.listVersions(note.value.id)
+    history.value = versions.map(normalizeVersion)
+  } catch { /* keep the current list */ }
+}
+// Open the full history modal, refreshing first so it's never stale.
+function openHistory() {
+  historyOpen.value = true
+  refreshHistory()
 }
 function maybeSnapshot() {
   const now = Date.now()
@@ -473,7 +489,7 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
         <div class="seg-tabs">
           <button class="seg-tab" :class="{ active: activeTab==='online' }" @click="activeTab='online'">{{ t('editor.online') }}</button>
           <button class="seg-tab" :class="{ active: activeTab==='comments' }" @click="activeTab='comments'">{{ t('editor.comments') }}</button>
-          <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'">{{ t('editor.history') }}</button>
+          <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'; refreshHistory()">{{ t('editor.history') }}</button>
         </div>
 
         <!-- Online (real presence via Yjs awareness) -->
@@ -505,10 +521,10 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
         <div v-else>
           <p v-if="!history.length" class="pr-status">{{ t('editor.noHistory') }}</p>
           <template v-else>
-            <button class="btn btn-outline-soft w-100 history-open-btn" @click="historyOpen = true">
+            <button class="btn btn-outline-soft w-100 history-open-btn" @click="openHistory">
               <i class="bi bi-clock-history"></i>{{ t('editor.openHistory') }}
             </button>
-            <button v-for="h in history.slice(0, 6)" :key="h.id" class="history-row history-btn" @click="historyOpen = true">
+            <button v-for="h in history.slice(0, 6)" :key="h.id" class="history-row history-btn" @click="openHistory">
               <span class="hist-dot" :style="{ background: h.color }">{{ initials(h.author) }}</span>
               <div>
                 <div class="pr-name">{{ h.author || t('editor.someone') }}</div>

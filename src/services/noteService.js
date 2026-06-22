@@ -272,5 +272,18 @@ export const noteService = {
       .select('*, author:profiles(full_name)').single()
     if (error) throw error
     return data
+  },
+
+  /**
+   * Subscribe to live version-history changes for a note so collaborators' new
+   * snapshots appear without a reload. Returns an unsubscribe fn (no-op in demo).
+   */
+  subscribeVersions(noteId, onChange) {
+    if (!isSupabaseConfigured) return () => {}
+    const ch = supabase
+      .channel(`versions:${noteId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'note_versions', filter: `note_id=eq.${noteId}` }, () => onChange())
+      .subscribe()
+    return () => supabase.removeChannel(ch)
   }
 }
