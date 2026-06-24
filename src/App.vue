@@ -17,6 +17,7 @@ import { usePaletteStore } from './stores/paletteStore.js'
 import AppSidebar from './components/common/AppSidebar.vue'
 import CommandPalette from './components/common/CommandPalette.vue'
 import AppDialogs from './components/common/AppDialogs.vue'
+import { SpeedInsights } from '@vercel/speed-insights/vue'
 import logoMark from './assets/images/logo_2.png'
 
 const route = useRoute()
@@ -46,6 +47,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <transition name="page-fade" mode="out-in"><component :is="Component" /></transition>
     </router-view>
     <AppDialogs />
+    <SpeedInsights />
   </div>
 
   <div v-else class="app-shell" :class="{ 'sidebar-mini': ui.sidebarMode === 'mini' }">
@@ -87,5 +89,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Global in-app toasts / confirm / prompt -->
     <AppDialogs />
+
+    <!-- Vercel Speed Insights (real-user performance metrics in production) -->
+    <SpeedInsights />
   </div>
 </template>
