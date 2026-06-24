@@ -5,7 +5,6 @@
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { analyzeDifficulty } from '../../utils/difficultyAnalyzer.js'
 import { timeAgo } from '../../utils/formatDate.js'
 import { htmlToText } from '../../utils/html.js'
 
@@ -18,7 +17,6 @@ defineEmits(['delete'])
 const { t } = useI18n()
 
 const plain = computed(() => htmlToText(props.note.content))
-const difficulty = computed(() => analyzeDifficulty(plain.value).level)
 const excerpt = computed(() => plain.value.slice(0, 180))
 </script>
 
@@ -32,9 +30,8 @@ const excerpt = computed(() => plain.value.slice(0, 180))
       :aria-label="t('notes.deleteNote')"
       @click.prevent.stop="$emit('delete', note)"
     ><i class="bi bi-trash3"></i></button>
-    <div class="d-flex align-items-start justify-content-between gap-2">
+    <div class="d-flex align-items-start gap-2">
       <span class="badge-soft">{{ subjectCode || 'Note' }}</span>
-      <span class="difficulty-pill" :class="`difficulty-${difficulty}`">{{ difficulty }}</span>
     </div>
     <div class="note-title mt-3">{{ note.title }}</div>
     <p class="note-excerpt">{{ excerpt }}</p>
