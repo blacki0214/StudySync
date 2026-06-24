@@ -26,6 +26,10 @@ import TaskItem from '@tiptap/extension-task-item'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 import { createLowlight, common } from 'lowlight'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import CodeBlockView from '../components/notes/CodeBlockView.vue'
@@ -177,6 +181,12 @@ onMounted(async () => {
     Highlight.configure({ multicolor: true }),
     TaskList,
     TaskItem.configure({ nested: true }),
+    // Data tables — resizable columns; pasting from Excel/Sheets/CSV lands as a
+    // real table because the clipboard carries <table> HTML.
+    Table.configure({ resizable: true }),
+    TableRow,
+    TableHeader,
+    TableCell,
     CommentMark,
     Placeholder.configure({ placeholder: t('editor.placeholder') }),
     Collaboration.configure({ document: ydoc })
@@ -425,6 +435,18 @@ function fileToDataUrl(file) {
 }
 function isActive(name, attrs) { editorTick.value; return editor.value?.isActive(name, attrs) }
 
+// --- Data tables -----------------------------------------------------------
+const tableMenuOpen = ref(false)
+const inTable = computed(() => { editorTick.value; return !!editor.value?.isActive('table') })
+function insertTable() {
+  chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+}
+// Run a table command, then close the contextual menu.
+function tableCmd(fn) {
+  fn(chain())?.run?.()
+  if (!editor.value?.isActive('table')) tableMenuOpen.value = false
+}
+
 // --- Export (PDF / Word) ---------------------------------------------------
 // Subtitle line shown under the title in the exported file: subject + week.
 const exportSubtitle = computed(() => {
@@ -552,6 +574,30 @@ async function runExport(kind) {
         <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="t('editor.codeBlock')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
         <button class="tb-btn" :title="t('editor.divider')" @click="chain().setHorizontalRule().run()"><i class="bi bi-dash-lg"></i></button>
         <button class="tb-btn" :title="t('editor.clearFormat')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
+      </div>
+      <div class="tb-sep"></div>
+      <!-- Data table: insert, plus contextual row/column tools when inside one -->
+      <div class="tb-group">
+        <button class="tb-btn" :class="{ on: inTable }" :title="t('editor.insertTable')" @click="insertTable"><i class="bi bi-table"></i></button>
+        <div v-if="inTable" class="table-menu-wrap">
+          <button class="tb-btn" :class="{ on: tableMenuOpen }" :title="t('editor.tableTools')" @click="tableMenuOpen = !tableMenuOpen"><i class="bi bi-sliders"></i></button>
+          <template v-if="tableMenuOpen">
+            <div class="export-backdrop" @click="tableMenuOpen = false"></div>
+            <div class="table-menu" role="menu">
+              <button class="export-item" @click="tableCmd(c => c.addColumnBefore())"><i class="bi bi-arrow-bar-left"></i><span>{{ t('editor.colBefore') }}</span></button>
+              <button class="export-item" @click="tableCmd(c => c.addColumnAfter())"><i class="bi bi-arrow-bar-right"></i><span>{{ t('editor.colAfter') }}</span></button>
+              <button class="export-item" @click="tableCmd(c => c.deleteColumn())"><i class="bi bi-x-square"></i><span>{{ t('editor.delCol') }}</span></button>
+              <div class="table-menu-sep"></div>
+              <button class="export-item" @click="tableCmd(c => c.addRowBefore())"><i class="bi bi-arrow-bar-up"></i><span>{{ t('editor.rowBefore') }}</span></button>
+              <button class="export-item" @click="tableCmd(c => c.addRowAfter())"><i class="bi bi-arrow-bar-down"></i><span>{{ t('editor.rowAfter') }}</span></button>
+              <button class="export-item" @click="tableCmd(c => c.deleteRow())"><i class="bi bi-x-square"></i><span>{{ t('editor.delRow') }}</span></button>
+              <div class="table-menu-sep"></div>
+              <button class="export-item" @click="tableCmd(c => c.toggleHeaderRow())"><i class="bi bi-table"></i><span>{{ t('editor.toggleHeader') }}</span></button>
+              <button class="export-item" @click="tableCmd(c => c.mergeOrSplit())"><i class="bi bi-union"></i><span>{{ t('editor.mergeSplit') }}</span></button>
+              <button class="export-item danger" @click="tableCmd(c => c.deleteTable())"><i class="bi bi-trash3"></i><span>{{ t('editor.delTable') }}</span></button>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 

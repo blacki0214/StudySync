@@ -364,6 +364,42 @@
 .doc-surface .ProseMirror pre .hljs-emphasis { font-style: italic; }
 .doc-surface .ProseMirror pre .hljs-strong { font-weight: 700; }
 .doc-surface .ProseMirror hr { border: none; border-top: 1px solid var(--c-border); margin: var(--space-5) 0; }
+
+/* ---- Data tables ---- */
+.doc-surface .ProseMirror table {
+  border-collapse: collapse; table-layout: fixed; width: 100%;
+  margin: var(--space-4) 0; overflow: hidden;
+}
+.doc-surface .ProseMirror td,
+.doc-surface .ProseMirror th {
+  border: 1px solid var(--c-border-strong, #cbd5e1); padding: 6px 10px;
+  vertical-align: top; box-sizing: border-box; position: relative; min-width: 60px;
+}
+.doc-surface .ProseMirror th {
+  background: var(--c-surface-2); font-weight: 700; text-align: left;
+}
+/* Cell selection + column resize affordances from prosemirror-tables. */
+.doc-surface .ProseMirror .selectedCell::after {
+  content: ''; position: absolute; inset: 0; background: var(--c-primary-light, rgba(99,102,241,0.18));
+  pointer-events: none; z-index: 2;
+}
+.doc-surface .ProseMirror .column-resize-handle {
+  position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px;
+  background: var(--c-primary); pointer-events: none;
+}
+.doc-surface .ProseMirror.resize-cursor { cursor: col-resize; }
+
+/* Contextual table-tools dropdown (reuses .export-item rows). */
+.table-menu-wrap { position: relative; display: inline-flex; }
+.table-menu {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 61;
+  min-width: 188px; padding: 6px; background: var(--c-surface);
+  border: 1px solid var(--c-border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(15, 23, 42, 0.16));
+}
+.table-menu .export-item.danger { color: var(--c-danger); }
+.table-menu .export-item.danger i { color: var(--c-danger); }
+.table-menu-sep { height: 1px; background: var(--c-border); margin: 4px 2px; }
 .doc-surface .ProseMirror img { max-width: 100%; border-radius: var(--radius-sm); }
 
 /* ---- Editable image node (resize / rotate / align) ---- */
