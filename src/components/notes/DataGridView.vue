@@ -86,11 +86,11 @@ function stop(e) { e.stopPropagation() }
     <div class="dg-scroll">
       <table class="dg-table">
         <thead v-if="hasHeader">
-          <tr><th v-for="(h, i) in header" :key="i">{{ h }}</th></tr>
+          <tr><th v-for="(h, i) in header" :key="i" :title="h">{{ h }}</th></tr>
         </thead>
         <tbody>
           <tr v-for="(row, r) in pageRows" :key="r">
-            <td v-for="(cell, c) in row" :key="c">{{ cell }}</td>
+            <td v-for="(cell, c) in row" :key="c" :title="cell">{{ cell }}</td>
           </tr>
           <tr v-if="!pageRows.length">
             <td class="dg-empty" :colspan="Math.max(1, colCount)">{{ t('editor.dataGridNoMatch') }}</td>

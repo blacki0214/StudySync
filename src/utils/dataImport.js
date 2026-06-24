@@ -82,12 +82,14 @@ export async function readDataFile(file) {
   if (ext === 'xlsx' || ext === 'xls') {
     const XLSX = await import('xlsx')
     const buf = await file.arrayBuffer()
-    const wb = XLSX.read(buf, { type: 'array' })
+    // cellDates → real dates instead of serial numbers (e.g. 43681 → a date).
+    const wb = XLSX.read(buf, { type: 'array', cellDates: true })
     sheetName = wb.SheetNames[0]
     const sheet = wb.Sheets[sheetName]
     if (!sheet) throw new Error('empty-workbook')
-    // header:1 → array-of-arrays; defval keeps empty cells aligned.
-    rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '' })
+    // header:1 → array-of-arrays; raw:false → use each cell's *displayed* text
+    // (formatted dates, percentages, currency) so the grid reads like Excel.
+    rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '', raw: false })
       .map((r) => r.map((c) => (c == null ? '' : String(c))))
   } else if (ext === 'csv' || ext === 'tsv' || ext === 'txt') {
     const text = await file.text()
