@@ -388,9 +388,16 @@
 .doc-surface .ProseMirror th {
   background: var(--c-surface-2); font-weight: 700; text-align: left;
 }
-/* Cell selection + column resize affordances from prosemirror-tables. */
+/* Selecting the table emphasises its OUTER border with a bold accent ring,
+   rather than washing every cell with colour (inset shadow isn't clipped by the
+   table's overflow:hidden and reads as a thick border). */
+.doc-surface .ProseMirror table.ProseMirror-selectednode,
+.doc-surface .ProseMirror table:has(.selectedCell) {
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+/* No per-cell colour fill — keep the cells clean so only the border stands out. */
 .doc-surface .ProseMirror .selectedCell::after {
-  content: ''; position: absolute; inset: 0; background: var(--c-primary-light, rgba(99,102,241,0.18));
+  content: ''; position: absolute; inset: 0; background: transparent;
   pointer-events: none; z-index: 2;
 }
 .doc-surface .ProseMirror .column-resize-handle {
