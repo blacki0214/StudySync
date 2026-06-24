@@ -400,6 +400,66 @@
 .table-menu .export-item.danger { color: var(--c-danger); }
 .table-menu .export-item.danger i { color: var(--c-danger); }
 .table-menu-sep { height: 1px; background: var(--c-border); margin: 4px 2px; }
+
+/* ---- Data grid: Jira-style paged viewer for imported datasets ---- */
+.doc-surface .ProseMirror .dg {
+  border: 1px solid var(--c-border); border-radius: var(--radius-md);
+  background: var(--c-surface); overflow: hidden; margin: var(--space-4) 0;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.05)); user-select: none;
+}
+.doc-surface .ProseMirror .dg.dg-selected { outline: 2px solid var(--c-primary); outline-offset: 1px; }
+.dg-head {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 0.75rem; border-bottom: 1px solid var(--c-border);
+  background: var(--c-surface-2);
+}
+.dg-ico { color: var(--c-primary); }
+.dg-title { font-weight: 700; font-size: 0.9rem; color: var(--c-text); max-width: 40%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dg-dim { font-size: 0.78rem; color: var(--c-text-muted); }
+.dg-spacer { flex: 1; }
+.dg-search { display: flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.55rem;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 999px; }
+.dg-search i { font-size: 0.8rem; color: var(--c-text-muted); }
+.dg-search input { border: none; outline: none; background: none; font-size: 0.83rem;
+  width: 130px; color: var(--c-text); }
+.dg-del { border: none; background: none; color: var(--c-text-muted); cursor: pointer;
+  width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; }
+.dg-del:hover { background: rgba(239, 68, 68, 0.14); color: var(--c-danger); }
+
+.dg-scroll { overflow-x: auto; max-width: 100%; }
+.dg-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+.dg-table th, .dg-table td {
+  border-bottom: 1px solid var(--c-border); padding: 0.5rem 0.75rem;
+  text-align: left; vertical-align: top; white-space: nowrap;
+}
+.dg-table thead th {
+  position: sticky; top: 0; background: var(--c-surface-2);
+  font-weight: 700; color: var(--c-text); border-bottom: 2px solid var(--c-border);
+}
+.dg-table tbody tr:nth-child(even) { background: var(--c-surface-2); }
+.dg-table tbody tr:hover { background: var(--c-hover, var(--c-surface-2)); }
+.dg-empty { text-align: center; color: var(--c-text-muted); padding: 1.2rem; white-space: normal; }
+
+.dg-foot {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  padding: 0.5rem 0.75rem; border-top: 1px solid var(--c-border);
+  background: var(--c-surface-2); font-size: 0.8rem; color: var(--c-text-muted);
+}
+.dg-count { white-space: nowrap; }
+.dg-pager { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.dg-pg {
+  border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text);
+  width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; cursor: pointer;
+}
+.dg-pg:hover:not(:disabled) { background: var(--c-surface-2); border-color: var(--c-border-strong, var(--c-border)); }
+.dg-pg:disabled { opacity: 0.4; cursor: default; }
+.dg-page { padding: 0 0.5rem; white-space: nowrap; }
+.dg-size { display: flex; align-items: center; gap: 0.35rem; }
+.dg-size select {
+  border: 1px solid var(--c-border); border-radius: 6px; padding: 0.15rem 0.3rem;
+  background: var(--c-surface); color: var(--c-text); font-size: 0.8rem;
+}
 .doc-surface .ProseMirror img { max-width: 100%; border-radius: var(--radius-sm); }
 
 /* ---- Editable image node (resize / rotate / align) ---- */

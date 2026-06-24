@@ -30,6 +30,7 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
+import { DataGrid } from '../components/notes/DataGrid.js'
 import { createLowlight, common } from 'lowlight'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import CodeBlockView from '../components/notes/CodeBlockView.vue'
@@ -188,6 +189,7 @@ onMounted(async () => {
     TableRow,
     TableHeader,
     TableCell,
+    DataGrid, // paged viewer for large imported datasets
     CommentMark,
     Placeholder.configure({ placeholder: t('editor.placeholder') }),
     Collaboration.configure({ document: ydoc })
@@ -463,9 +465,17 @@ async function onDataFilePicked(e) {
   importingData.value = true
   try {
     const { rows, truncated } = await readDataFile(file)
-    const html = rowsToTableHtml(rows, { headerRow: true })
-    // Insert the parsed table; Tiptap parses the <table> HTML into a real node.
-    editor.value.chain().focus().insertContent(html).run()
+    // Large datasets → a paged data-grid (first 10 rows + pager) so the document
+    // stays light. Small ones → a normal editable table the user can tweak.
+    if (rows.length - 1 > 10) {
+      editor.value.chain().focus().insertContent({
+        type: 'dataGrid',
+        attrs: { rows, headerRow: true, pageSize: 10, caption: file.name }
+      }).run()
+    } else {
+      const html = rowsToTableHtml(rows, { headerRow: true })
+      editor.value.chain().focus().insertContent(html).run()
+    }
     if (truncated) alert(t('editor.dataTruncated'))
   } catch (err) {
     console.error('Data import failed', err)
