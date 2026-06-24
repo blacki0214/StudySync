@@ -159,7 +159,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-6) var(--space-7);
+  padding: var(--space-6) var(--space-8);
   min-height: 520px;
   /* Allow this grid column to shrink so a long word / wide table can't push the
      side panel off-screen (grid items default to min-width:auto = min-content). */
