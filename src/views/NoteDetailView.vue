@@ -44,6 +44,7 @@ import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
 import { formatDateTime } from '../utils/formatDate.js'
 import { exportNotePdf, exportNoteDocx } from '../utils/exporters.js'
+import { readDataFile, rowsToTableHtml } from '../utils/dataImport.js'
 import { CommentMark } from '../components/notes/CommentMark.js'
 import { FontSize } from '../components/notes/FontSize.js'
 import AppSelect from '../components/common/AppSelect.vue'
@@ -447,6 +448,33 @@ function tableCmd(fn) {
   if (!editor.value?.isActive('table')) tableMenuOpen.value = false
 }
 
+// Import data (CSV / TSV / Excel) → an editable table inserted at the caret.
+const dataInput = ref(null)
+const importingData = ref(false)
+function importData() {
+  if (importingData.value) return
+  dataInput.value?.click()
+}
+async function onDataFilePicked(e) {
+  const file = e.target.files?.[0]
+  e.target.value = '' // allow re-importing the same file later
+  if (!file || !editor.value) return
+  if (file.size > 8 * 1024 * 1024) { alert(t('editor.dataFileTooLarge')); return }
+  importingData.value = true
+  try {
+    const { rows, truncated } = await readDataFile(file)
+    const html = rowsToTableHtml(rows, { headerRow: true })
+    // Insert the parsed table; Tiptap parses the <table> HTML into a real node.
+    editor.value.chain().focus().insertContent(html).run()
+    if (truncated) alert(t('editor.dataTruncated'))
+  } catch (err) {
+    console.error('Data import failed', err)
+    alert(err?.message === 'unsupported-type' ? t('editor.dataUnsupported') : t('editor.dataImportFailed'))
+  } finally {
+    importingData.value = false
+  }
+}
+
 // --- Export (PDF / Word) ---------------------------------------------------
 // Subtitle line shown under the title in the exported file: subject + week.
 const exportSubtitle = computed(() => {
@@ -579,6 +607,10 @@ async function runExport(kind) {
       <!-- Data table: insert, plus contextual row/column tools when inside one -->
       <div class="tb-group">
         <button class="tb-btn" :class="{ on: inTable }" :title="t('editor.insertTable')" @click="insertTable"><i class="bi bi-table"></i></button>
+        <button class="tb-btn" :class="{ disabled: importingData }" :disabled="importingData" :title="t('editor.importData')" @click="importData">
+          <i class="bi" :class="importingData ? 'bi-arrow-repeat spin' : 'bi-file-earmark-spreadsheet'"></i>
+        </button>
+        <input ref="dataInput" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" class="d-none" @change="onDataFilePicked" />
         <div v-if="inTable" class="table-menu-wrap">
           <button class="tb-btn" :class="{ on: tableMenuOpen }" :title="t('editor.tableTools')" @click="tableMenuOpen = !tableMenuOpen"><i class="bi bi-sliders"></i></button>
           <template v-if="tableMenuOpen">
