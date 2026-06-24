@@ -39,6 +39,7 @@ import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProv
 import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
 import { formatDateTime } from '../utils/formatDate.js'
+import { exportNotePdf, exportNoteDocx } from '../utils/exporters.js'
 import { CommentMark } from '../components/notes/CommentMark.js'
 import { FontSize } from '../components/notes/FontSize.js'
 import AppSelect from '../components/common/AppSelect.vue'
@@ -76,6 +77,8 @@ const onlineUsers = ref([])
 const activeTab = ref('online')
 const aiOpen = ref(false)
 const shareOpen = ref(false)
+const exportOpen = ref(false)
+const exportBusy = ref('') // '' | 'pdf' | 'docx' — drives the per-item spinner
 
 const me = computed(() => auth.user || { id: 'guest', full_name: 'Guest' })
 const isShared = computed(() => route.name === 'note-share')
@@ -421,6 +424,30 @@ function fileToDataUrl(file) {
   })
 }
 function isActive(name, attrs) { editorTick.value; return editor.value?.isActive(name, attrs) }
+
+// --- Export (PDF / Word) ---------------------------------------------------
+// Subtitle line shown under the title in the exported file: subject + week.
+const exportSubtitle = computed(() => {
+  const parts = []
+  if (subject.value) parts.push(`${subject.value.code} · ${subject.value.name}`)
+  if (note.value?.week) parts.push(note.value.week)
+  return parts.join('  ·  ')
+})
+async function runExport(kind) {
+  if (exportBusy.value || !editor.value) return
+  exportBusy.value = kind
+  const payload = { title: note.value?.title || 'Note', subtitle: exportSubtitle.value, html: editor.value.getHTML() }
+  try {
+    if (kind === 'pdf') await exportNotePdf(payload)
+    else await exportNoteDocx(payload)
+    exportOpen.value = false
+  } catch (err) {
+    console.error('Export failed', err)
+    alert(t('editor.exportFailed'))
+  } finally {
+    exportBusy.value = ''
+  }
+}
 </script>
 
 <template>
@@ -454,6 +481,24 @@ function isActive(name, attrs) { editorTick.value; return editor.value?.isActive
         <span v-else class="badge-soft"><i class="bi bi-eye"></i> {{ t('share.readOnly') }}</span>
         <template v-if="!isShared">
           <button class="btn btn-outline-soft" @click="shareOpen = true"><i class="bi bi-share"></i>{{ t('editor.share') }}</button>
+          <div class="export-menu-wrap">
+            <button class="btn btn-outline-soft" :class="{ on: exportOpen }" @click="exportOpen = !exportOpen">
+              <i class="bi bi-download"></i>{{ t('editor.export') }}<i class="bi bi-chevron-down export-caret"></i>
+            </button>
+            <template v-if="exportOpen">
+              <div class="export-backdrop" @click="exportOpen = false"></div>
+              <div class="export-menu" role="menu">
+                <button class="export-item" :disabled="!!exportBusy" role="menuitem" @click="runExport('pdf')">
+                  <i class="bi" :class="exportBusy === 'pdf' ? 'bi-arrow-repeat spin' : 'bi-file-earmark-pdf'"></i>
+                  <span>{{ t('editor.exportPdf') }}</span>
+                </button>
+                <button class="export-item" :disabled="!!exportBusy" role="menuitem" @click="runExport('docx')">
+                  <i class="bi" :class="exportBusy === 'docx' ? 'bi-arrow-repeat spin' : 'bi-file-earmark-word'"></i>
+                  <span>{{ t('editor.exportWord') }}</span>
+                </button>
+              </div>
+            </template>
+          </div>
           <button class="btn btn-brand" @click="aiOpen = true"><i class="bi bi-stars"></i>{{ t('editor.aiTools') }}</button>
         </template>
       </div>

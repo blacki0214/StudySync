@@ -179,6 +179,10 @@ export default {
     conflict: 'Conflict',
     share: 'Share',
     aiTools: 'AI Tools',
+    export: 'Export',
+    exportPdf: 'PDF document (.pdf)',
+    exportWord: 'Word document (.docx)',
+    exportFailed: 'Sorry, the export could not be completed. Please try again.',
     // Toolbar
     undo: 'Undo', redo: 'Redo',
     paragraph: 'Normal text', heading1: 'Heading 1', heading2: 'Heading 2', heading3: 'Heading 3',
