@@ -29,6 +29,23 @@ const showForm = ref(false)
 const form = ref({ title: '', content: '', subject_id: '' })
 const creating = ref(false)
 
+// Delete-confirmation state.
+const pendingDelete = ref(null)
+const deleting = ref(false)
+function askDelete(note) { pendingDelete.value = note }
+async function confirmDelete() {
+  if (!pendingDelete.value) return
+  deleting.value = true
+  try {
+    await noteStore.deleteNote(pendingDelete.value.id)
+    pendingDelete.value = null
+  } catch {
+    alert(t('notes.deleteFailed'))
+  } finally {
+    deleting.value = false
+  }
+}
+
 onMounted(async () => {
   await Promise.all([subjectStore.fetchSubjects(), noteStore.fetchNotes()])
 })
@@ -111,7 +128,7 @@ async function createNote() {
 
     <div v-else class="row g-4">
       <div v-for="n in filtered" :key="n.id" class="col-12 col-md-6 col-lg-4">
-        <NoteCard :note="n" :subject-code="subjectCode(n.subject_id)" />
+        <NoteCard :note="n" :subject-code="subjectCode(n.subject_id)" deletable @delete="askDelete" />
       </div>
     </div>
 
@@ -142,6 +159,27 @@ async function createNote() {
             <button class="btn btn-soft" @click="showForm = false">{{ t('common.cancel') }}</button>
             <button class="btn btn-brand" :disabled="creating" @click="createNote">
               <span v-if="creating" class="spinner-border spinner-border-sm"></span>{{ t('notes.createContinue') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete confirmation -->
+    <div v-if="pendingDelete" class="modal d-block" tabindex="-1" style="background: rgba(15,23,42,.5)" @click.self="pendingDelete = null">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>{{ t('notes.deleteTitle') }}</h5>
+            <button class="btn-close" @click="pendingDelete = null"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">{{ t('notes.deleteConfirm', { title: pendingDelete.title }) }}</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-soft" @click="pendingDelete = null">{{ t('common.cancel') }}</button>
+            <button class="btn btn-danger" :disabled="deleting" @click="confirmDelete">
+              <span v-if="deleting" class="spinner-border spinner-border-sm me-1"></span>{{ t('common.delete') }}
             </button>
           </div>
         </div>

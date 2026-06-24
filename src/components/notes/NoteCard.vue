@@ -4,14 +4,18 @@
  * Computes a quick difficulty pill on the fly using the manual analyzer.
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { analyzeDifficulty } from '../../utils/difficultyAnalyzer.js'
 import { timeAgo } from '../../utils/formatDate.js'
 import { htmlToText } from '../../utils/html.js'
 
 const props = defineProps({
   note: { type: Object, required: true },
-  subjectCode: { type: String, default: '' }
+  subjectCode: { type: String, default: '' },
+  deletable: { type: Boolean, default: false }
 })
+defineEmits(['delete'])
+const { t } = useI18n()
 
 const plain = computed(() => htmlToText(props.note.content))
 const difficulty = computed(() => analyzeDifficulty(plain.value).level)
@@ -20,6 +24,14 @@ const excerpt = computed(() => plain.value.slice(0, 180))
 
 <template>
   <router-link :to="`/notes/${note.id}`" class="note-card text-reset text-decoration-none">
+    <button
+      v-if="deletable"
+      type="button"
+      class="note-del-btn"
+      :title="t('notes.deleteNote')"
+      :aria-label="t('notes.deleteNote')"
+      @click.prevent.stop="$emit('delete', note)"
+    ><i class="bi bi-trash3"></i></button>
     <div class="d-flex align-items-start justify-content-between gap-2">
       <span class="badge-soft">{{ subjectCode || 'Note' }}</span>
       <span class="difficulty-pill" :class="`difficulty-${difficulty}`">{{ difficulty }}</span>

@@ -39,6 +39,7 @@ export default {
     students: 'sinh viên',
     notes: 'ghi chú',
     cancel: 'Huỷ',
+    delete: 'Xoá',
     close: 'Đóng',
     done: 'Xong',
     viewSubject: 'Xem môn học'
@@ -170,7 +171,11 @@ export default {
     content: 'Nội dung',
     titlePlaceholder: 'vd. Khái niệm reactivity trong Vue',
     contentPlaceholder: 'Viết các câu định nghĩa để tạo thẻ ghi nhớ/câu hỏi tốt hơn...',
-    createContinue: 'Tạo & tiếp tục'
+    createContinue: 'Tạo & tiếp tục',
+    deleteNote: 'Xoá ghi chú',
+    deleteTitle: 'Xoá ghi chú?',
+    deleteConfirm: 'Bạn có chắc muốn xoá “{title}” không? Hành động này không thể hoàn tác.',
+    deleteFailed: 'Không thể xoá ghi chú. Vui lòng thử lại.'
   },
 
   editor: {

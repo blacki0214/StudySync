@@ -39,6 +39,7 @@ export default {
     students: 'students',
     notes: 'notes',
     cancel: 'Cancel',
+    delete: 'Delete',
     close: 'Close',
     done: 'Done',
     viewSubject: 'View subject'
@@ -170,7 +171,11 @@ export default {
     content: 'Content',
     titlePlaceholder: 'e.g. Vue reactivity basics',
     contentPlaceholder: "Write definition sentences so flashcards/quizzes generate well...",
-    createContinue: 'Create & continue'
+    createContinue: 'Create & continue',
+    deleteNote: 'Delete note',
+    deleteTitle: 'Delete note?',
+    deleteConfirm: 'Are you sure you want to delete “{title}”? This action cannot be undone.',
+    deleteFailed: 'Could not delete the note. Please try again.'
   },
 
   editor: {
