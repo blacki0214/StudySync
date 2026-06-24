@@ -7,6 +7,7 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore.js'
 import { useClassStore } from '../stores/classStore.js'
@@ -21,6 +22,7 @@ import ClassGradebookTab from '../components/classes/ClassGradebookTab.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
+const dialog = useDialogStore()
 const router = useRouter()
 const auth = useAuthStore()
 const classStore = useClassStore()
@@ -72,7 +74,7 @@ async function removeAnnouncement(a) {
   announcements.value = announcements.value.filter((x) => x.id !== a.id)
 }
 async function removeMember(m) {
-  if (!confirm(t('classes.confirmRemove'))) return
+  if (!(await dialog.confirm({ message: t('classes.confirmRemove'), danger: true, confirmText: t('common.delete') }))) return
   await classService.removeMember(m)
   roster.value = roster.value.filter((x) => x.id !== m.id)
 }
@@ -82,7 +84,7 @@ async function toggleTa(m) {
   m.role = role
 }
 async function destroy() {
-  if (!confirm(t('classes.confirmDelete'))) return
+  if (!(await dialog.confirm({ message: t('classes.confirmDelete'), danger: true, confirmText: t('common.delete') }))) return
   await classStore.deleteClass(props.id)
   router.push('/classes')
 }

@@ -39,6 +39,7 @@ import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useAuthStore } from '../stores/authStore.js'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
 import { timeAgo } from '../utils/formatDate.js'
@@ -59,6 +60,7 @@ const router = useRouter()
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const auth = useAuthStore()
+const dialog = useDialogStore()
 
 // Syntax highlighting for code blocks (IDE-style colours via highlight.js).
 const lowlight = createLowlight(common)
@@ -379,16 +381,46 @@ function onSurfaceClick(e) {
 
 // Toolbar command helpers.
 function chain() { return editor.value.chain().focus() }
+
+// "Link" is a LOCAL FILE attachment, not a URL prompt: the user picks a file
+// from their device, we upload it and insert a link to it (labelled with the
+// file name). Selected text, if any, becomes the link label instead.
+const linkInput = ref(null)
+const uploadingLink = ref(false)
 function setLink() {
-  const url = prompt(t('editor.linkUrl'))
-  if (url === null) return
-  if (url === '') chain().unsetLink().run()
-  else chain().extendMarkRange('link').setLink({ href: url }).run()
+  linkInput.value?.click()
 }
-// Image insert is an upload, not a URL prompt: the user picks a file from their
-// device. Live mode uploads to the public `note-images` Storage bucket; demo
-// mode (and any upload failure) falls back to inlining the image as a data URL,
-// so it always works offline too.
+async function onLinkFilePicked(e) {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  if (file.size > 15 * 1024 * 1024) { dialog.toast(t('editor.linkFileTooLarge'), 'warning'); return }
+  uploadingLink.value = true
+  try {
+    const href = await uploadFile(file, 'note-files')
+    if (!href) { dialog.toast(t('editor.linkFailed'), 'error'); return }
+    const { from, to } = editor.value.state.selection
+    if (from !== to) {
+      // Wrap the current selection as the link.
+      chain().extendMarkRange('link').setLink({ href }).run()
+    } else {
+      // No selection → insert the file name as a clickable link.
+      chain().insertContent(`<a href="${href}" target="_blank" rel="noopener">${escapeHtmlAttr(file.name)}</a> `).run()
+    }
+    dialog.toast(t('editor.linkAdded'), 'success')
+  } catch {
+    dialog.toast(t('editor.linkFailed'), 'error')
+  } finally {
+    uploadingLink.value = false
+  }
+}
+function escapeHtmlAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+// Image insert is an upload: the user picks a file from their device. Live mode
+// uploads to the public `note-images` Storage bucket; demo mode (and any upload
+// failure) falls back to inlining the image as a data URL, so it works offline.
 const imageInput = ref(null)
 const uploadingImage = ref(false)
 function setImage() {
@@ -400,27 +432,29 @@ async function onImagePicked(e) {
   if (!file) return
   if (!file.type.startsWith('image/')) return
   if (file.size > 5 * 1024 * 1024) {
-    alert(t('editor.imageTooLarge'))
+    dialog.toast(t('editor.imageTooLarge'), 'warning')
     return
   }
   uploadingImage.value = true
   try {
-    const src = await uploadImage(file)
+    const src = await uploadFile(file, 'note-images')
     if (src) chain().setImage({ src }).run()
   } catch {
-    alert(t('editor.imageFailed'))
+    dialog.toast(t('editor.imageFailed'), 'error')
   } finally {
     uploadingImage.value = false
   }
 }
-async function uploadImage(file) {
+// Upload a file to a public Storage bucket, returning its public URL. Falls back
+// to an inline data URL when Storage is unavailable (demo mode / upload denied).
+async function uploadFile(file, bucket) {
   if (isSupabaseConfigured && supabase) {
     try {
       const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
       const path = `${auth.user?.id || 'anon'}/${Date.now()}-${safe}`
-      const { error } = await supabase.storage.from('note-images').upload(path, file)
+      const { error } = await supabase.storage.from(bucket).upload(path, file)
       if (!error) {
-        const { data } = supabase.storage.from('note-images').getPublicUrl(path)
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path)
         if (data?.publicUrl) return data.publicUrl
       }
       // Bucket missing or upload denied → fall back to an inline data URL.
@@ -461,7 +495,7 @@ async function onDataFilePicked(e) {
   const file = e.target.files?.[0]
   e.target.value = '' // allow re-importing the same file later
   if (!file || !editor.value) return
-  if (file.size > 8 * 1024 * 1024) { alert(t('editor.dataFileTooLarge')); return }
+  if (file.size > 8 * 1024 * 1024) { dialog.toast(t('editor.dataFileTooLarge'), 'warning'); return }
   importingData.value = true
   try {
     const { rows, truncated } = await readDataFile(file)
@@ -476,10 +510,10 @@ async function onDataFilePicked(e) {
       const html = rowsToTableHtml(rows, { headerRow: true })
       editor.value.chain().focus().insertContent(html).run()
     }
-    if (truncated) alert(t('editor.dataTruncated'))
+    if (truncated) dialog.toast(t('editor.dataTruncated'), 'info')
   } catch (err) {
     console.error('Data import failed', err)
-    alert(err?.message === 'unsupported-type' ? t('editor.dataUnsupported') : t('editor.dataImportFailed'))
+    dialog.toast(err?.message === 'unsupported-type' ? t('editor.dataUnsupported') : t('editor.dataImportFailed'), 'error')
   } finally {
     importingData.value = false
   }
@@ -503,7 +537,7 @@ async function runExport(kind) {
     exportOpen.value = false
   } catch (err) {
     console.error('Export failed', err)
-    alert(t('editor.exportFailed'))
+    dialog.toast(t('editor.exportFailed'), 'error')
   } finally {
     exportBusy.value = ''
   }
@@ -590,7 +624,10 @@ async function runExport(kind) {
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('link') }" :title="t('editor.link')" @click="setLink"><i class="bi bi-link-45deg"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('link'), disabled: uploadingLink }" :disabled="uploadingLink" :title="t('editor.attachFile')" @click="setLink">
+          <i class="bi" :class="uploadingLink ? 'bi-arrow-repeat spin' : 'bi-paperclip'"></i>
+        </button>
+        <input ref="linkInput" type="file" class="d-none" @change="onLinkFilePicked" />
         <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
         <button class="tb-btn" :class="{ disabled: uploadingImage }" :disabled="uploadingImage" :title="t('editor.image')" @click="setImage">
           <i class="bi" :class="uploadingImage ? 'bi-arrow-repeat spin' : 'bi-image'"></i>

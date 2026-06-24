@@ -6,6 +6,7 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDialogStore } from '../../stores/dialogStore.js'
 import { assignmentService } from '../../services/assignmentService.js'
 import { documentService } from '../../services/documentService.js'
 import { useAuthStore } from '../../stores/authStore.js'
@@ -17,6 +18,7 @@ import SubmissionsPanel from './SubmissionsPanel.vue'
 
 const props = defineProps({ classId: { type: String, required: true }, isOwner: { type: Boolean, default: false } })
 const { t } = useI18n()
+const dialog = useDialogStore()
 const auth = useAuthStore()
 
 const assignments = ref([])
@@ -58,7 +60,7 @@ async function create() {
   } finally { creating.value = false }
 }
 async function remove(a) {
-  if (!confirm(t('classes.confirmDeleteAssignment'))) return
+  if (!(await dialog.confirm({ message: t('classes.confirmDeleteAssignment'), danger: true, confirmText: t('common.delete') }))) return
   await assignmentService.remove(a.id)
   assignments.value = assignments.value.filter((x) => x.id !== a.id)
 }

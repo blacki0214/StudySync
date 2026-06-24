@@ -6,12 +6,14 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { useRouter } from 'vue-router'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import AppSelect from '../components/common/AppSelect.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 
 const { t } = useI18n()
+const dialog = useDialogStore()
 const router = useRouter()
 const subjectStore = useSubjectStore()
 
@@ -50,7 +52,9 @@ async function create() {
 }
 
 async function remove(id) {
-  if (confirm(t('mySubjects.confirmDelete'))) await subjectStore.deleteSubject(id)
+  if (await dialog.confirm({ message: t('mySubjects.confirmDelete'), danger: true, confirmText: t('common.delete') })) {
+    await subjectStore.deleteSubject(id)
+  }
 }
 </script>
 

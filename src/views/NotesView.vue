@@ -7,6 +7,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { useNoteStore } from '../stores/noteStore.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import NoteCard from '../components/notes/NoteCard.vue'
@@ -17,6 +18,7 @@ import EmptyState from '../components/common/EmptyState.vue'
 
 const route = useRoute()
 const { t } = useI18n()
+const dialog = useDialogStore()
 const noteStore = useNoteStore()
 const subjectStore = useSubjectStore()
 
@@ -40,7 +42,7 @@ async function confirmDelete() {
     await noteStore.deleteNote(pendingDelete.value.id)
     pendingDelete.value = null
   } catch {
-    alert(t('notes.deleteFailed'))
+    dialog.toast(t('notes.deleteFailed'), 'error')
   } finally {
     deleting.value = false
   }

@@ -42,6 +42,10 @@ export default {
     delete: 'Delete',
     close: 'Close',
     done: 'Done',
+    confirm: 'Confirm',
+    ok: 'OK',
+    confirmTitle: 'Please confirm',
+    promptTitle: 'Enter a value',
     viewSubject: 'View subject'
   },
 
@@ -194,6 +198,9 @@ export default {
     bold: 'Bold', italic: 'Italic', underline: 'Underline', strikethrough: 'Strikethrough',
     bulletList: 'Bulleted list', numberList: 'Numbered list',
     quote: 'Quote', codeBlock: 'Code block', link: 'Insert link', image: 'Insert image', divider: 'Divider',
+    attachFile: 'Attach a file', linkAdded: 'File attached', linkFailed: 'Could not attach the file. Please try again.',
+    linkFileTooLarge: 'That file is too large to attach (max 15 MB).',
+    altTitle: 'Image description', altLabel: 'Alt text (for accessibility)', altPlaceholder: 'Describe the image…',
     alignLeft: 'Align left', alignCenter: 'Align center', alignRight: 'Align right',
     clearFormat: 'Clear formatting', textColor: 'Text colour', highlight: 'Highlight',
     insertTable: 'Insert table', tableTools: 'Table tools',

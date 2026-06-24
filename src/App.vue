@@ -16,6 +16,7 @@ import { useUiStore } from './stores/uiStore.js'
 import { usePaletteStore } from './stores/paletteStore.js'
 import AppSidebar from './components/common/AppSidebar.vue'
 import CommandPalette from './components/common/CommandPalette.vue'
+import AppDialogs from './components/common/AppDialogs.vue'
 import logoMark from './assets/images/logo_2.png'
 
 const route = useRoute()
@@ -44,6 +45,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     <router-view v-slot="{ Component }">
       <transition name="page-fade" mode="out-in"><component :is="Component" /></transition>
     </router-view>
+    <AppDialogs />
   </div>
 
   <div v-else class="app-shell" :class="{ 'sidebar-mini': ui.sidebarMode === 'mini' }">
@@ -82,5 +84,8 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Global ⌘K command palette -->
     <CommandPalette />
+
+    <!-- Global in-app toasts / confirm / prompt -->
+    <AppDialogs />
   </div>
 </template>

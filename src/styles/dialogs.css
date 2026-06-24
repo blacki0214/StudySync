@@ -1,0 +1,40 @@
+/* dialogs.css
+   ----------------------------------------------------------------------------
+   In-app toast notifications (the confirm/prompt modals reuse the shared .modal
+   styles). Rendered by AppDialogs.vue, driven by dialogStore. */
+
+.toast-host {
+  position: fixed; right: var(--space-5); bottom: var(--space-5); z-index: 1080;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  max-width: min(380px, calc(100vw - 2 * var(--space-5))); pointer-events: none;
+}
+.app-toast {
+  pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  padding: 0.7rem 0.85rem; border-radius: var(--radius-md);
+  background: var(--c-surface); color: var(--c-text);
+  border: 1px solid var(--c-border); border-left: 4px solid var(--c-text-muted);
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(15, 23, 42, 0.18));
+  font-size: 0.88rem; animation: toast-in 0.18s ease-out;
+}
+.app-toast > i { font-size: 1.05rem; line-height: 1.4; flex-shrink: 0; }
+.app-toast .toast-msg { flex: 1; line-height: 1.4; }
+.app-toast .toast-x {
+  border: none; background: none; color: var(--c-text-muted); cursor: pointer;
+  padding: 0; font-size: 0.8rem; line-height: 1.4; flex-shrink: 0;
+}
+.app-toast .toast-x:hover { color: var(--c-text); }
+
+.app-toast.toast-success { border-left-color: var(--c-live, #10b981); }
+.app-toast.toast-success > i { color: var(--c-live, #10b981); }
+.app-toast.toast-error { border-left-color: var(--c-danger, #ef4444); }
+.app-toast.toast-error > i { color: var(--c-danger, #ef4444); }
+.app-toast.toast-warning { border-left-color: #f59e0b; }
+.app-toast.toast-warning > i { color: #f59e0b; }
+.app-toast.toast-info { border-left-color: var(--c-primary); }
+.app-toast.toast-info > i { color: var(--c-primary); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

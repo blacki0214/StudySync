@@ -8,6 +8,11 @@
  */
 import { computed, ref, onBeforeUnmount } from 'vue'
 import { NodeViewWrapper } from '@tiptap/vue-3'
+import { useI18n } from 'vue-i18n'
+import { useDialogStore } from '../../stores/dialogStore.js'
+
+const { t } = useI18n()
+const dialog = useDialogStore()
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -58,10 +63,15 @@ function setSize(px) { props.updateAttributes({ width: px }) }
 function resetSize() { props.updateAttributes({ width: null }); menuOpen.value = false }
 function remove() { props.deleteNode() }
 
-function editAlt() {
-  const alt = window.prompt('Alt text (description):', props.node.attrs.alt || '')
-  if (alt !== null) props.updateAttributes({ alt })
+async function editAlt() {
   menuOpen.value = false
+  const alt = await dialog.promptText({
+    title: t('editor.altTitle'),
+    label: t('editor.altLabel'),
+    value: props.node.attrs.alt || '',
+    placeholder: t('editor.altPlaceholder')
+  })
+  if (alt !== null) props.updateAttributes({ alt })
 }
 function download() {
   const a = document.createElement('a')
