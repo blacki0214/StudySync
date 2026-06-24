@@ -31,6 +31,7 @@ import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import { DataGrid } from '../components/notes/DataGrid.js'
+import { FileAttachment } from '../components/notes/FileAttachment.js'
 import { createLowlight, common } from 'lowlight'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import CodeBlockView from '../components/notes/CodeBlockView.vue'
@@ -192,6 +193,7 @@ onMounted(async () => {
     TableHeader,
     TableCell,
     DataGrid, // paged viewer for large imported datasets
+    FileAttachment, // compact chip for attached files
     CommentMark,
     Placeholder.configure({ placeholder: t('editor.placeholder') }),
     Collaboration.configure({ document: ydoc })
@@ -399,23 +401,18 @@ async function onLinkFilePicked(e) {
   try {
     const href = await uploadFile(file, 'note-files')
     if (!href) { dialog.toast(t('editor.linkFailed'), 'error'); return }
-    const { from, to } = editor.value.state.selection
-    if (from !== to) {
-      // Wrap the current selection as the link.
-      chain().extendMarkRange('link').setLink({ href }).run()
-    } else {
-      // No selection → insert the file name as a clickable link.
-      chain().insertContent(`<a href="${href}" target="_blank" rel="noopener">${escapeHtmlAttr(file.name)}</a> `).run()
-    }
+    // Insert a compact file-chip node (icon/thumb + name + size), not a raw link —
+    // the (possibly huge data-URL) href stays in an attribute, never visible text.
+    chain().insertContent({
+      type: 'fileAttachment',
+      attrs: { href, name: file.name, mime: file.type, size: file.size }
+    }).run()
     dialog.toast(t('editor.linkAdded'), 'success')
   } catch {
     dialog.toast(t('editor.linkFailed'), 'error')
   } finally {
     uploadingLink.value = false
   }
-}
-function escapeHtmlAttr(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 // Image insert is an upload: the user picks a file from their device. Live mode

@@ -418,6 +418,44 @@
 .table-menu .export-item.danger i { color: var(--c-danger); }
 .table-menu-sep { height: 1px; background: var(--c-border); margin: 4px 2px; }
 
+/* ---- File attachment chip ---- */
+.doc-surface .ProseMirror .file-chip {
+  display: inline-flex; align-items: center; vertical-align: middle;
+  max-width: 320px; margin: 2px 4px 2px 0;
+  border: 1px solid var(--c-border); border-radius: 10px;
+  background: var(--c-surface-2); overflow: hidden; line-height: normal;
+}
+.doc-surface .ProseMirror .file-chip.file-chip-sel { outline: 2px solid var(--c-primary); outline-offset: 1px; }
+.file-chip-link {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  padding: 0.4rem 0.6rem; text-decoration: none; color: var(--c-text); min-width: 0;
+}
+.file-chip-link:hover { background: var(--c-hover, var(--c-surface)); }
+.file-chip-ico {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px;
+  display: grid; place-items: center; font-size: 1.15rem; color: #fff;
+}
+.file-chip-ico.k-pdf { background: #ef4444; }
+.file-chip-ico.k-word { background: #2563eb; }
+.file-chip-ico.k-excel { background: #16a34a; }
+.file-chip-ico.k-ppt { background: #ea580c; }
+.file-chip-ico.k-zip { background: #a16207; }
+.file-chip-ico.k-text { background: #64748b; }
+.file-chip-ico.k-audio { background: #7c3aed; }
+.file-chip-ico.k-video { background: #db2777; }
+.file-chip-ico.k-image,
+.file-chip-ico.k-generic { background: #475569; }
+.file-chip-thumb { flex-shrink: 0; width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--c-surface); }
+.file-chip-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.file-chip-body { display: flex; flex-direction: column; min-width: 0; }
+.file-chip-name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-chip-meta { font-size: 0.72rem; color: var(--c-text-muted); }
+.file-chip-del {
+  flex-shrink: 0; border: none; background: none; color: var(--c-text-muted);
+  width: 28px; height: 100%; cursor: pointer; align-self: stretch;
+}
+.file-chip-del:hover { background: rgba(239, 68, 68, 0.12); color: var(--c-danger); }
+
 /* ---- Data grid: Jira-style paged viewer for imported datasets ---- */
 .doc-surface .ProseMirror .dg {
   border: 1px solid var(--c-border); border-radius: var(--radius-md);
