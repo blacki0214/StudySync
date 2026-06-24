@@ -28,9 +28,10 @@
 .export-menu-wrap { position: relative; }
 .export-menu-wrap .btn.on { background: var(--c-surface-2); color: var(--c-text); }
 .export-caret { font-size: 0.7rem; margin-left: 0.1rem; opacity: 0.7; }
-.export-backdrop { position: fixed; inset: 0; z-index: 40; }
+/* Sit above the sticky formatting toolbar (.editor-toolbar2, z-index 50). */
+.export-backdrop { position: fixed; inset: 0; z-index: 60; }
 .export-menu {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 41;
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 61;
   min-width: 184px; padding: 6px; background: var(--c-surface);
   border: 1px solid var(--c-border); border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg, 0 10px 30px rgba(15, 23, 42, 0.16));
