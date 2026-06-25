@@ -11,6 +11,7 @@ import { ref, shallowRef, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Editor, EditorContent } from '@tiptap/vue-3'
+import { Extension } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -62,6 +63,18 @@ const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const auth = useAuthStore()
 const dialog = useDialogStore()
+
+// Keyboard-shortcut hints shown in toolbar tooltips (Notion/Docs style).
+// Mac shows ⌘/⌥ instead of Ctrl/Alt; the actual key bindings use TipTap's
+// "Mod" which already maps to ⌘ on macOS and Ctrl elsewhere.
+const isMac = typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform)
+function kbd(keys) {
+  return isMac ? keys.replace(/Ctrl/g, '⌘').replace(/Alt/g, '⌥').replace(/Shift/g, '⇧').replace(/\+/g, '') : keys
+}
+// Tooltip = translated label + " · " + the shortcut for that action.
+function tip(key, keys) {
+  return t(key) + ' · ' + kbd(keys)
+}
 
 // Syntax highlighting for code blocks (IDE-style colours via highlight.js).
 const lowlight = createLowlight(common)
@@ -169,7 +182,27 @@ onMounted(async () => {
   }
   updateOnline()
 
+  // Shortcuts for actions that have NO TipTap default. The formatting/structure
+  // shortcuts (Ctrl+B/I/U, Ctrl+Shift+S, headings Ctrl+Alt+1-3, lists
+  // Ctrl+Shift+7/8/9, quote Ctrl+Shift+B, code block Ctrl+Alt+C, undo/redo)
+  // already ship with StarterKit & the mark extensions. These closures call the
+  // component helpers; returning true tells ProseMirror we handled the key so
+  // the browser's own shortcut (e.g. Ctrl+K) doesn't fire.
+  const Shortcuts = Extension.create({
+    name: 'studysyncShortcuts',
+    addKeyboardShortcuts() {
+      return {
+        'Mod-k': () => { if (canEdit.value) setLink(); return true },          // attach file
+        'Mod-Alt-i': () => { if (canEdit.value) setImage(); return true },     // insert image
+        'Mod-Alt-t': () => { if (canEdit.value) insertTable(); return true },  // insert table
+        'Mod-Alt-m': () => { startComment(); return true },                    // comment on selection
+        'Mod-\\': () => this.editor.chain().focus().unsetAllMarks().clearNodes().run() // clear formatting
+      }
+    }
+  })
+
   const extensions = [
+    Shortcuts,
     StarterKit.configure({ history: false, codeBlock: false }), // history → Collaboration; codeBlock → lowlight
     CodeBlockLowlight.extend({
       draggable: true, // allow moving the block via its title-bar drag handle
@@ -598,8 +631,8 @@ async function runExport(kind) {
     <!-- Toolbar (hidden when view-only) -->
     <div v-if="canEdit && editor" class="editor-toolbar2">
       <div class="tb-group">
-        <button class="tb-btn" :title="t('editor.undo')" @click="chain().undo().run()"><i class="bi bi-arrow-counterclockwise"></i></button>
-        <button class="tb-btn" :title="t('editor.redo')" @click="chain().redo().run()"><i class="bi bi-arrow-clockwise"></i></button>
+        <button class="tb-btn" :title="tip('editor.undo', 'Ctrl+Z')" @click="chain().undo().run()"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="tb-btn" :title="tip('editor.redo', 'Ctrl+Shift+Z')" @click="chain().redo().run()"><i class="bi bi-arrow-clockwise"></i></button>
       </div>
       <div class="tb-sep"></div>
       <!-- Paragraph style + font + size -->
@@ -612,21 +645,21 @@ async function runExport(kind) {
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('bold') }" :title="t('editor.bold')" @click="chain().toggleBold().run()"><i class="bi bi-type-bold"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('italic') }" :title="t('editor.italic')" @click="chain().toggleItalic().run()"><i class="bi bi-type-italic"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('underline') }" :title="t('editor.underline')" @click="chain().toggleUnderline().run()"><i class="bi bi-type-underline"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('strike') }" :title="t('editor.strikethrough')" @click="chain().toggleStrike().run()"><i class="bi bi-type-strikethrough"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('bold') }" :title="tip('editor.bold', 'Ctrl+B')" @click="chain().toggleBold().run()"><i class="bi bi-type-bold"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('italic') }" :title="tip('editor.italic', 'Ctrl+I')" @click="chain().toggleItalic().run()"><i class="bi bi-type-italic"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('underline') }" :title="tip('editor.underline', 'Ctrl+U')" @click="chain().toggleUnderline().run()"><i class="bi bi-type-underline"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('strike') }" :title="tip('editor.strikethrough', 'Ctrl+Shift+S')" @click="chain().toggleStrike().run()"><i class="bi bi-type-strikethrough"></i></button>
         <label class="tb-btn tb-color" :title="t('editor.textColor')"><i class="bi bi-fonts"></i><input type="color" @input="chain().setColor($event.target.value).run()" /></label>
         <label class="tb-btn tb-color" :title="t('editor.highlight')"><i class="bi bi-highlighter"></i><input type="color" @input="chain().toggleHighlight({ color: $event.target.value }).run()" /></label>
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('link'), disabled: uploadingLink }" :disabled="uploadingLink" :title="t('editor.attachFile')" @click="setLink">
+        <button class="tb-btn" :class="{ on: isActive('link'), disabled: uploadingLink }" :disabled="uploadingLink" :title="tip('editor.attachFile', 'Ctrl+K')" @click="setLink">
           <i class="bi" :class="uploadingLink ? 'bi-arrow-repeat spin' : 'bi-paperclip'"></i>
         </button>
         <input ref="linkInput" type="file" class="d-none" @change="onLinkFilePicked" />
-        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="t('editor.comment')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
-        <button class="tb-btn" :class="{ disabled: uploadingImage }" :disabled="uploadingImage" :title="t('editor.image')" @click="setImage">
+        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="tip('editor.comment', 'Ctrl+Alt+M')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
+        <button class="tb-btn" :class="{ disabled: uploadingImage }" :disabled="uploadingImage" :title="tip('editor.image', 'Ctrl+Alt+I')" @click="setImage">
           <i class="bi" :class="uploadingImage ? 'bi-arrow-repeat spin' : 'bi-image'"></i>
         </button>
         <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
@@ -639,18 +672,18 @@ async function runExport(kind) {
       </div>
       <div class="tb-sep"></div>
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: isActive('taskList') }" :title="t('editor.checklist')" @click="chain().toggleTaskList().run()"><i class="bi bi-check2-square"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('bulletList') }" :title="t('editor.bulletList')" @click="chain().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('orderedList') }" :title="t('editor.numberList')" @click="chain().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('blockquote') }" :title="t('editor.quote')" @click="chain().toggleBlockquote().run()"><i class="bi bi-quote"></i></button>
-        <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="t('editor.codeBlock')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('taskList') }" :title="tip('editor.checklist', 'Ctrl+Shift+9')" @click="chain().toggleTaskList().run()"><i class="bi bi-check2-square"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('bulletList') }" :title="tip('editor.bulletList', 'Ctrl+Shift+8')" @click="chain().toggleBulletList().run()"><i class="bi bi-list-ul"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('orderedList') }" :title="tip('editor.numberList', 'Ctrl+Shift+7')" @click="chain().toggleOrderedList().run()"><i class="bi bi-list-ol"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('blockquote') }" :title="tip('editor.quote', 'Ctrl+Shift+B')" @click="chain().toggleBlockquote().run()"><i class="bi bi-quote"></i></button>
+        <button class="tb-btn" :class="{ on: isActive('codeBlock') }" :title="tip('editor.codeBlock', 'Ctrl+Alt+C')" @click="chain().toggleCodeBlock().run()"><i class="bi bi-code-slash"></i></button>
         <button class="tb-btn" :title="t('editor.divider')" @click="chain().setHorizontalRule().run()"><i class="bi bi-dash-lg"></i></button>
-        <button class="tb-btn" :title="t('editor.clearFormat')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
+        <button class="tb-btn" :title="tip('editor.clearFormat', 'Ctrl+\\')" @click="chain().unsetAllMarks().clearNodes().run()"><i class="bi bi-eraser"></i></button>
       </div>
       <div class="tb-sep"></div>
       <!-- Data table: insert, plus contextual row/column tools when inside one -->
       <div class="tb-group">
-        <button class="tb-btn" :class="{ on: inTable }" :title="t('editor.insertTable')" @click="insertTable"><i class="bi bi-table"></i></button>
+        <button class="tb-btn" :class="{ on: inTable }" :title="tip('editor.insertTable', 'Ctrl+Alt+T')" @click="insertTable"><i class="bi bi-table"></i></button>
         <button class="tb-btn" :class="{ disabled: importingData }" :disabled="importingData" :title="t('editor.importData')" @click="importData">
           <i class="bi" :class="importingData ? 'bi-arrow-repeat spin' : 'bi-file-earmark-spreadsheet'"></i>
         </button>
