@@ -14,6 +14,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
+import { useStudyStatsStore } from '../stores/studyStatsStore.js'
 import { isAiConfigured, generateFlashcards as aiGenerateFlashcards } from '../services/aiService.js'
 import AppSelect from '../components/common/AppSelect.vue'
 import StatCard from '../components/common/StatCard.vue'
@@ -25,20 +26,21 @@ const route = useRoute()
 const { t } = useI18n()
 const content = useContentStore()
 const dialog = useDialogStore()
+const srs = useStudyStatsStore()
 const subjectByCode = (code) => content.subjectByCode(code)
 // Note picker options (value is the note object, matched by identity).
 const noteOptions = computed(() => content.notes.map((n) => ({ value: n, label: n.title })))
 
 const tab = ref('study')
-const stats = computed(() => {
-  const fs = content.flashcardStats || {}
-  return [
-    { label: t('flashcards.cardsMastered'), value: fs.mastered ?? 0, icon: 'bi-trophy', grad: 'grad-orange' },
-    { label: t('flashcards.dueToday'), value: fs.dueToday ?? 0, icon: 'bi-bullseye', grad: 'grad-blue' },
-    { label: t('flashcards.streak'), value: (fs.streak ?? 0) + 'd', icon: 'bi-fire', grad: 'grad-fuchsia' },
-    { label: t('flashcards.avgRecall'), value: (fs.avgRecall ?? 0) + '%', icon: 'bi-clock', grad: 'grad-green' }
-  ]
-})
+// Live spaced-repetition stats derived from the user's own ratings (reactive:
+// recomputes whenever a card is reviewed or a deck is added).
+const fcStats = computed(() => srs.statsFor(content.decks))
+const stats = computed(() => [
+  { label: t('flashcards.cardsMastered'), value: fcStats.value.mastered, icon: 'bi-trophy', grad: 'grad-orange' },
+  { label: t('flashcards.dueToday'), value: fcStats.value.dueToday, icon: 'bi-bullseye', grad: 'grad-blue' },
+  { label: t('flashcards.streak'), value: fcStats.value.streak + 'd', icon: 'bi-fire', grad: 'grad-fuchsia' },
+  { label: t('flashcards.avgRecall'), value: fcStats.value.avgRecall + '%', icon: 'bi-clock', grad: 'grad-green' }
+])
 const weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 // ---- Study mode ----
@@ -50,8 +52,10 @@ const studyProgress = computed(() =>
   deck.value?.cards?.length ? ((idx.value + 1) / deck.value.cards.length) * 100 : 0
 )
 
-function rate() {
+function rate(rating) {
   if (!deck.value?.cards?.length) return
+  const c = deck.value.cards[idx.value]
+  if (c) srs.recordReview(deck.value.id, c.id ?? idx.value, rating)
   flipped.value = false
   idx.value = (idx.value + 1) % deck.value.cards.length
 }
@@ -113,6 +117,7 @@ async function saveAsDeck() {
 }
 
 onMounted(async () => {
+  srs.ensureLoaded()
   await content.ensureLoaded()
   // If arriving from a note (/flashcards/:noteId), open straight into "create"
   // mode pre-loaded with that note.
@@ -128,7 +133,7 @@ onMounted(async () => {
     <header class="page-head">
       <div>
         <h1 class="ph-title">{{ t('flashcards.title') }}</h1>
-        <p class="ph-sub">{{ t('flashcards.sub', { due: content.flashcardStats?.dueToday ?? 0, decks: content.decks.length }) }}</p>
+        <p class="ph-sub">{{ t('flashcards.sub', { due: fcStats.dueToday, decks: content.decks.length }) }}</p>
       </div>
       <div class="action-row">
         <button class="btn btn-outline-soft" @click="tab='create'"><i class="bi bi-stars"></i>{{ t('flashcards.aiGenerate') }}</button>
@@ -172,9 +177,9 @@ onMounted(async () => {
 
         <div class="srs-row">
           <button class="srs-nav" @click="step(-1)"><i class="bi bi-chevron-left"></i></button>
-          <button class="srs-btn again" @click="rate"><i class="bi bi-x-lg"></i>{{ t('flashcards.again') }}</button>
-          <button class="srs-btn hard" @click="rate">{{ t('flashcards.hard') }}</button>
-          <button class="srs-btn easy" @click="rate"><i class="bi bi-check-lg"></i>{{ t('flashcards.easy') }}</button>
+          <button class="srs-btn again" @click="rate('again')"><i class="bi bi-x-lg"></i>{{ t('flashcards.again') }}</button>
+          <button class="srs-btn hard" @click="rate('hard')">{{ t('flashcards.hard') }}</button>
+          <button class="srs-btn easy" @click="rate('easy')"><i class="bi bi-check-lg"></i>{{ t('flashcards.easy') }}</button>
           <button class="srs-nav" @click="step(1)"><i class="bi bi-chevron-right"></i></button>
         </div>
       </div>
@@ -183,11 +188,11 @@ onMounted(async () => {
         <div class="panel">
           <div class="reviewed-title">{{ t('flashcards.cardsReviewed') }}</div>
           <div class="reviewed-sub">{{ t('flashcards.last7') }}</div>
-          <BarChart :labels="weekLabels" :values="content.flashcardStats?.reviewedLast7 || []" :height="170" />
+          <BarChart :labels="weekLabels" :values="fcStats.reviewedLast7" :height="170" />
           <div class="reviewed-stats">
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.today') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: content.flashcardStats?.todayCount ?? 0 }) }}</span></div>
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.thisWeek') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: content.flashcardStats?.weekCount ?? 0 }) }}</span></div>
-            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.retention') }}</span><span class="rs-val ok">{{ content.flashcardStats?.retention ?? 0 }}%</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.today') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: fcStats.todayCount }) }}</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.thisWeek') }}</span><span class="rs-val">{{ t('flashcards.cardsN', { n: fcStats.weekCount }) }}</span></div>
+            <div class="reviewed-stat"><span class="rs-key">{{ t('flashcards.retention') }}</span><span class="rs-val ok">{{ fcStats.retention }}%</span></div>
           </div>
         </div>
       </div>
