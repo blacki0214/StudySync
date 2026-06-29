@@ -109,6 +109,29 @@ export async function extractKeywords(content, { limit = 12 } = {}) {
   return manualKeywords(content, { limit })
 }
 
+/**
+ * Generate a concise note title from its content. AI when configured, else a
+ * simple heuristic (first sentence, trimmed to a few words).
+ * @returns {Promise<string>}
+ */
+export async function generateTitle(content) {
+  if (isAiConfigured) {
+    try {
+      const { title } = await callAi('title', { text: content })
+      if (title?.trim()) return title.trim()
+    } catch (e) {
+      console.warn('[ai] title fell back to heuristic:', e.message)
+    }
+  }
+  // Heuristic fallback: first sentence → first ~8 words, capitalised.
+  const first = String(content || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(/(?<=[.!?])\s+/)[0] || ''
+  const words = first.split(' ').filter(Boolean).slice(0, 8).join(' ')
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : ''
+}
+
 /** Difficulty stays deterministic/manual — the heatmap needs its exact metrics. */
 export function analyzeDifficulty(content) {
   return manualDifficulty(content)
@@ -169,6 +192,7 @@ export const aiService = {
   generateQuiz,
   summarize,
   extractKeywords,
+  generateTitle,
   analyzeDifficulty,
   askSources,
   chat,

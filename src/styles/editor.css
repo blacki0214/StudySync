@@ -24,6 +24,19 @@
 .editor-header .eh-title-edit:focus { background: var(--c-surface); box-shadow: 0 0 0 2px var(--c-primary); }
 .editor-header .eh-actions { display: flex; align-items: center; gap: var(--space-2); }
 
+/* Title row + AI "generate title" button (only shows when AI is configured). */
+.editor-header .eh-title-row { display: flex; align-items: center; gap: 0.3rem; }
+.editor-header .eh-title-gen {
+  flex: none; width: 1.9rem; height: 1.9rem; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--c-border); background: var(--c-surface);
+  color: var(--c-primary); cursor: pointer; opacity: 0; transition: opacity 0.15s, background 0.15s;
+}
+.editor-header .eh-title-row:hover .eh-title-gen,
+.editor-header .eh-title-gen:focus-visible { opacity: 1; }
+.editor-header .eh-title-gen:hover { background: var(--c-surface-2); }
+.editor-header .eh-title-gen:disabled { cursor: default; opacity: 1; color: var(--c-text-muted); }
+
 /* Export dropdown (PDF / Word) in the header actions. */
 .export-menu-wrap { position: relative; }
 .export-menu-wrap .btn.on { background: var(--c-surface-2); color: var(--c-text); }

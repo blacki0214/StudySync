@@ -13,6 +13,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { isAiConfigured, generateFlashcards as aiGenerateFlashcards } from '../services/aiService.js'
 import AppSelect from '../components/common/AppSelect.vue'
 import StatCard from '../components/common/StatCard.vue'
@@ -23,6 +24,7 @@ import KeywordExtractor from '../components/ai/KeywordExtractor.vue'
 const route = useRoute()
 const { t } = useI18n()
 const content = useContentStore()
+const dialog = useDialogStore()
 const subjectByCode = (code) => content.subjectByCode(code)
 // Note picker options (value is the note object, matched by identity).
 const noteOptions = computed(() => content.notes.map((n) => ({ value: n, label: n.title })))
@@ -78,6 +80,38 @@ async function runGenerate() {
 // made in onMounted, which flips noteForGen from null to a note.
 watch(noteForGen, runGenerate)
 
+// Persist the generated cards as a studyable deck, then jump into Study mode.
+const saving = ref(false)
+async function saveAsDeck() {
+  if (!generated.value.length) { dialog.toast(t('flashcards.noCardsToSave'), 'warning'); return }
+  const name = await dialog.promptText({
+    title: t('flashcards.saveDeck'),
+    label: t('flashcards.deckName'),
+    value: noteForGen.value?.title || t('flashcards.newDeck')
+  })
+  if (!name || !name.trim()) return
+
+  // Resolve the note's subject code (decks store the code, notes store an id).
+  const subject = content.subjects.find((s) => s.id === noteForGen.value?.subject_id)
+  saving.value = true
+  try {
+    const newDeck = await content.createDeck({
+      name: name.trim(),
+      subjectCode: subject?.code || '',
+      cards: generated.value.map((c) => ({ question: c.question, answer: c.answer }))
+    })
+    deck.value = newDeck
+    idx.value = 0
+    flipped.value = false
+    tab.value = 'study'
+    dialog.toast(t('flashcards.deckSaved', { n: newDeck.cards.length }), 'success')
+  } catch {
+    dialog.toast(t('flashcards.deckSaveFailed'), 'error')
+  } finally {
+    saving.value = false
+  }
+}
+
 onMounted(async () => {
   await content.ensureLoaded()
   // If arriving from a note (/flashcards/:noteId), open straight into "create"
@@ -98,7 +132,7 @@ onMounted(async () => {
       </div>
       <div class="action-row">
         <button class="btn btn-outline-soft" @click="tab='create'"><i class="bi bi-stars"></i>{{ t('flashcards.aiGenerate') }}</button>
-        <button class="btn btn-brand"><i class="bi bi-plus-lg"></i>{{ t('flashcards.newDeck') }}</button>
+        <button class="btn btn-brand" @click="tab='create'"><i class="bi bi-plus-lg"></i>{{ t('flashcards.newDeck') }}</button>
       </div>
     </header>
 
@@ -205,6 +239,9 @@ onMounted(async () => {
           <span v-if="generating" class="badge-soft"><i class="bi bi-arrow-repeat spin"></i> {{ t('flashcards.generating') }}</span>
           <span v-else class="badge-soft">{{ isAiConfigured ? t('flashcards.cardsViaAi', { n: generated.length }) : t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
           <button class="btn btn-soft btn-sm" :disabled="generating || !noteForGen" @click="runGenerate"><i class="bi bi-stars"></i>{{ t('flashcards.regenerate') }}</button>
+          <button class="btn btn-brand btn-sm" :disabled="saving || generating || !generated.length" @click="saveAsDeck">
+            <i class="bi" :class="saving ? 'bi-arrow-repeat spin' : 'bi-folder-plus'"></i>{{ t('flashcards.saveDeck') }}
+          </button>
         </div>
         <div class="row g-3">
           <div v-if="generating && !generated.length" class="col-12">

@@ -21,6 +21,7 @@
 
 import { defineStore } from 'pinia'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
+import { deckService } from '../services/deckService.js'
 import { timeAgo } from '../utils/formatDate.js'
 
 // Sample data — only used when no backend is configured (demo mode).
@@ -74,6 +75,16 @@ export const useContentStore = defineStore('content', {
   },
 
   actions: {
+    /**
+     * Create a flashcard deck (e.g. from AI-generated cards) and add it to the
+     * top of the list so it shows immediately. Works live (Supabase) or in demo.
+     */
+    async createDeck(payload) {
+      const deck = await deckService.createDeck(payload)
+      this.decks.unshift(deck)
+      return deck
+    },
+
     /**
      * Load every display collection exactly once. Safe to call from many
      * components/onMounted hooks — concurrent calls share the same promise.

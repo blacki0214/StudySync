@@ -259,6 +259,9 @@ export default {
     aiContinue: 'Continue writing',
     aiNeedsSelection: 'Select some text first.',
     aiFailed: 'AI request failed. Please try again.',
+    generateTitle: 'Generate title from note',
+    titleNeedsContent: 'Write a bit more before generating a title.',
+    titleFailed: 'Could not generate a title. Please try again.',
     chatTitle: 'Study tutor',
     chatEmpty: 'Ask anything about this note — concepts, examples, or a quick explanation.',
     chatPlaceholder: 'Ask the tutor…',
@@ -324,7 +327,12 @@ export default {
     patternLabel: 'Q · pattern “{pattern}”',
     aiBadge: 'AI',
     generating: 'Generating…',
-    regenerate: 'Regenerate'
+    regenerate: 'Regenerate',
+    saveDeck: 'Save as deck',
+    deckName: 'Deck name',
+    deckSaved: 'Deck saved with {n} cards.',
+    deckSaveFailed: 'Could not save the deck. Please try again.',
+    noCardsToSave: 'Generate some cards first.'
   },
 
   quiz: {

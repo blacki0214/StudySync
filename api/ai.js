@@ -135,6 +135,12 @@ const keywordsSchema = {
   required: ['keywords']
 }
 
+const titleSchema = {
+  type: 'OBJECT',
+  properties: { title: { type: 'STRING' } },
+  required: ['title']
+}
+
 const askSchema = {
   type: 'OBJECT',
   properties: {
@@ -211,6 +217,16 @@ async function taskKeywords({ text, limit = 12 }) {
     return { word, count: Math.max(1, matches), technical: !!k.technical }
   })
   return { keywords }
+}
+
+async function taskTitle({ text }) {
+  const system = `You write a short, specific title for a study note based on its content. 3-8 words, descriptive, no surrounding quotes, no trailing punctuation. ${LANG_RULE}`
+  const out = await callGemini(
+    userTurn(`Write a title for this note:\n\n${clip(text)}`),
+    { system, schema: titleSchema, temperature: 0.4 }
+  )
+  const parsed = parseJson(out, { title: '' })
+  return { title: String(parsed.title || '').replace(/^["'\s]+|["'\s.]+$/g, '') }
 }
 
 async function taskAsk({ question, passages = [] }) {
@@ -304,6 +320,8 @@ export default async function handler(req, res) {
         return res.status(200).json(await taskSummary(payload))
       case 'keywords':
         return res.status(200).json(await taskKeywords(payload))
+      case 'title':
+        return res.status(200).json(await taskTitle(payload))
       case 'ask':
         return res.status(200).json(await taskAsk(payload))
       case 'chat':

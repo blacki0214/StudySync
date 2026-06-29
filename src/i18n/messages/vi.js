@@ -258,6 +258,9 @@ export default {
     aiContinue: 'Viết tiếp',
     aiNeedsSelection: 'Hãy chọn một đoạn văn bản trước.',
     aiFailed: 'Yêu cầu AI thất bại. Vui lòng thử lại.',
+    generateTitle: 'Tạo tiêu đề từ ghi chú',
+    titleNeedsContent: 'Hãy viết thêm một chút trước khi tạo tiêu đề.',
+    titleFailed: 'Không thể tạo tiêu đề. Vui lòng thử lại.',
     chatTitle: 'Gia sư học tập',
     chatEmpty: 'Hỏi bất cứ điều gì về ghi chú này — khái niệm, ví dụ hoặc giải thích nhanh.',
     chatPlaceholder: 'Hỏi gia sư…',
@@ -323,7 +326,12 @@ export default {
     patternLabel: 'H · mẫu “{pattern}”',
     aiBadge: 'AI',
     generating: 'Đang tạo…',
-    regenerate: 'Tạo lại'
+    regenerate: 'Tạo lại',
+    saveDeck: 'Lưu thành bộ thẻ',
+    deckName: 'Tên bộ thẻ',
+    deckSaved: 'Đã lưu bộ thẻ với {n} thẻ.',
+    deckSaveFailed: 'Không thể lưu bộ thẻ. Vui lòng thử lại.',
+    noCardsToSave: 'Hãy tạo một vài thẻ trước.'
   },
 
   quiz: {

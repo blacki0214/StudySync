@@ -44,7 +44,7 @@ import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
-import { isAiConfigured, rewrite as aiRewrite } from '../services/aiService.js'
+import { isAiConfigured, rewrite as aiRewrite, generateTitle as aiGenerateTitle } from '../services/aiService.js'
 import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
 import { formatDateTime } from '../utils/formatDate.js'
@@ -101,6 +101,8 @@ const activeTab = ref('online')
 const aiOpen = ref(false)
 const aiMenuOpen = ref(false) // editor "✨ Ask AI" rewrite menu
 const aiBusy = ref(false)
+const titleEl = ref(null) // the contenteditable <h1>, managed manually (v-once)
+const titleBusy = ref(false)
 const shareOpen = ref(false)
 const exportOpen = ref(false)
 const exportBusy = ref('') // '' | 'pdf' | 'docx' — drives the per-item spinner
@@ -401,6 +403,25 @@ async function renameTitle(e) {
   try { await noteService.renameNote(note.value.id, name) } catch { /* keep optimistic value */ }
 }
 
+// Generate a title from the note body (Gemini, with a heuristic fallback).
+async function generateTitleFromNote() {
+  if (!editor.value || titleBusy.value) return
+  const text = editor.value.getText().trim()
+  if (text.length < 20) { dialog.toast(t('editor.titleNeedsContent'), 'warning'); return }
+  titleBusy.value = true
+  try {
+    const title = await aiGenerateTitle(text)
+    if (!title) { dialog.toast(t('editor.titleFailed'), 'error'); return }
+    note.value.title = title
+    if (titleEl.value) titleEl.value.textContent = title // heading is v-once → set manually
+    try { await noteService.renameNote(note.value.id, title) } catch { /* keep optimistic value */ }
+  } catch {
+    dialog.toast(t('editor.titleFailed'), 'error')
+  } finally {
+    titleBusy.value = false
+  }
+}
+
 // Clicking the empty area of the page (below the content, or next to a floated
 // image / after a trailing image) should place the caret there to type — adding
 // a paragraph at the end if the document doesn't end in editable text.
@@ -619,17 +640,27 @@ async function runExport(kind) {
         </div>
         <!-- v-once: render the title once, then we manage its text manually so
              frequent re-renders (presence/typing) can't clobber in-progress edits. -->
-        <h1
-          v-if="canEdit"
-          v-once
-          class="eh-title eh-title-edit"
-          contenteditable="true"
-          spellcheck="false"
-          :title="t('editor.renameHint')"
-          @keydown.enter.prevent="$event.target.blur()"
-          @blur="renameTitle"
-        >{{ note.title }}</h1>
-        <h1 v-else class="eh-title">{{ note.title }}</h1>
+        <div class="eh-title-row">
+          <h1
+            v-if="canEdit"
+            ref="titleEl"
+            v-once
+            class="eh-title eh-title-edit"
+            contenteditable="true"
+            spellcheck="false"
+            :title="t('editor.renameHint')"
+            @keydown.enter.prevent="$event.target.blur()"
+            @blur="renameTitle"
+          >{{ note.title }}</h1>
+          <h1 v-else class="eh-title">{{ note.title }}</h1>
+          <button
+            v-if="canEdit && isAiConfigured"
+            class="eh-title-gen"
+            :disabled="titleBusy"
+            :title="t('editor.generateTitle')"
+            @click="generateTitleFromNote"
+          ><i class="bi" :class="titleBusy ? 'bi-arrow-repeat spin' : 'bi-stars'"></i></button>
+        </div>
       </div>
       <div class="eh-actions">
         <span v-if="canEdit" class="badge-live"><span class="dot-online"></span>{{ statusLabel }}</span>
