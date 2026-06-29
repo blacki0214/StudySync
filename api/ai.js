@@ -46,7 +46,7 @@ async function callGemini(contents, { system, schema, temperature = 0.4 } = {}) 
   })
   if (!resp.ok) {
     const detail = await resp.text().catch(() => '')
-    throw new Error(`Gemini ${resp.status}: ${detail.slice(0, 300)}`)
+    throw new Error(`Gemini ${resp.status} (model ${MODEL}): ${detail.slice(0, 400)}`)
   }
   const data = await resp.json()
   const text = (data?.candidates?.[0]?.content?.parts || [])
@@ -334,6 +334,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `Unknown task: ${task}` })
     }
   } catch (err) {
+    // Logs to the `vercel dev` terminal / Vercel function logs for diagnosis.
+    console.error('[api/ai] task failed:', err?.message)
     return res.status(502).json({ error: err.message || 'AI request failed' })
   }
 }

@@ -48,7 +48,11 @@ async function callAi(task, payload) {
   })
   if (!resp.ok) {
     const info = await resp.json().catch(() => ({}))
-    throw new Error(info.error || `AI request failed (${resp.status})`)
+    const message = info.error || `AI request failed (${resp.status})`
+    // Surface the real reason (e.g. "Gemini 404: model not found", quota, bad key)
+    // instead of only the generic 502 the browser logs.
+    console.error(`[ai] ${task} failed → ${message}`)
+    throw new Error(message)
   }
   return resp.json()
 }
