@@ -2,24 +2,28 @@
 /**
  * SubjectWorkspaceView — the NotebookLM-style workspace for one subject:
  *   • Left   : add sources + the source list (toggle which feed the study set)
- *   • Center : generated study material (summary / flashcards / quiz / keywords)
- *   • Right  : extractive "Ask your sources"
- * All generation is the existing rule-based "manual AI" run over the combined
- * text of the selected documents. Export to Markdown / CSV / Anki.
+ *   • Center : AI-generated study material (summary / flashcards / quiz / keywords)
+ *   • Right  : "Ask your sources"
+ *
+ * Generation runs through aiService, so it's real Gemini output when configured
+ * (and falls back to the rule-based engine otherwise). It auto-runs when the
+ * subject opens with sources, and re-runs (debounced) whenever the selected
+ * sources change — so creating a subject and adding sources fills the study set
+ * automatically. Flashcards can be saved into the Flashcards feature as a deck.
  */
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectStore } from '../stores/subjectStore.js'
 import { useDocumentStore } from '../stores/documentStore.js'
+import { useContentStore } from '../stores/contentStore.js'
+import { useDialogStore } from '../stores/dialogStore.js'
 import { useAiStore } from '../stores/aiStore.js'
+import { isAiConfigured, summarize, generateFlashcards, extractKeywords } from '../services/aiService.js'
 import { exportStudyMarkdown, exportFlashcardsCsv, exportFlashcardsAnki } from '../utils/exporters.js'
 import DocumentUploader from '../components/documents/DocumentUploader.vue'
 import DocumentList from '../components/documents/DocumentList.vue'
 import AskSourcesPanel from '../components/documents/AskSourcesPanel.vue'
-import StudySummary from '../components/ai/StudySummary.vue'
-import FlashcardGenerator from '../components/ai/FlashcardGenerator.vue'
 import QuizGenerator from '../components/ai/QuizGenerator.vue'
-import KeywordExtractor from '../components/ai/KeywordExtractor.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import TaskManager from '../components/tasks/TaskManager.vue'
 
@@ -27,6 +31,8 @@ const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const documentStore = useDocumentStore()
+const content = useContentStore()
+const dialog = useDialogStore()
 const aiStore = useAiStore()
 
 const ready = ref(false)
@@ -42,17 +48,85 @@ const selectedDocs = computed(() => docs.value.filter((d) => selected.value.incl
 const corpus = computed(() => selectedDocs.value.map((d) => d.extracted_text || '').join('\n\n').trim())
 const hasMaterial = computed(() => corpus.value.length > 0)
 
+// --- AI-generated study material ------------------------------------------
+const summary = ref([])
+const flashcards = ref([])
+const keywords = ref([])
+const revealed = ref(new Set())
+const gen = reactive({ summary: false, flashcards: false, keywords: false })
+const saving = ref(false)
+let genTimer = null
+
+async function genSummary() {
+  if (!corpus.value) { summary.value = []; return }
+  gen.summary = true
+  try { summary.value = await summarize(corpus.value, { max: 6 }) } finally { gen.summary = false }
+}
+async function genFlash() {
+  if (!corpus.value) { flashcards.value = []; return }
+  gen.flashcards = true
+  try {
+    flashcards.value = await generateFlashcards(corpus.value, { max: 12 })
+    revealed.value = new Set()
+  } finally { gen.flashcards = false }
+}
+async function genKeywords() {
+  if (!corpus.value) { keywords.value = []; return }
+  gen.keywords = true
+  try { keywords.value = await extractKeywords(corpus.value, { limit: 14 }) } finally { gen.keywords = false }
+}
+function generateAll() { genSummary(); genFlash(); genKeywords() }
+
+function toggleReveal(i) {
+  const set = new Set(revealed.value)
+  set.has(i) ? set.delete(i) : set.add(i)
+  revealed.value = set
+}
+
+// Save the generated flashcards into the Flashcards feature as a studyable deck.
+async function saveDeck() {
+  if (!flashcards.value.length) { dialog.toast(t('workspace.noCards'), 'warning'); return }
+  const name = await dialog.promptText({
+    title: t('workspace.saveDeck'),
+    label: t('flashcards.deckName'),
+    value: subject.value?.name || t('flashcards.newDeck')
+  })
+  if (!name || !name.trim()) return
+  saving.value = true
+  try {
+    const deck = await content.createDeck({
+      name: name.trim(),
+      subjectCode: subject.value?.code || '',
+      color: subject.value?.color || 'grad-blue',
+      cards: flashcards.value.map((c) => ({ question: c.question, answer: c.answer }))
+    })
+    dialog.toast(t('workspace.deckSaved', { n: deck.cards.length }), 'success')
+  } catch {
+    dialog.toast(t('workspace.deckSaveFailed'), 'error')
+  } finally {
+    saving.value = false
+  }
+}
+
 onMounted(async () => {
   if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
   await documentStore.fetchForSubject(props.id)
   selected.value = docs.value.map((d) => d.id) // study everything by default
   ready.value = true
+  if (hasMaterial.value) generateAll() // auto-fill the study set on open
 })
 
 // Keep selection valid as documents are added/removed.
 watch(docs, (list) => {
   const ids = new Set(list.map((d) => d.id))
   selected.value = selected.value.filter((id) => ids.has(id))
+})
+
+// Re-generate (debounced) whenever the studied corpus changes.
+watch(corpus, () => {
+  clearTimeout(genTimer)
+  if (!hasMaterial.value) { summary.value = []; flashcards.value = []; keywords.value = []; return }
+  genTimer = setTimeout(generateAll, 500)
 })
 
 function toggle(id) {
@@ -150,10 +224,76 @@ function doExport(kind) {
             <button class="text-tab" :class="{ active: tab==='quiz' }" @click="tab='quiz'">{{ t('workspace.tabQuiz') }}</button>
             <button class="text-tab" :class="{ active: tab==='keywords' }" @click="tab='keywords'">{{ t('workspace.tabKeywords') }}</button>
           </div>
-          <StudySummary v-if="tab==='summary'" :content="corpus" />
-          <FlashcardGenerator v-else-if="tab==='flashcards'" :content="corpus" />
-          <QuizGenerator v-else-if="tab==='quiz'" :content="corpus" />
-          <KeywordExtractor v-else :content="corpus" />
+
+          <!-- Summary -->
+          <div v-if="tab==='summary'" class="panel ws-panel">
+            <div class="ws-panel-head">
+              <div class="section-title mb-0"><i class="bi bi-card-list"></i>{{ t('workspace.tabSummary') }}
+                <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
+              </div>
+              <button class="btn btn-soft btn-sm" :disabled="gen.summary" @click="genSummary">
+                <i class="bi" :class="gen.summary ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
+              </button>
+            </div>
+            <div v-if="gen.summary && !summary.length" class="ws-loading"><i class="bi bi-arrow-repeat spin"></i> {{ t('workspace.generating') }}</div>
+            <p v-else-if="!summary.length" class="tool-empty">{{ t('workspace.summaryEmpty') }}</p>
+            <ol v-else class="ws-summary">
+              <li v-for="(s, i) in summary" :key="i"><span class="ws-sum-num">{{ i + 1 }}</span><span>{{ s }}</span></li>
+            </ol>
+          </div>
+
+          <!-- Flashcards -->
+          <div v-else-if="tab==='flashcards'" class="panel ws-panel">
+            <div class="ws-panel-head">
+              <div class="section-title mb-0"><i class="bi bi-card-text"></i>{{ t('workspace.tabFlashcards') }}
+                <span class="badge-soft">{{ flashcards.length }}</span>
+                <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
+              </div>
+              <div class="ws-head-actions">
+                <button class="btn btn-soft btn-sm" :disabled="gen.flashcards" @click="genFlash">
+                  <i class="bi" :class="gen.flashcards ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
+                </button>
+                <button class="btn btn-brand btn-sm" :disabled="saving || !flashcards.length" @click="saveDeck">
+                  <i class="bi" :class="saving ? 'bi-arrow-repeat spin' : 'bi-folder-plus'"></i>{{ t('workspace.saveDeck') }}
+                </button>
+              </div>
+            </div>
+            <div v-if="gen.flashcards && !flashcards.length" class="ws-loading"><i class="bi bi-arrow-repeat spin"></i> {{ t('workspace.generating') }}</div>
+            <p v-else-if="!flashcards.length" class="tool-empty">{{ t('workspace.flashEmpty') }}</p>
+            <div v-else class="ws-fc-grid">
+              <button v-for="(c, i) in flashcards" :key="i" class="ws-fc" :class="{ revealed: revealed.has(i) }" @click="toggleReveal(i)">
+                <div class="ws-fc-q">{{ c.question }}</div>
+                <div class="ws-fc-a" :class="{ hint: !revealed.has(i) }">{{ revealed.has(i) ? c.answer : t('workspace.clickReveal') }}</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quiz (interactive, AI-backed) -->
+          <div v-else-if="tab==='quiz'" class="panel ws-panel">
+            <QuizGenerator :content="corpus" />
+          </div>
+
+          <!-- Keywords -->
+          <div v-else class="panel ws-panel">
+            <div class="ws-panel-head">
+              <div class="section-title mb-0"><i class="bi bi-tags"></i>{{ t('keywords.title') }}
+                <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
+              </div>
+              <button class="btn btn-soft btn-sm" :disabled="gen.keywords" @click="genKeywords">
+                <i class="bi" :class="gen.keywords ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
+              </button>
+            </div>
+            <div v-if="gen.keywords && !keywords.length" class="ws-loading"><i class="bi bi-arrow-repeat spin"></i> {{ t('workspace.generating') }}</div>
+            <p v-else-if="!keywords.length" class="tool-empty">{{ t('keywords.empty') }}</p>
+            <div v-else class="keyword-cloud">
+              <span
+                v-for="k in keywords"
+                :key="k.word"
+                class="keyword-tag"
+                :class="{ 'is-technical': k.technical }"
+              >{{ k.word }}<span class="kw-count">{{ k.count }}</span></span>
+            </div>
+          </div>
         </template>
       </section>
 

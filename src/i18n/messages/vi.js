@@ -430,7 +430,16 @@ export default {
     askNoMatch: 'Không tìm thấy đoạn phù hợp trong nguồn của bạn.',
     askThinking: 'Đang tìm trong nguồn của bạn…',
     askAnswer: 'Trả lời',
-    askEvidence: 'Từ nguồn của bạn'
+    askEvidence: 'Từ nguồn của bạn',
+    regenerate: 'Tạo lại',
+    saveDeck: 'Lưu thành bộ thẻ',
+    generating: 'Đang tạo…',
+    clickReveal: 'Nhấn để xem đáp án',
+    deckSaved: 'Đã lưu {n} thẻ vào bộ thẻ của bạn.',
+    deckSaveFailed: 'Không thể lưu bộ thẻ. Vui lòng thử lại.',
+    noCards: 'Chưa có thẻ nào để lưu.',
+    flashEmpty: 'Chưa tạo được thẻ ghi nhớ.',
+    summaryEmpty: 'Chưa có tóm tắt.'
   },
 
   share: {

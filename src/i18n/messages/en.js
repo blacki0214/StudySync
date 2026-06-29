@@ -431,7 +431,16 @@ export default {
     askNoMatch: 'No matching passages found in your sources.',
     askThinking: 'Searching your sources…',
     askAnswer: 'Answer',
-    askEvidence: 'From your sources'
+    askEvidence: 'From your sources',
+    regenerate: 'Regenerate',
+    saveDeck: 'Save as deck',
+    generating: 'Generating…',
+    clickReveal: 'Click to reveal',
+    deckSaved: 'Saved {n} cards to your decks.',
+    deckSaveFailed: 'Could not save the deck. Please try again.',
+    noCards: 'No flashcards to save yet.',
+    flashEmpty: 'No flashcards generated yet.',
+    summaryEmpty: 'No summary yet.'
   },
 
   share: {

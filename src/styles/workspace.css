@@ -76,3 +76,38 @@
 .ask-citations { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
 .ask-evidence-label { font-size: 0.76rem; font-weight: 600; color: var(--c-text-faint); margin-bottom: 0.4rem; }
 .ask-evidence { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* --- AI study material (summary / flashcards / keywords) ----------------- */
+.ws-panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap;
+}
+.ws-head-actions { display: flex; gap: 0.5rem; }
+.ws-ai { color: var(--c-primary); display: inline-flex; align-items: center; gap: 0.25rem; }
+.ws-loading {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: var(--c-text-muted); font-size: 0.9rem; padding: var(--space-4) 0;
+}
+
+/* Summary — clean numbered key-points list */
+.ws-summary { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.ws-summary li { display: flex; gap: 0.7rem; align-items: flex-start; font-size: 0.94rem; line-height: 1.6; color: var(--c-text); }
+.ws-sum-num {
+  flex: none; width: 1.55rem; height: 1.55rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--c-primary); color: #fff; font-size: 0.78rem; font-weight: 700;
+}
+
+/* Flashcards — click-to-reveal cards (no pattern clutter) */
+.ws-fc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3); }
+.ws-fc {
+  text-align: left; border: 1px solid var(--c-border); border-radius: var(--radius-md, 14px);
+  background: var(--c-surface); padding: var(--space-4); cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.6rem; min-height: 130px;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.ws-fc:hover { border-color: var(--c-primary); transform: translateY(-2px); }
+.ws-fc-q { font-weight: 700; font-size: 0.94rem; line-height: 1.45; color: var(--c-text); }
+.ws-fc-a { font-size: 0.88rem; line-height: 1.5; color: var(--c-text); margin-top: auto; }
+.ws-fc-a.hint { color: var(--c-text-faint); font-style: italic; }
+.ws-fc.revealed { background: var(--c-surface-2, rgba(99, 102, 241, 0.06)); border-color: var(--c-primary); }
