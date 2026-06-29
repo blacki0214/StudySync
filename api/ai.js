@@ -30,6 +30,8 @@ const clip = (s) => String(s || '').slice(0, MAX_INPUT_CHARS)
 // ---------------------------------------------------------------------------
 // Gemini call
 // ---------------------------------------------------------------------------
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 async function callGemini(contents, { system, schema, temperature = 0.4 } = {}) {
   const key = process.env.GEMINI_API_KEY
   const body = { contents, generationConfig: { temperature } }
@@ -39,21 +41,29 @@ async function callGemini(contents, { system, schema, temperature = 0.4 } = {}) 
     body.generationConfig.responseSchema = schema
   }
 
-  const resp = await fetch(`${ENDPOINT(MODEL)}?key=${key}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => '')
-    throw new Error(`Gemini ${resp.status} (model ${MODEL}): ${detail.slice(0, 400)}`)
+  // Retry transient failures (429 rate-limit, 500/503 overloaded) with backoff.
+  let lastDetail = ''
+  let lastStatus = 0
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const resp = await fetch(`${ENDPOINT(MODEL)}?key=${key}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    if (resp.ok) {
+      const data = await resp.json()
+      return (data?.candidates?.[0]?.content?.parts || [])
+        .map((p) => p.text || '')
+        .join('')
+        .trim()
+    }
+    lastStatus = resp.status
+    lastDetail = await resp.text().catch(() => '')
+    const transient = resp.status === 429 || resp.status === 500 || resp.status === 503
+    if (!transient || attempt === 3) break
+    await sleep(600 * Math.pow(2, attempt)) // 0.6s, 1.2s, 2.4s
   }
-  const data = await resp.json()
-  const text = (data?.candidates?.[0]?.content?.parts || [])
-    .map((p) => p.text || '')
-    .join('')
-    .trim()
-  return text
+  throw new Error(`Gemini ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
 }
 
 // Wrap a plain user string as a Gemini `contents` array.
