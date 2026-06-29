@@ -383,6 +383,12 @@ create policy "auth delete notes"     on public.notes         for delete to auth
 create policy "shared edit notes"     on public.notes         for update using (share_enabled = true and share_permission = 'edit') with check (share_enabled = true and share_permission = 'edit');
 create policy "insert versions"       on public.note_versions for insert with check (true);
 create policy "auth insert posts"     on public.community_posts for insert to authenticated with check (true);
+create policy "auth insert decks"     on public.decks         for insert to authenticated with check (true);
+create policy "auth update decks"     on public.decks         for update to authenticated using (true);
+create policy "auth delete decks"     on public.decks         for delete to authenticated using (true);
+create policy "auth insert deck_cards" on public.deck_cards   for insert to authenticated with check (true);
+create policy "auth update deck_cards" on public.deck_cards   for update to authenticated using (true);
+create policy "auth delete deck_cards" on public.deck_cards   for delete to authenticated using (true);
 create policy "auth insert flashcards" on public.flashcards   for insert to authenticated with check (true);
 create policy "auth insert quizzes"   on public.quizzes       for insert to authenticated with check (true);
 create policy "auth insert activity"  on public.activities    for insert to authenticated with check (true);

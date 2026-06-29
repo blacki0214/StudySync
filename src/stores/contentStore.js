@@ -86,6 +86,15 @@ export const useContentStore = defineStore('content', {
     },
 
     /**
+     * Keep the cached note title in sync after it's renamed in the editor, so
+     * other views (e.g. the Flashcards note picker) don't show a stale title.
+     */
+    setNoteTitle(id, title) {
+      const note = this.notes.find((n) => n.id === id)
+      if (note) note.title = title
+    },
+
+    /**
      * Load every display collection exactly once. Safe to call from many
      * components/onMounted hooks — concurrent calls share the same promise.
      */

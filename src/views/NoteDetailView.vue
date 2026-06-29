@@ -40,6 +40,7 @@ import * as Y from 'yjs'
 import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
+import { useContentStore } from '../stores/contentStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
@@ -62,6 +63,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
+const contentStore = useContentStore()
 const auth = useAuthStore()
 const dialog = useDialogStore()
 
@@ -400,6 +402,7 @@ async function renameTitle(e) {
   }
   note.value.title = name
   e.target.textContent = name
+  contentStore.setNoteTitle(note.value.id, name) // keep other views in sync
   try { await noteService.renameNote(note.value.id, name) } catch { /* keep optimistic value */ }
 }
 
@@ -414,6 +417,7 @@ async function generateTitleFromNote() {
     if (!title) { dialog.toast(t('editor.titleFailed'), 'error'); return }
     note.value.title = title
     if (titleEl.value) titleEl.value.textContent = title // heading is v-once → set manually
+    contentStore.setNoteTitle(note.value.id, title) // keep other views in sync
     try { await noteService.renameNote(note.value.id, title) } catch { /* keep optimistic value */ }
   } catch {
     dialog.toast(t('editor.titleFailed'), 'error')
