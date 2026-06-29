@@ -44,6 +44,7 @@ import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { SupabaseYjsProvider, u8ToBase64, base64ToU8 } from '../services/yjsProvider.js'
+import { isAiConfigured, rewrite as aiRewrite } from '../services/aiService.js'
 import { timeAgo } from '../utils/formatDate.js'
 import { htmlToText } from '../utils/html.js'
 import { formatDateTime } from '../utils/formatDate.js'
@@ -98,6 +99,8 @@ const saveStatus = ref('saved')
 const onlineUsers = ref([])
 const activeTab = ref('online')
 const aiOpen = ref(false)
+const aiMenuOpen = ref(false) // editor "✨ Ask AI" rewrite menu
+const aiBusy = ref(false)
 const shareOpen = ref(false)
 const exportOpen = ref(false)
 const exportBusy = ref('') // '' | 'pdf' | 'docx' — drives the per-item spinner
@@ -502,6 +505,34 @@ function fileToDataUrl(file) {
 }
 function isActive(name, attrs) { editorTick.value; return editor.value?.isActive(name, attrs) }
 
+// --- AI rewrite (Gemini) ---------------------------------------------------
+// Transform the current selection (or, for "continue", extend from the caret).
+// The result replaces the selection so it reads like an inline edit assistant.
+async function runRewrite(mode) {
+  aiMenuOpen.value = false
+  if (!editor.value || !canEdit.value || aiBusy.value) return
+  const { from, to, empty } = editor.value.state.selection
+  let text = empty ? '' : editor.value.state.doc.textBetween(from, to, ' ')
+  // "continue" needs no selection — feed it the tail of the document as context.
+  if (mode === 'continue' && !text) text = editor.value.getText().slice(-1500)
+  if (!text.trim()) { dialog.toast(t('editor.aiNeedsSelection'), 'warning'); return }
+
+  aiBusy.value = true
+  try {
+    const out = await aiRewrite(text, mode)
+    if (!out) { dialog.toast(t('editor.aiFailed'), 'error'); return }
+    if (mode === 'continue') {
+      editor.value.chain().focus().insertContent(' ' + out).run()
+    } else {
+      editor.value.chain().focus().insertContentAt({ from, to }, out).run()
+    }
+  } catch {
+    dialog.toast(t('editor.aiFailed'), 'error')
+  } finally {
+    aiBusy.value = false
+  }
+}
+
 // --- Data tables -----------------------------------------------------------
 const tableMenuOpen = ref(false)
 const inTable = computed(() => { editorTick.value; return !!editor.value?.isActive('table') })
@@ -664,6 +695,29 @@ async function runExport(kind) {
         </button>
         <input ref="imageInput" type="file" accept="image/*" class="d-none" @change="onImagePicked" />
       </div>
+
+      <!-- AI assist (Gemini) — rewrite/explain/continue the selection -->
+      <template v-if="isAiConfigured && canEdit">
+        <div class="tb-sep"></div>
+        <div class="tb-group table-menu-wrap">
+          <button class="tb-btn ai-tb" :class="{ on: aiMenuOpen, disabled: aiBusy }" :disabled="aiBusy" :title="t('editor.aiAssist')" @click="aiMenuOpen = !aiMenuOpen">
+            <i class="bi" :class="aiBusy ? 'bi-arrow-repeat spin' : 'bi-stars'"></i>
+          </button>
+          <template v-if="aiMenuOpen">
+            <div class="export-backdrop" @click="aiMenuOpen = false"></div>
+            <div class="table-menu" role="menu">
+              <button class="export-item" @click="runRewrite('improve')"><i class="bi bi-magic"></i><span>{{ t('editor.aiImprove') }}</span></button>
+              <button class="export-item" @click="runRewrite('fix')"><i class="bi bi-check2-circle"></i><span>{{ t('editor.aiFix') }}</span></button>
+              <button class="export-item" @click="runRewrite('shorten')"><i class="bi bi-arrows-collapse"></i><span>{{ t('editor.aiShorten') }}</span></button>
+              <button class="export-item" @click="runRewrite('expand')"><i class="bi bi-arrows-expand"></i><span>{{ t('editor.aiExpand') }}</span></button>
+              <button class="export-item" @click="runRewrite('explain')"><i class="bi bi-lightbulb"></i><span>{{ t('editor.aiExplain') }}</span></button>
+              <div class="table-menu-sep"></div>
+              <button class="export-item" @click="runRewrite('continue')"><i class="bi bi-pencil-square"></i><span>{{ t('editor.aiContinue') }}</span></button>
+            </div>
+          </template>
+        </div>
+      </template>
+
       <div class="tb-sep"></div>
       <div class="tb-group">
         <button class="tb-btn" :class="{ on: isActive({ textAlign: 'left' }) }" :title="t('editor.alignLeft')" @click="chain().setTextAlign('left').run()"><i class="bi bi-text-left"></i></button>

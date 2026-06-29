@@ -12,9 +12,11 @@ import { watch, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAiStore } from '../../stores/aiStore.js'
 import { generateFlashcards } from '../../utils/flashcardGenerator.js'
+import { isAiConfigured } from '../../services/aiService.js'
 import StudySummary from './StudySummary.vue'
 import KeywordExtractor from './KeywordExtractor.vue'
 import DifficultyHeatmap from '../study/DifficultyHeatmap.vue'
+import AiChat from './AiChat.vue'
 
 const { t } = useI18n()
 const aiStore = useAiStore()
@@ -63,6 +65,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         </header>
 
         <div class="ai-drawer-body">
+          <AiChat v-if="isAiConfigured" :context="content" />
           <StudySummary :content="content" />
           <KeywordExtractor :content="content" />
           <DifficultyHeatmap v-if="aiStore.difficulty" :analysis="aiStore.difficulty" />

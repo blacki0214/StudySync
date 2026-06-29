@@ -6,7 +6,7 @@
  */
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { generateQuiz } from '../../utils/quizGenerator.js'
+import { generateQuiz } from '../../services/aiService.js'
 
 const { t } = useI18n()
 const props = defineProps({
@@ -17,9 +17,15 @@ const questions = ref([])
 const current = ref(0)
 const answers = ref([]) // selected option index per question
 const finished = ref(false)
+const building = ref(false)
 
-function build() {
-  questions.value = generateQuiz(props.content, { maxQuestions: 8 })
+async function build() {
+  building.value = true
+  try {
+    questions.value = await generateQuiz(props.content, { max: 8 })
+  } finally {
+    building.value = false
+  }
   current.value = 0
   answers.value = new Array(questions.value.length).fill(null)
   finished.value = false
@@ -66,7 +72,12 @@ watch(() => props.content, build, { immediate: true })
       </span>
     </div>
 
-    <div v-if="!questions.length" class="empty-state">
+    <div v-if="building" class="empty-state">
+      <div class="empty-icon"><i class="bi bi-arrow-repeat spin"></i></div>
+      <p class="empty-text">{{ t('quiz.generating') }}</p>
+    </div>
+
+    <div v-else-if="!questions.length" class="empty-state">
       <div class="empty-icon"><i class="bi bi-patch-question"></i></div>
       <p class="empty-text">{{ t('quiz.empty') }}</p>
     </div>

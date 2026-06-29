@@ -9,11 +9,11 @@
  * Layout uses only Bootstrap's row/col grid; all other styling is semantic
  * classes defined in styles/flashcards.css.
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
-import { generateFlashcards } from '../utils/flashcardGenerator.js'
+import { isAiConfigured, generateFlashcards as aiGenerateFlashcards } from '../services/aiService.js'
 import AppSelect from '../components/common/AppSelect.vue'
 import StatCard from '../components/common/StatCard.vue'
 import BarChart from '../components/charts/BarChart.vue'
@@ -59,11 +59,24 @@ function step(d) {
   idx.value = (idx.value + d + deck.value.cards.length) % deck.value.cards.length
 }
 
-// ---- Create cards (manual generation from a note) ----
+// ---- Create cards (AI generation from a note; manual fallback) ----
 const noteForGen = ref(null)
-const generated = computed(() =>
-  noteForGen.value ? generateFlashcards(noteForGen.value.content, { maxCards: 12 }) : []
-)
+const generated = ref([])
+const generating = ref(false)
+
+async function runGenerate() {
+  if (!noteForGen.value) { generated.value = []; return }
+  generating.value = true
+  try {
+    generated.value = await aiGenerateFlashcards(noteForGen.value.content, { max: 12 })
+  } finally {
+    generating.value = false
+  }
+}
+
+// (Re)generate whenever the selected note changes — including the initial pick
+// made in onMounted, which flips noteForGen from null to a note.
+watch(noteForGen, runGenerate)
 
 onMounted(async () => {
   await content.ensureLoaded()
@@ -189,12 +202,17 @@ onMounted(async () => {
         <div class="field-inline">
           <label>{{ t('flashcards.generateFromNote') }}</label>
           <AppSelect v-model="noteForGen" class="note-select" :options="noteOptions" :aria-label="t('flashcards.generateFromNote')" />
-          <span class="badge-soft">{{ t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
+          <span v-if="generating" class="badge-soft"><i class="bi bi-arrow-repeat spin"></i> {{ t('flashcards.generating') }}</span>
+          <span v-else class="badge-soft">{{ isAiConfigured ? t('flashcards.cardsViaAi', { n: generated.length }) : t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
+          <button class="btn btn-soft btn-sm" :disabled="generating || !noteForGen" @click="runGenerate"><i class="bi bi-stars"></i>{{ t('flashcards.regenerate') }}</button>
         </div>
         <div class="row g-3">
+          <div v-if="generating && !generated.length" class="col-12">
+            <div class="panel gen-card text-muted-sm"><i class="bi bi-arrow-repeat spin"></i> {{ t('flashcards.generating') }}</div>
+          </div>
           <div v-for="(c, i) in generated" :key="i" class="col-12 col-md-6">
             <div class="panel gen-card">
-              <div class="gen-pattern">{{ t('flashcards.patternLabel', { pattern: c.pattern }) }}</div>
+              <div class="gen-pattern">{{ c.pattern === 'ai' ? t('flashcards.aiBadge') : t('flashcards.patternLabel', { pattern: c.pattern }) }}</div>
               <div class="gen-q">{{ c.question }}</div>
               <div class="gen-a">{{ c.answer }}</div>
             </div>

@@ -250,6 +250,19 @@ export default {
     backToNotes: 'Back to notes',
     aiToolsTitle: 'AI study tools',
     aiToolsSub: 'Generated from this note — no external AI.',
+    aiAssist: 'Ask AI',
+    aiImprove: 'Improve writing',
+    aiFix: 'Fix spelling & grammar',
+    aiShorten: 'Make shorter',
+    aiExpand: 'Make longer',
+    aiExplain: 'Explain this',
+    aiContinue: 'Continue writing',
+    aiNeedsSelection: 'Select some text first.',
+    aiFailed: 'AI request failed. Please try again.',
+    chatTitle: 'Study tutor',
+    chatEmpty: 'Ask anything about this note — concepts, examples, or a quick explanation.',
+    chatPlaceholder: 'Ask the tutor…',
+    chatError: 'Sorry, I could not respond. Please try again.',
     aiFlashcards: 'Flashcard preview',
     aiFlashcardsEmpty: 'Add definition-style sentences to generate flashcards.',
     openFullFlashcards: 'Open full flashcards & quiz',
@@ -307,13 +320,18 @@ export default {
     fromNote: 'From note:',
     generateFromNote: 'Generate from note:',
     cardsViaPatterns: '{n} cards via definition patterns',
-    patternLabel: 'Q · pattern “{pattern}”'
+    cardsViaAi: '{n} cards · AI',
+    patternLabel: 'Q · pattern “{pattern}”',
+    aiBadge: 'AI',
+    generating: 'Generating…',
+    regenerate: 'Regenerate'
   },
 
   quiz: {
     title: 'Quiz',
     questionOf: 'Question {current} / {total}',
     empty: 'Not enough definition sentences to build a quiz. Add more detailed notes and try again.',
+    generating: 'Generating quiz…',
     scored: 'You scored {score} / {total}',
     reviewHint: 'Review the highlighted answers below, or try again.',
     retake: 'Retake quiz',
@@ -402,7 +420,10 @@ export default {
     askHint: 'Finds and cites the most relevant passages from your sources (no AI guessing).',
     askPlaceholder: 'Ask a question…',
     askNeedsSources: 'Add and select sources to ask questions.',
-    askNoMatch: 'No matching passages found in your sources.'
+    askNoMatch: 'No matching passages found in your sources.',
+    askThinking: 'Searching your sources…',
+    askAnswer: 'Answer',
+    askEvidence: 'From your sources'
   },
 
   share: {

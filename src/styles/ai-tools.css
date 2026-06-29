@@ -45,6 +45,26 @@
 .ai-fc-a { color: var(--c-text-muted); font-size: 0.85rem; margin-top: 0.2rem; }
 .tool-empty { color: var(--c-text-muted); font-size: 0.85rem; margin: 0; }
 
+/* Study-tutor chat (AI mode) */
+.ai-chat { display: flex; flex-direction: column; }
+.ai-chat-log {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  max-height: 320px; min-height: 80px; overflow-y: auto;
+  padding: var(--space-2) 0;
+}
+.ai-msg { display: flex; }
+.ai-msg.user { justify-content: flex-end; }
+.ai-msg.assistant { justify-content: flex-start; }
+.ai-msg-bubble {
+  max-width: 85%; padding: 0.5rem 0.75rem; border-radius: 12px;
+  font-size: 0.88rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+}
+.ai-msg.user .ai-msg-bubble { background: var(--c-primary); color: #fff; border-bottom-right-radius: 4px; }
+.ai-msg.assistant .ai-msg-bubble { background: var(--c-surface-2, rgba(99,102,241,0.08)); color: var(--c-text); border-bottom-left-radius: 4px; }
+.ai-typing { color: var(--c-text-muted); }
+.ai-chat-input { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.ai-chat-input .form-control { flex: 1; }
+
 /* Slide-in transition */
 .drawer-enter-active,
 .drawer-leave-active { transition: opacity 0.2s ease; }

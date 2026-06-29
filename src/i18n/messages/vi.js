@@ -249,6 +249,19 @@ export default {
     backToNotes: 'Quay lại ghi chú',
     aiToolsTitle: 'Công cụ học AI',
     aiToolsSub: 'Tạo từ ghi chú này — không dùng AI bên ngoài.',
+    aiAssist: 'Hỏi AI',
+    aiImprove: 'Cải thiện văn phong',
+    aiFix: 'Sửa chính tả & ngữ pháp',
+    aiShorten: 'Rút ngắn',
+    aiExpand: 'Mở rộng',
+    aiExplain: 'Giải thích',
+    aiContinue: 'Viết tiếp',
+    aiNeedsSelection: 'Hãy chọn một đoạn văn bản trước.',
+    aiFailed: 'Yêu cầu AI thất bại. Vui lòng thử lại.',
+    chatTitle: 'Gia sư học tập',
+    chatEmpty: 'Hỏi bất cứ điều gì về ghi chú này — khái niệm, ví dụ hoặc giải thích nhanh.',
+    chatPlaceholder: 'Hỏi gia sư…',
+    chatError: 'Xin lỗi, không thể trả lời. Vui lòng thử lại.',
     aiFlashcards: 'Xem trước thẻ ghi nhớ',
     aiFlashcardsEmpty: 'Thêm các câu định nghĩa để tạo thẻ ghi nhớ.',
     openFullFlashcards: 'Mở thẻ ghi nhớ & kiểm tra đầy đủ',
@@ -306,13 +319,18 @@ export default {
     fromNote: 'Từ ghi chú:',
     generateFromNote: 'Tạo từ ghi chú:',
     cardsViaPatterns: '{n} thẻ theo mẫu định nghĩa',
-    patternLabel: 'H · mẫu “{pattern}”'
+    cardsViaAi: '{n} thẻ · AI',
+    patternLabel: 'H · mẫu “{pattern}”',
+    aiBadge: 'AI',
+    generating: 'Đang tạo…',
+    regenerate: 'Tạo lại'
   },
 
   quiz: {
     title: 'Kiểm tra',
     questionOf: 'Câu {current} / {total}',
     empty: 'Chưa đủ câu định nghĩa để tạo bài kiểm tra. Hãy thêm ghi chú chi tiết hơn rồi thử lại.',
+    generating: 'Đang tạo bài kiểm tra…',
     scored: 'Bạn được {score} / {total}',
     reviewHint: 'Xem lại các đáp án được tô sáng bên dưới, hoặc thử lại.',
     retake: 'Làm lại',
@@ -401,7 +419,10 @@ export default {
     askHint: 'Tìm và trích dẫn các đoạn liên quan nhất từ nguồn (không suy đoán bằng AI).',
     askPlaceholder: 'Đặt một câu hỏi…',
     askNeedsSources: 'Thêm và chọn nguồn để đặt câu hỏi.',
-    askNoMatch: 'Không tìm thấy đoạn phù hợp trong nguồn của bạn.'
+    askNoMatch: 'Không tìm thấy đoạn phù hợp trong nguồn của bạn.',
+    askThinking: 'Đang tìm trong nguồn của bạn…',
+    askAnswer: 'Trả lời',
+    askEvidence: 'Từ nguồn của bạn'
   },
 
   share: {
