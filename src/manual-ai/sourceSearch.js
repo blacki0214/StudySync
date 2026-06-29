@@ -10,7 +10,7 @@
  * splitting), so it stays consistent with the rest of the "manual AI".
  */
 
-import { tokenize, splitSentences } from './textAnalyzer.js'
+import { tokenize, splitSentences } from '../utils/textAnalyzer.js'
 import { extractKeywords } from './keywordExtractor.js'
 
 /**

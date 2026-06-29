@@ -21,7 +21,7 @@ import {
   averageSentenceLength,
   countSyllables,
   wordCount
-} from './textAnalyzer.js'
+} from '../utils/textAnalyzer.js'
 import { extractKeywords } from './keywordExtractor.js'
 
 /**

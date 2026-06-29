@@ -25,7 +25,7 @@ const flashcards = ref([])
 const fcLoading = ref(false)
 
 async function genPreview() {
-  if (!isAiConfigured || !props.content) { flashcards.value = []; return }
+  if (!props.content) { flashcards.value = []; return }
   fcLoading.value = true
   try {
     flashcards.value = await generateFlashcards(props.content, { max: 6 })
@@ -66,24 +66,21 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         </header>
 
         <div class="ai-drawer-body">
-          <div v-if="!isAiConfigured" class="panel tool-empty">{{ t('ai.disabled') }}</div>
+          <!-- Chat has no offline equivalent → only when AI is enabled. -->
+          <AiChat v-if="isAiConfigured" :context="content" />
+          <StudySummary :content="content" />
+          <KeywordExtractor :content="content" />
 
-          <template v-else>
-            <AiChat :context="content" />
-            <StudySummary :content="content" />
-            <KeywordExtractor :content="content" />
-
-            <!-- Flashcard preview -->
-            <div class="panel">
-              <div class="section-title"><i class="bi bi-card-text"></i>{{ t('editor.aiFlashcards') }}</div>
-              <p v-if="fcLoading" class="tool-empty"><i class="bi bi-arrow-repeat spin"></i> {{ t('ai.generating') }}</p>
-              <p v-else-if="!flashcards.length" class="tool-empty">{{ t('editor.aiFlashcardsEmpty') }}</p>
-              <div v-for="(c, i) in flashcards" :key="i" class="ai-fc">
-                <div class="ai-fc-q">{{ c.question }}</div>
-                <div class="ai-fc-a">{{ c.answer }}</div>
-              </div>
+          <!-- Flashcard preview -->
+          <div class="panel">
+            <div class="section-title"><i class="bi bi-card-text"></i>{{ t('editor.aiFlashcards') }}</div>
+            <p v-if="fcLoading" class="tool-empty"><i class="bi bi-arrow-repeat spin"></i> {{ t('ai.generating') }}</p>
+            <p v-else-if="!flashcards.length" class="tool-empty">{{ t('editor.aiFlashcardsEmpty') }}</p>
+            <div v-for="(c, i) in flashcards" :key="i" class="ai-fc">
+              <div class="ai-fc-q">{{ c.question }}</div>
+              <div class="ai-fc-a">{{ c.answer }}</div>
             </div>
-          </template>
+          </div>
         </div>
 
         <footer class="ai-drawer-foot">

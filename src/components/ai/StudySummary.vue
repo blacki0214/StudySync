@@ -5,7 +5,7 @@
  */
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { isAiConfigured, summarize } from '../../services/aiService.js'
+import { summarize } from '../../services/aiService.js'
 
 const { t } = useI18n()
 const props = defineProps({
@@ -19,7 +19,7 @@ const failed = ref(false)
 
 async function run() {
   failed.value = false
-  if (!isAiConfigured || !props.content) { summary.value = []; return }
+  if (!props.content) { summary.value = []; return }
   loading.value = true
   try {
     summary.value = await summarize(props.content, { max: props.maxSentences })
@@ -38,8 +38,7 @@ watch(() => props.content, run, { immediate: true })
   <div class="panel">
     <div class="section-title"><i class="bi bi-card-list"></i>{{ t('editor.summaryTitle') }}</div>
 
-    <p v-if="!isAiConfigured" class="tool-empty">{{ t('ai.disabled') }}</p>
-    <p v-else-if="loading" class="tool-empty"><i class="bi bi-arrow-repeat spin"></i> {{ t('ai.generating') }}</p>
+    <p v-if="loading" class="tool-empty"><i class="bi bi-arrow-repeat spin"></i> {{ t('ai.generating') }}</p>
     <p v-else-if="failed" class="tool-empty">{{ t('ai.failed') }}</p>
     <p v-else-if="!summary.length" class="tool-empty">{{ t('editor.summaryEmpty') }}</p>
 

@@ -13,7 +13,7 @@
  *             answer  : "page navigation in Vue applications" }
  */
 
-import { splitSentences } from './textAnalyzer.js'
+import { splitSentences } from '../utils/textAnalyzer.js'
 
 /**
  * Each rule has:

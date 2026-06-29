@@ -1,26 +1,26 @@
 /**
  * aiService.js — the single interface every component/store uses for AI.
  * ----------------------------------------------------------------------------
- * GEMINI-ONLY. All generative features go through the /api/ai proxy (Gemini).
- * There is no rule-based fallback anymore: if AI is not enabled or a request
- * fails, the methods throw so the UI can show a clear message instead of
- * silently producing lower-quality "manual" output.
+ * Gemini API is PRIMARY; the offline rule-based engine in src/manual-ai is the
+ * FALLBACK. Every generative method tries Gemini first (when enabled) and, on
+ * any failure or when AI is disabled, returns the manual-ai result instead — so
+ * the app always produces something.
  *
- *   VITE_AI_ENABLED === 'true'  → AI features are on (proxy must be reachable).
- *   otherwise                   → AI features are disabled; callers show a notice.
+ *   VITE_AI_ENABLED === 'true'  → Gemini via /api/ai, falling back to manual-ai.
+ *   otherwise                   → manual-ai only.
  *
- * The Gemini KEY lives only in the Vercel function, never here. The only
- * rule-based code still used is sourceSearch — but purely as RETRIEVAL to
- * ground the AI answer (RAG), not to generate study material.
+ * The Gemini KEY lives only in the Vercel function, never here.
+ * chat() and rewrite() have NO manual equivalent, so they require Gemini and
+ * throw when it's unavailable — guard their UI with isAiConfigured.
  */
 
 import { supabase } from './supabaseClient.js'
-import { askSources as retrievePassages } from '../utils/sourceSearch.js'
+import { manualAI } from '../manual-ai/index.js'
 
 /** True when the app is wired to the Gemini proxy. Public, safe to read in UI. */
 export const isAiConfigured = import.meta.env.VITE_AI_ENABLED === 'true'
 
-/** Throw early (with a clear message) when AI isn't enabled. */
+/** Throw early (with a clear message) when AI isn't enabled. For chat/rewrite. */
 function ensureAi() {
   if (!isAiConfigured) {
     throw new Error('AI is disabled. Set VITE_AI_ENABLED=true and configure GEMINI_API_KEY.')
@@ -38,7 +38,7 @@ async function authHeader() {
   }
 }
 
-/** POST a task to the proxy. Throws on any non-OK response. */
+/** POST a task to the proxy. Throws on any non-OK response so callers can fall back. */
 async function callAi(task, payload) {
   ensureAi()
   const resp = await fetch('/api/ai', {
@@ -49,8 +49,6 @@ async function callAi(task, payload) {
   if (!resp.ok) {
     const info = await resp.json().catch(() => ({}))
     const message = info.error || `AI request failed (${resp.status})`
-    // Surface the real reason (e.g. "Gemini 404: model not found", quota, bad key)
-    // instead of only the generic 502 the browser logs.
     console.error(`[ai] ${task} failed → ${message}`)
     throw new Error(message)
   }
@@ -58,54 +56,104 @@ async function callAi(task, payload) {
 }
 
 // ---------------------------------------------------------------------------
-// Generation — all Gemini. Each throws if AI is disabled or the request fails.
+// Generation — Gemini first, manual-ai fallback. Same return shapes either way.
 // ---------------------------------------------------------------------------
 
 /** @returns {Promise<Array<{question:string, answer:string}>>} */
 export async function generateFlashcards(content, { max = 12 } = {}) {
-  const { flashcards } = await callAi('flashcards', { text: content, max })
-  return (flashcards || []).map((c) => ({ ...c, pattern: 'ai' }))
+  if (isAiConfigured) {
+    try {
+      const { flashcards } = await callAi('flashcards', { text: content, max })
+      if (flashcards?.length) return flashcards.map((c) => ({ ...c, pattern: 'ai' }))
+    } catch (e) {
+      console.warn('[ai] flashcards → manual fallback:', e.message)
+    }
+  }
+  return manualAI.generateFlashcards(content, { max })
 }
 
-/** @returns {Promise<Array<{question:string, options:string[], correctAnswer:number, explanation:string}>>} */
+/** @returns {Promise<Array<{question:string, options:string[], correctAnswer:number, explanation?:string}>>} */
 export async function generateQuiz(content, { max = 8 } = {}) {
-  const { quiz } = await callAi('quiz', { text: content, max })
-  return quiz || []
+  if (isAiConfigured) {
+    try {
+      const { quiz } = await callAi('quiz', { text: content, max })
+      if (quiz?.length) return quiz
+    } catch (e) {
+      console.warn('[ai] quiz → manual fallback:', e.message)
+    }
+  }
+  return manualAI.generateQuiz(content, { max })
 }
 
 /** @returns {Promise<string[]>} key points */
 export async function summarize(content, { max = 4 } = {}) {
-  const { summary } = await callAi('summary', { text: content, max })
-  return summary || []
+  if (isAiConfigured) {
+    try {
+      const { summary } = await callAi('summary', { text: content, max })
+      if (summary?.length) return summary
+    } catch (e) {
+      console.warn('[ai] summary → manual fallback:', e.message)
+    }
+  }
+  return manualAI.summarize(content, { max })
 }
 
 /** @returns {Promise<Array<{word:string, count:number, technical:boolean}>>} */
 export async function extractKeywords(content, { limit = 12 } = {}) {
-  const { keywords } = await callAi('keywords', { text: content, limit })
-  return keywords || []
+  if (isAiConfigured) {
+    try {
+      const { keywords } = await callAi('keywords', { text: content, limit })
+      if (keywords?.length) return keywords
+    } catch (e) {
+      console.warn('[ai] keywords → manual fallback:', e.message)
+    }
+  }
+  return manualAI.extractKeywords(content, { limit })
 }
 
 /** @returns {Promise<string>} a concise note title */
 export async function generateTitle(content) {
-  const { title } = await callAi('title', { text: content })
-  return (title || '').trim()
+  if (isAiConfigured) {
+    try {
+      const { title } = await callAi('title', { text: content })
+      if (title?.trim()) return title.trim()
+    } catch (e) {
+      console.warn('[ai] title → manual fallback:', e.message)
+    }
+  }
+  return manualAI.generateTitle(content)
+}
+
+/** Difficulty is deterministic analytics — always the manual engine. */
+export function analyzeDifficulty(content) {
+  return manualAI.analyzeDifficulty(content)
 }
 
 /**
- * Ask-your-sources (RAG). Retrieves candidate passages locally (grounding only),
- * then has Gemini write a grounded answer with citations.
- * @returns {Promise<{answer:string, citations:Array, passages:Array}>}
+ * Ask-your-sources (RAG). Always retrieves candidate passages locally (grounding).
+ * When Gemini is available it writes a grounded answer with citations; otherwise
+ * it returns the extractive passages (answer = null).
+ * @returns {Promise<{answer:string|null, citations:Array, passages:Array}>}
  */
 export async function askSources(question, docs, { limit = 5 } = {}) {
-  ensureAi()
-  const passages = retrievePassages(question, docs, { limit: Math.max(limit, 8) })
-  if (!passages.length) return { answer: '', citations: [], passages: [] }
-  const { answer, citations } = await callAi('ask', {
-    question,
-    passages: passages.map((p) => ({ source: p.source, text: p.text, docId: p.docId }))
-  })
-  return { answer, citations: citations || [], passages: passages.slice(0, limit) }
+  const passages = manualAI.retrieve(question, docs, { limit: Math.max(limit, 8) })
+  if (isAiConfigured && passages.length) {
+    try {
+      const { answer, citations } = await callAi('ask', {
+        question,
+        passages: passages.map((p) => ({ source: p.source, text: p.text, docId: p.docId }))
+      })
+      return { answer, citations: citations || [], passages: passages.slice(0, limit) }
+    } catch (e) {
+      console.warn('[ai] ask → extractive fallback:', e.message)
+    }
+  }
+  return { answer: null, citations: [], passages: passages.slice(0, limit) }
 }
+
+// ---------------------------------------------------------------------------
+// Generative-only — no manual equivalent. Require Gemini (throw if disabled).
+// ---------------------------------------------------------------------------
 
 /**
  * Multi-turn study chat.
@@ -135,6 +183,7 @@ export const aiService = {
   summarize,
   extractKeywords,
   generateTitle,
+  analyzeDifficulty,
   askSources,
   chat,
   rewrite

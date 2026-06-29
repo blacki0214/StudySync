@@ -8,7 +8,7 @@
  * words (e.g. "polymorphism") outrank generic high-frequency words.
  */
 
-import { tokenize } from './textAnalyzer.js'
+import { tokenize } from '../utils/textAnalyzer.js'
 import { allStopwords } from '../data/vietnameseStopwords.js'
 
 /**
