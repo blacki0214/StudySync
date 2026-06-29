@@ -1,8 +1,9 @@
 <script setup>
 /**
- * QuizGenerator — interactive multiple-choice quiz built by the manual quiz
- * generator (distractors from other answers/keywords, manually shuffled).
- * Tracks the user's selections and scores them at the end.
+ * QuizGenerator — interactive multiple-choice quiz (AI-backed via aiService,
+ * manual fallback). Answering a question immediately reveals whether it was
+ * right or wrong and shows an explanation; the choice then locks. A score +
+ * full review (with explanations) is shown at the end.
  */
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -33,6 +34,7 @@ async function build() {
 
 function select(optionIndex) {
   if (finished.value) return
+  if (answers.value[current.value] !== null) return // locked after first answer
   answers.value[current.value] = optionIndex
 }
 
@@ -44,6 +46,12 @@ function prev() {
   if (current.value > 0) current.value--
 }
 
+// Has the current question been answered? (drives the reveal + Next button)
+const answeredCurrent = computed(() => answers.value[current.value] !== null)
+const isCorrectCurrent = computed(
+  () => answeredCurrent.value && answers.value[current.value] === questions.value[current.value]?.correctAnswer
+)
+
 const score = computed(
   () => questions.value.filter((q, i) => answers.value[i] === q.correctAnswer).length
 )
@@ -51,9 +59,10 @@ const percent = computed(() =>
   questions.value.length ? Math.round((score.value / questions.value.length) * 100) : 0
 )
 
-// Decide the CSS class for an option once the quiz is finished (reveal mode).
+// Reveal an option's correctness as soon as that question is answered.
 function optionClass(qi, oi) {
-  if (!finished.value) return answers.value[qi] === oi ? 'selected' : ''
+  const answered = finished.value || answers.value[qi] !== null
+  if (!answered) return ''
   const q = questions.value[qi]
   if (oi === q.correctAnswer) return 'correct'
   if (answers.value[qi] === oi) return 'incorrect'
@@ -100,6 +109,7 @@ watch(() => props.content, build, { immediate: true })
           >
             <span class="opt-key">{{ String.fromCharCode(65 + oi) }}</span>{{ opt }}
           </div>
+          <p v-if="q.explanation" class="quiz-review-why"><i class="bi bi-info-circle"></i>{{ q.explanation }}</p>
         </div>
       </div>
     </div>
@@ -111,10 +121,20 @@ watch(() => props.content, build, { immediate: true })
         v-for="(opt, oi) in questions[current].options"
         :key="oi"
         class="quiz-option"
-        :class="optionClass(current, oi)"
+        :class="[optionClass(current, oi), { 'is-locked': answeredCurrent }]"
         @click="select(oi)"
       >
         <span class="opt-key">{{ String.fromCharCode(65 + oi) }}</span>{{ opt }}
+      </div>
+
+      <!-- Immediate feedback + explanation -->
+      <div v-if="answeredCurrent" class="quiz-feedback" :class="isCorrectCurrent ? 'ok' : 'bad'">
+        <div class="qf-head">
+          <i class="bi" :class="isCorrectCurrent ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+          {{ isCorrectCurrent ? t('quiz.correct') : t('quiz.incorrect') }}
+        </div>
+        <p v-if="questions[current].explanation" class="qf-text">{{ questions[current].explanation }}</p>
+        <p v-else class="qf-text">{{ t('quiz.correctAnswerIs', { answer: questions[current].options[questions[current].correctAnswer] }) }}</p>
       </div>
 
       <div class="quiz-nav">

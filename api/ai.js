@@ -105,9 +105,10 @@ const quizSchema = {
         properties: {
           question: { type: 'STRING' },
           options: { type: 'ARRAY', items: { type: 'STRING' } },
-          correctAnswer: { type: 'INTEGER' } // 0-based index into options
+          correctAnswer: { type: 'INTEGER' }, // 0-based index into options
+          explanation: { type: 'STRING' } // why the correct option is right
         },
-        required: ['question', 'options', 'correctAnswer']
+        required: ['question', 'options', 'correctAnswer', 'explanation']
       }
     }
   },
@@ -174,7 +175,7 @@ async function taskFlashcards({ text, max = 12 }) {
 }
 
 async function taskQuiz({ text, max = 8 }) {
-  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. ${LANG_RULE}`
+  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. "explanation" is one or two sentences saying why the correct option is right (and, if helpful, why a tempting wrong one is not). ${LANG_RULE}`
   const out = await callGemini(
     userTurn(`Write up to ${max} multiple-choice questions from these notes:\n\n${clip(text)}`),
     { system, schema: quizSchema, temperature: 0.4 }
@@ -186,7 +187,8 @@ async function taskQuiz({ text, max = 8 }) {
     .map((q) => ({
       question: q.question,
       options: q.options,
-      correctAnswer: Math.max(0, Math.min(3, Number(q.correctAnswer) || 0))
+      correctAnswer: Math.max(0, Math.min(3, Number(q.correctAnswer) || 0)),
+      explanation: q.explanation || ''
     }))
     .slice(0, max)
   return { quiz }
