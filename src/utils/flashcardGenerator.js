@@ -77,6 +77,32 @@ function capitalise(value) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
+// Words that, when they START a captured "subject", signal we grabbed a clause
+// fragment rather than a real term — e.g. "For the 'process' part, you …" →
+// a nonsense question. Cards with these subjects are dropped.
+const BAD_LEADING = new Set([
+  'for', 'when', 'if', 'because', 'and', 'but', 'so', 'to', 'in', 'on', 'at',
+  'as', 'of', 'by', 'with', 'from', 'that', 'this', 'these', 'those', 'you',
+  'we', 'they', 'it', 'he', 'she', 'there', 'here', 'however', 'therefore',
+  'thus', 'despite', 'although', 'while', 'since', 'also', 'then', 'such'
+])
+// Pronouns that shouldn't end a subject ("…part, you").
+const BAD_TRAILING = new Set(['you', 'we', 'they', 'it', 'i', 'he', 'she'])
+
+/**
+ * Heuristic quality gate: reject subjects that are clearly clause fragments
+ * rather than a definable term, so the deck has fewer nonsensical cards.
+ * @param {string} subject
+ */
+function isBadSubject(subject) {
+  if (/["“”',;:()]/.test(subject)) return true // contains quotes/commas → a clause, not a term
+  const words = subject.trim().split(/\s+/)
+  if (words.length > 6) return true // too long to be a clean term
+  if (BAD_LEADING.has(words[0]?.toLowerCase())) return true
+  if (BAD_TRAILING.has(words[words.length - 1]?.toLowerCase())) return true
+  return false
+}
+
 /**
  * Generate flashcards from raw note content.
  *
@@ -103,6 +129,8 @@ export function generateFlashcards(content, options = {}) {
 
       // Skip degenerate matches (too-short subject or empty answer).
       if (subject.length < 2 || definition.length < 3) continue
+      // Skip clause-fragment subjects that produce nonsensical questions.
+      if (isBadSubject(subject)) continue
 
       const question = pattern.question(subject)
       if (seenQuestions.has(question.toLowerCase())) break

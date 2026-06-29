@@ -71,10 +71,13 @@ const generated = ref([])
 const generating = ref(false)
 
 async function runGenerate() {
-  if (!noteForGen.value) { generated.value = []; return }
+  if (!noteForGen.value || !isAiConfigured) { generated.value = []; return }
   generating.value = true
   try {
     generated.value = await aiGenerateFlashcards(noteForGen.value.content, { max: 12 })
+  } catch {
+    generated.value = []
+    dialog.toast(t('ai.failed'), 'error')
   } finally {
     generating.value = false
   }
@@ -249,7 +252,10 @@ onMounted(async () => {
           </button>
         </div>
         <div class="row g-3">
-          <div v-if="generating && !generated.length" class="col-12">
+          <div v-if="!isAiConfigured" class="col-12">
+            <div class="panel gen-card text-muted-sm">{{ t('ai.disabled') }}</div>
+          </div>
+          <div v-else-if="generating && !generated.length" class="col-12">
             <div class="panel gen-card text-muted-sm"><i class="bi bi-arrow-repeat spin"></i> {{ t('flashcards.generating') }}</div>
           </div>
           <div v-for="(c, i) in generated" :key="i" class="col-12 col-md-6">

@@ -17,8 +17,8 @@ import { useSubjectStore } from '../stores/subjectStore.js'
 import { useDocumentStore } from '../stores/documentStore.js'
 import { useContentStore } from '../stores/contentStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
-import { useAiStore } from '../stores/aiStore.js'
-import { isAiConfigured, summarize, generateFlashcards, extractKeywords } from '../services/aiService.js'
+import { isAiConfigured, summarize, generateFlashcards, generateQuiz, extractKeywords } from '../services/aiService.js'
+import { cleanText } from '../utils/textAnalyzer.js'
 import { exportStudyMarkdown, exportFlashcardsCsv, exportFlashcardsAnki } from '../utils/exporters.js'
 import DocumentUploader from '../components/documents/DocumentUploader.vue'
 import DocumentList from '../components/documents/DocumentList.vue'
@@ -33,7 +33,6 @@ const subjectStore = useSubjectStore()
 const documentStore = useDocumentStore()
 const content = useContentStore()
 const dialog = useDialogStore()
-const aiStore = useAiStore()
 
 const ready = ref(false)
 const busy = ref(false)
@@ -45,7 +44,7 @@ const showExport = ref(false)
 const subject = computed(() => subjectStore.getById(props.id))
 const docs = computed(() => documentStore.forSubject(props.id))
 const selectedDocs = computed(() => docs.value.filter((d) => selected.value.includes(d.id)))
-const corpus = computed(() => selectedDocs.value.map((d) => d.extracted_text || '').join('\n\n').trim())
+const corpus = computed(() => selectedDocs.value.map((d) => cleanText(d.extracted_text || '')).join('\n\n').trim())
 const hasMaterial = computed(() => corpus.value.length > 0)
 
 // --- AI-generated study material ------------------------------------------
@@ -58,22 +57,27 @@ const saving = ref(false)
 let genTimer = null
 
 async function genSummary() {
-  if (!corpus.value) { summary.value = []; return }
+  if (!corpus.value || !isAiConfigured) { summary.value = []; return }
   gen.summary = true
-  try { summary.value = await summarize(corpus.value, { max: 6 }) } finally { gen.summary = false }
+  try { summary.value = await summarize(corpus.value, { max: 6 }) }
+  catch { summary.value = [] }
+  finally { gen.summary = false }
 }
 async function genFlash() {
-  if (!corpus.value) { flashcards.value = []; return }
+  if (!corpus.value || !isAiConfigured) { flashcards.value = []; return }
   gen.flashcards = true
   try {
     flashcards.value = await generateFlashcards(corpus.value, { max: 12 })
     revealed.value = new Set()
-  } finally { gen.flashcards = false }
+  } catch { flashcards.value = [] }
+  finally { gen.flashcards = false }
 }
 async function genKeywords() {
-  if (!corpus.value) { keywords.value = []; return }
+  if (!corpus.value || !isAiConfigured) { keywords.value = []; return }
   gen.keywords = true
-  try { keywords.value = await extractKeywords(corpus.value, { limit: 14 }) } finally { gen.keywords = false }
+  try { keywords.value = await extractKeywords(corpus.value, { limit: 14 }) }
+  catch { keywords.value = [] }
+  finally { gen.keywords = false }
 }
 function generateAll() { genSummary(); genFlash(); genKeywords() }
 
@@ -149,13 +153,17 @@ async function remove(doc) {
   await documentStore.removeDocument(props.id, doc)
 }
 
-function doExport(kind) {
+async function doExport(kind) {
   showExport.value = false
-  aiStore.analyzeDocuments(selectedDocs.value)
   const name = subject.value?.name || 'StudySync'
-  if (kind === 'md') exportStudyMarkdown({ name, summary: aiStore.summary, flashcards: aiStore.flashcards, quiz: aiStore.quiz })
-  else if (kind === 'csv') exportFlashcardsCsv(aiStore.flashcards, name)
-  else if (kind === 'anki') exportFlashcardsAnki(aiStore.flashcards, name)
+  // Reuse the already-generated AI study material; fetch a quiz on demand for MD.
+  if (kind === 'csv') { exportFlashcardsCsv(flashcards.value, name); return }
+  if (kind === 'anki') { exportFlashcardsAnki(flashcards.value, name); return }
+  if (kind === 'md') {
+    let quiz = []
+    try { quiz = await generateQuiz(corpus.value, { max: 8 }) } catch { /* export without quiz */ }
+    exportStudyMarkdown({ name, summary: summary.value, flashcards: flashcards.value, quiz })
+  }
 }
 </script>
 
@@ -216,6 +224,10 @@ function doExport(kind) {
         <div v-if="!hasMaterial" class="panel empty-state">
           <i class="bi bi-stars empty-icon"></i>
           <p>{{ t('workspace.materialEmpty') }}</p>
+        </div>
+        <div v-else-if="!isAiConfigured" class="panel empty-state">
+          <i class="bi bi-stars empty-icon"></i>
+          <p>{{ t('ai.disabled') }}</p>
         </div>
         <template v-else>
           <div class="text-tabs">

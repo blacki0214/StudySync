@@ -8,7 +8,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { assignmentService } from '../../services/assignmentService.js'
 import { documentService } from '../../services/documentService.js'
-import { generateQuiz } from '../../utils/quizGenerator.js'
+import { generateQuiz } from '../../services/aiService.js'
 import { useAuthStore } from '../../stores/authStore.js'
 
 const props = defineProps({ assignment: { type: Object, required: true } })
@@ -31,10 +31,14 @@ onMounted(async () => {
     if (existing.graded && existing.total != null) result.value = { score: existing.score, total: existing.total }
   }
   if (props.assignment.type === 'quiz' && !result.value) {
-    const doc = props.assignment.source_document_id
-      ? await documentService.getDocument(props.assignment.source_document_id)
-      : null
-    questions.value = doc ? generateQuiz(doc.extracted_text || '', { maxQuestions: 8 }) : []
+    try {
+      const doc = props.assignment.source_document_id
+        ? await documentService.getDocument(props.assignment.source_document_id)
+        : null
+      questions.value = doc ? await generateQuiz(doc.extracted_text || '', { max: 8 }) : []
+    } catch {
+      questions.value = []
+    }
     answers.value = questions.value.map(() => -1)
     if (!questions.value.length) error.value = t('classes.quizUnavailable')
   }

@@ -24,7 +24,7 @@ const asked = ref(false)
 const asking = ref(false)
 
 async function ask() {
-  if (!question.value.trim()) return
+  if (!question.value.trim() || !isAiConfigured) return
   asking.value = true
   asked.value = true
   try {
@@ -32,6 +32,10 @@ async function ask() {
     answer.value = r.answer
     citations.value = r.citations || []
     passages.value = r.passages || []
+  } catch {
+    answer.value = ''
+    citations.value = []
+    passages.value = []
   } finally {
     asking.value = false
   }
@@ -53,12 +57,13 @@ async function ask() {
         :placeholder="t('workspace.askPlaceholder')"
         @keyup.enter="ask"
       />
-      <button class="btn btn-brand btn-sm" :disabled="!docs.length || asking" @click="ask">
+      <button class="btn btn-brand btn-sm" :disabled="!docs.length || asking || !isAiConfigured" @click="ask">
         <i class="bi" :class="asking ? 'bi-arrow-repeat spin' : 'bi-search'"></i>
       </button>
     </div>
 
-    <p v-if="!docs.length" class="doc-empty">{{ t('workspace.askNeedsSources') }}</p>
+    <p v-if="!isAiConfigured" class="doc-empty">{{ t('ai.disabled') }}</p>
+    <p v-else-if="!docs.length" class="doc-empty">{{ t('workspace.askNeedsSources') }}</p>
 
     <div v-else-if="asking" class="doc-empty"><i class="bi bi-arrow-repeat spin"></i> {{ t('workspace.askThinking') }}</div>
 

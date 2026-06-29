@@ -248,7 +248,7 @@ export default {
     useTheirs: 'Dùng phiên bản của họ',
     backToNotes: 'Quay lại ghi chú',
     aiToolsTitle: 'Công cụ học AI',
-    aiToolsSub: 'Tạo từ ghi chú này — không dùng AI bên ngoài.',
+    aiToolsSub: 'AI tạo từ ghi chú này.',
     aiAssist: 'Hỏi AI',
     aiImprove: 'Cải thiện văn phong',
     aiFix: 'Sửa chính tả & ngữ pháp',
@@ -332,6 +332,12 @@ export default {
     deckSaved: 'Đã lưu bộ thẻ với {n} thẻ.',
     deckSaveFailed: 'Không thể lưu bộ thẻ. Vui lòng thử lại.',
     noCardsToSave: 'Hãy tạo một vài thẻ trước.'
+  },
+
+  ai: {
+    disabled: 'Bật AI để dùng tính năng này (đặt VITE_AI_ENABLED).',
+    generating: 'Đang tạo…',
+    failed: 'Yêu cầu AI thất bại. Vui lòng thử lại.'
   },
 
   quiz: {

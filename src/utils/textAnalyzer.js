@@ -10,6 +10,28 @@
  */
 
 /**
+ * Clean text extracted from PDFs/uploads before any generator sees it. PDF
+ * extraction commonly hyphenates across line breaks and leaves stray page
+ * numbers / runs of whitespace; this tidies the worst offenders so the
+ * generated study material is less noisy. (Mid-word spacing like "understa nd"
+ * can't be reliably repaired without a dictionary, so we leave it.)
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function cleanText(text) {
+  if (!text) return ''
+  return String(text)
+    .replace(/\r/g, '')
+    .replace(/-\s*\n\s*/g, '') // de-hyphenate words split across lines: "under-\nstand" -> "understand"
+    .replace(/^\s*\d+\s*$/gm, '') // drop lines that are only a page number
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
+}
+
+/**
  * Split a block of text into individual sentences.
  *
  * We split on sentence-ending punctuation (. ! ?) followed by whitespace, then
