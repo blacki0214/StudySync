@@ -1,0 +1,81 @@
+/**
+ * ml-ai/questionGen.js — OPTIONAL local ML question generator (transformers.js).
+ * ----------------------------------------------------------------------------
+ * Runs a fine-tuned T5-small model FULLY IN THE BROWSER (WebAssembly) via
+ * @xenova/transformers — no API, no rate limit. Trained with
+ * notebooks/question-gen.ipynb and exported to ONNX.
+ *
+ * It picks salient terms (the rule-based keyword extractor) as the "answers",
+ * then has the model phrase a natural question for each → flashcards.
+ *
+ * Wired in as the OFFLINE flashcard fallback: aiService.generateFlashcards tries
+ * Gemini first, then this local model. It is imported dynamically, so the heavy
+ * transformers.js dependency stays out of the main bundle until first use.
+ *
+ * Model source: by default the self-hosted, int8-quantized copy under
+ * public/models/t5-small-qg (served at /models/, ~80 MB, cached in IndexedDB
+ * after first load). Set VITE_QG_MODEL_ID to a Hugging Face repo id and
+ * VITE_QG_MODEL_REMOTE=true to load from the HF CDN instead.
+ */
+
+const MODEL_ID = import.meta.env.VITE_QG_MODEL_ID || 't5-small-qg'
+const USE_REMOTE = import.meta.env.VITE_QG_MODEL_REMOTE === 'true'
+const HL = '<hl>'
+
+let _pipe = null
+
+/** Lazily load the model the first time it's needed (downloads once, then cached). */
+async function getPipeline() {
+  if (_pipe) return _pipe
+  const { pipeline, env } = await import('@xenova/transformers')
+  if (!USE_REMOTE) {
+    // Self-host: fetch the model from the app's own /models/ folder, no network.
+    env.allowRemoteModels = false
+    env.localModelPath = '/models/'
+  }
+  _pipe = await pipeline('text2text-generation', MODEL_ID, { quantized: true })
+  return _pipe
+}
+
+/** Wrap `answer` in <hl> markers inside `sentence` (case-insensitive match). */
+function highlight(sentence, answer) {
+  const i = sentence.toLowerCase().indexOf(answer.toLowerCase())
+  if (i === -1) return `generate question: ${sentence}`
+  const exact = sentence.slice(i, i + answer.length)
+  return `generate question: ${sentence.slice(0, i)} ${HL} ${exact} ${HL} ${sentence.slice(i + answer.length)}`
+}
+
+/**
+ * Generate flashcards locally: key terms (rule-based) become the answers, the
+ * model phrases the questions. Same shape as aiService.generateFlashcards.
+ * @returns {Promise<Array<{question:string, answer:string, pattern:string}>>}
+ */
+export async function generateFlashcardsML(content, { max = 12 } = {}) {
+  const { splitSentences } = await import('../utils/textAnalyzer.js')
+  const { extractKeywords } = await import('../manual-ai/keywordExtractor.js')
+  const pipe = await getPipeline()
+
+  const sentences = splitSentences(content)
+  const cards = []
+  const seen = new Set()
+
+  for (const sentence of sentences) {
+    if (cards.length >= max) break
+    if (sentence.split(/\s+/).length < 5) continue // skip very short sentences
+
+    const kw = extractKeywords(sentence, { limit: 3 })[0]
+    if (!kw) continue
+    const answer = kw.word
+
+    const out = await pipe(highlight(sentence, answer), { max_new_tokens: 48, num_beams: 4 })
+    const question = (out?.[0]?.generated_text || '').trim()
+    const key = question.toLowerCase()
+    if (!question || seen.has(key)) continue
+    seen.add(key)
+
+    cards.push({ question, answer, pattern: 'ml' })
+  }
+  return cards
+}
+
+export default { generateFlashcardsML }

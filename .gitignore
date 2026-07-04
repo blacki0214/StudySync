@@ -14,6 +14,11 @@ dist-ssr
 Thumbs.db
 *.log
 
+# Local ML training artifacts — large (safetensors ~242MB, optimizer ~484MB,
+# checkpoints) and NOT needed to run the app. Only the exported, quantized copy
+# in public/models/ is deployed. Re-create these by running notebooks/question-gen.ipynb.
+notebooks/t5-small-qg/
+
 # Claude Code — never push AI assistant instructions/config to GitHub
 .claude/
 .agents/

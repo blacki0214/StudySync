@@ -59,17 +59,35 @@ async function callAi(task, payload) {
 // Generation — Gemini first, manual-ai fallback. Same return shapes either way.
 // ---------------------------------------------------------------------------
 
-/** @returns {Promise<Array<{question:string, answer:string}>>} */
+/**
+ * Flashcards — Gemini first, then the fine-tuned local model (offline, no limit).
+ * The rule-based engine is NOT used here: on model failure we surface a clear
+ * message rather than return low-quality pattern cards.
+ * @returns {Promise<Array<{question:string, answer:string, pattern:string}>>}
+ */
 export async function generateFlashcards(content, { max = 12 } = {}) {
   if (isAiConfigured) {
     try {
       const { flashcards } = await callAi('flashcards', { text: content, max })
       if (flashcards?.length) return flashcards.map((c) => ({ ...c, pattern: 'ai' }))
     } catch (e) {
-      console.warn('[ai] flashcards → manual fallback:', e.message)
+      console.warn('[ai] flashcards → local model:', e.message)
     }
   }
-  return manualAI.generateFlashcards(content, { max })
+  // Offline fallback: the fine-tuned T5 model (rule-based keyword extractor still
+  // picks the answers; the model phrases the questions). Replaces manual-ai.
+  try {
+    const { generateFlashcardsML } = await import('../ml-ai/questionGen.js')
+    const cards = await generateFlashcardsML(content, { max })
+    if (cards.length) return cards
+    throw new Error('The local model produced no cards for this content.')
+  } catch (e) {
+    console.error('[ai] local flashcard model failed:', e.message)
+    throw new Error(
+      'Flashcard generation is unavailable right now. The offline model may still ' +
+      'be downloading — please try again in a moment.'
+    )
+  }
 }
 
 /** @returns {Promise<Array<{question:string, options:string[], correctAnswer:number, explanation?:string}>>} */
