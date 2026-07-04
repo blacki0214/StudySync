@@ -86,15 +86,42 @@ function isGoodQuestion(q, answer) {
   const words = q.split(/\s+/)
   if (words.length < 4) return false // "What?", "What is?"
   if (words.some((w) => w.length > 28)) return false // leftover merged run-on
-  const lc = q.toLowerCase()
-  if (lc === `what is ${answer.toLowerCase()}?`) return false // trivial echo of the answer
-  if (/^(what|who|where|when|which)\??$/i.test(q.replace(/\s+/g, ''))) return false
+  if (q.toLowerCase() === `what is ${answer.toLowerCase()}?`) return false // trivial echo
   return true
 }
 
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 /**
- * Generate flashcards locally: key terms (rule-based) become the answers, the
- * model phrases the questions. Same shape as aiService.generateFlashcards.
+ * Parse a definition sentence ("Term is/means/refers to explanation") into its
+ * concept term and explanation. These make the strongest flashcards: the
+ * explanation becomes the answer and the question asks about the term.
+ */
+function extractDefinition(sentence) {
+  const m = sentence.match(
+    /^(.{2,60}?)\s+(?:is defined as|refers to|is known as|is called|means|denotes|describes|is an|is a|are|is)\s+(.{6,}?)[.!?]?$/i
+  )
+  if (!m) return null
+  const term = m[1].trim().replace(/^(?:the|a|an)\s+/i, '')
+  const definition = m[2].trim()
+  const termWords = term.split(/\s+/)
+  if (termWords.length < 1 || termWords.length > 6) return null
+  if (/^(?:it|this|that|they|these|those|there|here|he|she|we|you|i)$/i.test(term)) return null
+  if (definition.split(/\s+/).length < 2) return null
+  return { term, definition }
+}
+
+/** Trim a long explanation to a tidy answer (<= ~22 words, no dangling clause). */
+function tidyAnswer(text, maxWords = 22) {
+  const words = text.split(/\s+/)
+  const out = words.length > maxWords ? words.slice(0, maxWords).join(' ') + '…' : words.join(' ')
+  return out.replace(/[,;:]\s*(…?)$/, '$1').trim()
+}
+
+/**
+ * Generate flashcards locally. Prefer concept cards from definition sentences
+ * (term → explanation); for other sentences, highlight a salient term and let
+ * the model phrase a question about it. Same shape as aiService.generateFlashcards.
  * @returns {Promise<Array<{question:string, answer:string, pattern:string}>>}
  */
 export async function generateFlashcardsML(content, { max = 12 } = {}) {
@@ -107,26 +134,44 @@ export async function generateFlashcardsML(content, { max = 12 } = {}) {
   const seenQ = new Set()
   const seenA = new Set()
 
+  const add = (question, answer) => {
+    const qk = question.toLowerCase()
+    const ak = answer.toLowerCase()
+    if (seenQ.has(qk) || seenA.has(ak)) return false
+    seenQ.add(qk)
+    seenA.add(ak)
+    cards.push({ question, answer, pattern: 'ml' })
+    return true
+  }
+
   for (const sentence of sentences) {
     if (cards.length >= max) break
     const wc = sentence.split(/\s+/).length
-    if (wc < 6 || wc > 45) continue // skip fragments and unwieldy run-ons
+    if (wc < 5 || wc > 45) continue // skip fragments and unwieldy run-ons
 
-    // Prefer a technical term as the answer; fall back to the top keyword.
-    const kws = extractKeywords(sentence, { limit: 4 })
-    const kw = kws.find((k) => k.technical) || kws[0]
+    // 1) Concept card from a definition — the highest-value shape. Let the model
+    //    phrase the question (answer = the explanation); if it comes out weak or
+    //    off-topic, fall back to a clean "What is <term>?" template.
+    const def = extractDefinition(sentence)
+    if (def && !seenA.has(def.term.toLowerCase())) {
+      const out = await pipe(highlight(sentence, def.definition), { max_new_tokens: 48, num_beams: 4 })
+      const g = (out?.[0]?.generated_text || '').trim()
+      const onTopic = new RegExp(escapeRe(def.term.split(/\s+/)[0]), 'i').test(g)
+      const question = isGoodQuestion(g, def.definition) && onTopic ? g : `What is ${def.term}?`
+      if (add(question, tidyAnswer(def.definition))) continue
+    }
+
+    // 2) Otherwise: highlight a salient (preferably technical) term and let the
+    //    model ask about it.
+    const kws = extractKeywords(sentence, { limit: 5 })
+    const kw = kws.find((k) => k.technical && k.word.length > 3) || kws[0]
     if (!kw) continue
     const answer = kw.word
-    if (seenA.has(answer.toLowerCase())) continue // one card per answer term
+    if (seenA.has(answer.toLowerCase())) continue
 
     const out = await pipe(highlight(sentence, answer), { max_new_tokens: 48, num_beams: 4 })
     const question = (out?.[0]?.generated_text || '').trim()
-    const key = question.toLowerCase()
-    if (!isGoodQuestion(question, answer) || seenQ.has(key)) continue
-
-    seenQ.add(key)
-    seenA.add(answer.toLowerCase())
-    cards.push({ question, answer, pattern: 'ml' })
+    if (isGoodQuestion(question, answer)) add(question, answer)
   }
   return cards
 }
