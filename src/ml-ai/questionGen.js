@@ -37,6 +37,35 @@ async function getPipeline() {
   return _pipe
 }
 
+/**
+ * Convert note HTML (from the rich-text editor) into clean, well-spaced plain
+ * text. Without this, tags like <p> leak into the prompt and block boundaries
+ * collapse words together ("target value" -> "targetvalue"), which wrecks the
+ * model's output. Block-level tags become sentence breaks so splitSentences can
+ * still segment. Safe on plain text (no tags -> effectively a no-op).
+ */
+function htmlToText(html) {
+  let s = String(html || '')
+  if (!s.includes('<')) return s // already plain text
+  s = s.replace(/<br\s*\/?>/gi, '\n')
+  s = s.replace(/<li[^>]*>/gi, '\n') // list items start on a new line
+  s = s.replace(/<\/(p|div|li|h[1-6]|blockquote|tr|section|article)>/gi, '.\n') // block end -> sentence break
+  s = s.replace(/<[^>]+>/g, ' ') // strip any remaining tags
+  s = s
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+  return s
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .replace(/\.\s*\.(\s|$)/g, '.$1') // collapse doubled periods from block breaks
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+}
+
 /** Wrap `answer` in <hl> markers inside `sentence` (case-insensitive match). */
 function highlight(sentence, answer) {
   const i = sentence.toLowerCase().indexOf(answer.toLowerCase())
@@ -55,7 +84,7 @@ export async function generateFlashcardsML(content, { max = 12 } = {}) {
   const { extractKeywords } = await import('../manual-ai/keywordExtractor.js')
   const pipe = await getPipeline()
 
-  const sentences = splitSentences(content)
+  const sentences = splitSentences(htmlToText(content))
   const cards = []
   const seen = new Set()
 
