@@ -13,12 +13,14 @@
  * transformers.js dependency stays out of the main bundle until first use.
  *
  * Model source: by default the self-hosted, int8-quantized copy under
- * public/models/t5-small-qg (served at /models/, ~80 MB, cached in IndexedDB
- * after first load). Set VITE_QG_MODEL_ID to a Hugging Face repo id and
+ * public/models/t5-small-qg-v1 (served at /models/, ~80 MB, cached by the
+ * browser after first load). The folder is VERSIONED (…-v1): bump the suffix
+ * whenever the model files change so browsers fetch fresh URLs instead of a
+ * stale cached copy. Set VITE_QG_MODEL_ID to a Hugging Face repo id and
  * VITE_QG_MODEL_REMOTE=true to load from the HF CDN instead.
  */
 
-const MODEL_ID = import.meta.env.VITE_QG_MODEL_ID || 't5-small-qg'
+const MODEL_ID = import.meta.env.VITE_QG_MODEL_ID || 't5-small-qg-v1'
 const USE_REMOTE = import.meta.env.VITE_QG_MODEL_REMOTE === 'true'
 const HL = '<hl>'
 
@@ -75,6 +77,22 @@ function highlight(sentence, answer) {
 }
 
 /**
+ * Reject weak generations so only meaningful cards reach the user. T5-small
+ * sometimes emits stubs ("What?"), drops the '?', echoes the answer, or leaves a
+ * run-on token — better to skip those than show a bad card.
+ */
+function isGoodQuestion(q, answer) {
+  if (!q || !q.endsWith('?')) return false
+  const words = q.split(/\s+/)
+  if (words.length < 4) return false // "What?", "What is?"
+  if (words.some((w) => w.length > 28)) return false // leftover merged run-on
+  const lc = q.toLowerCase()
+  if (lc === `what is ${answer.toLowerCase()}?`) return false // trivial echo of the answer
+  if (/^(what|who|where|when|which)\??$/i.test(q.replace(/\s+/g, ''))) return false
+  return true
+}
+
+/**
  * Generate flashcards locally: key terms (rule-based) become the answers, the
  * model phrases the questions. Same shape as aiService.generateFlashcards.
  * @returns {Promise<Array<{question:string, answer:string, pattern:string}>>}
@@ -86,22 +104,28 @@ export async function generateFlashcardsML(content, { max = 12 } = {}) {
 
   const sentences = splitSentences(htmlToText(content))
   const cards = []
-  const seen = new Set()
+  const seenQ = new Set()
+  const seenA = new Set()
 
   for (const sentence of sentences) {
     if (cards.length >= max) break
-    if (sentence.split(/\s+/).length < 5) continue // skip very short sentences
+    const wc = sentence.split(/\s+/).length
+    if (wc < 6 || wc > 45) continue // skip fragments and unwieldy run-ons
 
-    const kw = extractKeywords(sentence, { limit: 3 })[0]
+    // Prefer a technical term as the answer; fall back to the top keyword.
+    const kws = extractKeywords(sentence, { limit: 4 })
+    const kw = kws.find((k) => k.technical) || kws[0]
     if (!kw) continue
     const answer = kw.word
+    if (seenA.has(answer.toLowerCase())) continue // one card per answer term
 
     const out = await pipe(highlight(sentence, answer), { max_new_tokens: 48, num_beams: 4 })
     const question = (out?.[0]?.generated_text || '').trim()
     const key = question.toLowerCase()
-    if (!question || seen.has(key)) continue
-    seen.add(key)
+    if (!isGoodQuestion(question, answer) || seenQ.has(key)) continue
 
+    seenQ.add(key)
+    seenA.add(answer.toLowerCase())
     cards.push({ question, answer, pattern: 'ml' })
   }
   return cards
