@@ -59,11 +59,17 @@ async function callGemini(contents, { system, schema, temperature = 0.4 } = {}) 
     }
     lastStatus = resp.status
     lastDetail = await resp.text().catch(() => '')
-    const transient = resp.status === 429 || resp.status === 500 || resp.status === 503
+    // Retry only server-side overload (500/503). A 429 here is a rate-limit or a
+    // depleted quota, which won't clear within an interactive request — fail fast
+    // so the client falls back to the local model instead of hanging on retries
+    // (and risking a Vercel function timeout).
+    const transient = resp.status === 500 || resp.status === 503
     if (!transient || attempt === 3) break
     await sleep(600 * Math.pow(2, attempt)) // 0.6s, 1.2s, 2.4s
   }
-  throw new Error(`Gemini ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
+  const err = new Error(`Gemini ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
+  err.status = lastStatus
+  throw err
 }
 
 // Wrap a plain user string as a Gemini `contents` array.
@@ -346,6 +352,10 @@ export default async function handler(req, res) {
   } catch (err) {
     // Logs to the `vercel dev` terminal / Vercel function logs for diagnosis.
     console.error('[api/ai] task failed:', err?.message)
-    return res.status(502).json({ error: err.message || 'AI request failed' })
+    // Surface the upstream status for client/quota errors (429 quota or rate
+    // limit, 401/403 auth) so the caller can tell them apart from a real proxy
+    // fault — a blanket 502 makes a depleted-quota 429 look like a broken proxy.
+    const status = [400, 401, 403, 404, 429].includes(err?.status) ? err.status : 502
+    return res.status(status).json({ error: err.message || 'AI request failed' })
   }
 }
