@@ -317,7 +317,15 @@ export default {
     voiceConnected: 'Đã kết nối thoại',
     disconnect: 'Ngắt kết nối',
     channelEmpty: 'Đây là khởi đầu của #{channel}. Chào mọi người nào!',
-    messageChannel: 'Nhắn vào #{channel}'
+    messageChannel: 'Nhắn vào #{channel}',
+    newText: 'Kênh chat mới',
+    newVoice: 'Kênh thoại mới',
+    channelName: 'Tên kênh',
+    deleteChannel: 'Xoá kênh',
+    deleteChannelConfirm: 'Xoá kênh “{name}”? Tin nhắn của kênh sẽ bị xoá.',
+    needOneText: 'Phòng cần ít nhất một kênh chat.',
+    micDenied: 'Micro bị chặn — bạn đã vào mà không có thoại.',
+    noMic: 'Đã kết nối (không micro)'
   },
 
   schedule: {

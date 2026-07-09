@@ -13,6 +13,20 @@ function localId(prefix) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
 }
 
+// Default channel set seeded into every new/empty room.
+const DEFAULT_CHANNELS = [
+  { name: 'general', kind: 'text' },
+  { name: 'questions', kind: 'text' },
+  { name: 'resources', kind: 'text' },
+  { name: 'off-topic', kind: 'text' },
+  { name: 'Study Hall', kind: 'voice' },
+  { name: 'Focus Room', kind: 'voice' }
+]
+
+const K_CHANNELS = 'studysync_demo_room_channels'
+const readChannels = () => { try { return JSON.parse(localStorage.getItem(K_CHANNELS) || '[]') } catch { return [] } }
+const writeChannels = (v) => { try { localStorage.setItem(K_CHANNELS, JSON.stringify(v)) } catch { /* ignore */ } }
+
 const demoRooms = [
   {
     id: 'room-1',
@@ -102,6 +116,61 @@ export const studyRoomService = {
     return data
   },
 
+  /** List a room's channels (seeding the default set if it has none). */
+  async listChannels(roomId) {
+    if (!isSupabaseConfigured) {
+      let all = readChannels().filter((c) => c.room_id === roomId)
+      if (!all.length) {
+        all = DEFAULT_CHANNELS.map((c, i) => ({ id: localId('ch'), room_id: roomId, name: c.name, kind: c.kind, position: i, created_at: new Date().toISOString() }))
+        writeChannels([...readChannels(), ...all])
+      }
+      return all.sort((a, b) => a.position - b.position)
+    }
+    const { data, error } = await supabase
+      .from('room_channels').select('*').eq('room_id', roomId).order('position')
+    if (error) throw error
+    if (data && data.length) return data
+    // Empty room → seed the defaults once.
+    const rows = DEFAULT_CHANNELS.map((c, i) => ({ room_id: roomId, name: c.name, kind: c.kind, position: i }))
+    const { data: seeded, error: seedErr } = await supabase.from('room_channels').insert(rows).select().order('position')
+    if (seedErr) throw seedErr
+    return seeded || []
+  },
+
+  /** Create a channel in a room. */
+  async createChannel({ roomId, name, kind = 'text', position = 99 }) {
+    const clean = String(name || '').trim().replace(/^#/, '').slice(0, 40) || 'channel'
+    if (!isSupabaseConfigured) {
+      const row = { id: localId('ch'), room_id: roomId, name: clean, kind, position, created_at: new Date().toISOString() }
+      writeChannels([...readChannels(), row])
+      return row
+    }
+    const { data, error } = await supabase
+      .from('room_channels').insert({ room_id: roomId, name: clean, kind, position }).select().single()
+    if (error) throw error
+    return data
+  },
+
+  /** Delete a channel. */
+  async deleteChannel(id) {
+    if (!isSupabaseConfigured) {
+      writeChannels(readChannels().filter((c) => c.id !== id))
+      return
+    }
+    const { error } = await supabase.from('room_channels').delete().eq('id', id)
+    if (error) throw error
+  },
+
+  /** Subscribe to a room's channel-list changes. Returns an unsubscribe fn. */
+  subscribeChannels(roomId, onChange) {
+    if (!isSupabaseConfigured) return () => {}
+    const ch = supabase
+      .channel(`room_channels:${roomId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_channels', filter: `room_id=eq.${roomId}` }, () => onChange())
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  },
+
   /**
    * Join a room's realtime channel.
    * @returns {{ sendActivity:Function, leave:Function }}
@@ -134,6 +203,11 @@ export const studyRoomService = {
 
     channel.on('broadcast', { event: 'chat' }, ({ payload }) => {
       handlers.onChat?.(payload)
+    })
+
+    // WebRTC signaling relay (offer/answer/ice) for real voice chat.
+    channel.on('broadcast', { event: 'signal' }, ({ payload }) => {
+      handlers.onSignal?.(payload)
     })
 
     const track = () =>
@@ -187,6 +261,10 @@ export const studyRoomService = {
         currentVoice = voiceId
         track()
       },
+      /** Relay a WebRTC signaling message to a specific peer. */
+      sendSignal(payload) {
+        channel.send({ type: 'broadcast', event: 'signal', payload })
+      },
       leave() {
         supabase.removeChannel(channel)
       }
@@ -232,6 +310,9 @@ function createDemoRoomChannel({ user, handlers }) {
     setVoice(voiceId) {
       me.voice = voiceId
       emitPresence()
+    },
+    sendSignal() {
+      /* no-op in demo mode — no remote peers to signal */
     },
     leave() {
       clearTimeout(presenceTimer)

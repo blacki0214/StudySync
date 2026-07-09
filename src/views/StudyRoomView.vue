@@ -1,10 +1,9 @@
 <script setup>
 /**
- * StudyRoomView — a Discord-style study room: a channel rail (text + voice
- * channels), the active text channel's live chat, and a member list. Chat and
- * presence are REAL over a Supabase Realtime channel via studyRoomStore (a
- * simulated channel in demo mode). Voice channels are presence-based (who's in
- * them) with mic/camera state — no real WebRTC audio.
+ * StudyRoomView — a Discord-style study room: a channel rail (creatable text +
+ * voice channels), the active text channel's live chat, and a member list.
+ * Chat + presence + channels are REAL over Supabase Realtime (simulated in demo
+ * mode). Voice channels use real peer-to-peer WebRTC audio via useVoiceChat.
  */
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -12,6 +11,8 @@ import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
 import { useStudyRoomStore } from '../stores/studyRoomStore.js'
 import { useAuthStore } from '../stores/authStore.js'
+import { useDialogStore } from '../stores/dialogStore.js'
+import { useVoiceChat } from '../composables/useVoiceChat.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,54 +20,43 @@ const { t } = useI18n()
 const content = useContentStore()
 const rooms = useStudyRoomStore()
 const auth = useAuthStore()
-
-// Friendly default channel set (client-side — no schema needed).
-const TEXT_CHANNELS = [
-  { id: 'general', name: 'general' },
-  { id: 'questions', name: 'questions' },
-  { id: 'resources', name: 'resources' },
-  { id: 'off-topic', name: 'off-topic' }
-]
-const VOICE_CHANNELS = [
-  { id: 'voice-study', name: 'Study Hall' },
-  { id: 'voice-focus', name: 'Focus Room' }
-]
+const dialog = useDialogStore()
+// Destructure so the refs unwrap correctly in the template (they're nested on
+// a plain object otherwise, which Vue does not auto-unwrap).
+const { muted: voiceMuted, micError: voiceMicError, join: joinVoiceAudio, leave: leaveVoiceAudio, toggleMute: toggleVoiceMute } = useVoiceChat()
 
 const room = computed(() => content.rooms.find((r) => r.id === route.params.id) || content.rooms[0])
 const subject = computed(() => content.subjectById(room.value?.subject_id))
 
-const activeText = ref('general')
+const activeText = ref('')
 const draft = ref('')
-const micOn = ref(true)
-const cameraOn = ref(false)
 const scroller = ref(null)
 
 const meId = computed(() => auth.user?.id || 'anon')
 const online = computed(() => rooms.onlineUsers)
 const myVoice = computed(() => rooms.myVoice)
+const textChannels = computed(() => rooms.textChannels)
+const voiceChannels = computed(() => rooms.voiceChannels)
 const channelMsgs = computed(() => rooms.channelMessages(activeText.value))
-const activeChannelName = computed(() => TEXT_CHANNELS.find((c) => c.id === activeText.value)?.name || 'general')
+const activeChannelName = computed(() => textChannels.value.find((c) => c.id === activeText.value)?.name || '')
+const connectedVoiceName = computed(() => voiceChannels.value.find((c) => c.id === myVoice.value)?.name || '')
 const voiceMembers = (id) => rooms.voiceMembers(id)
-const connectedVoiceName = computed(() => VOICE_CHANNELS.find((c) => c.id === myVoice.value)?.name || '')
-
-// --- Pomodoro (local) ---
-const seconds = ref(25 * 60)
-let timer = null
-const pomodoro = computed(() => {
-  const m = Math.floor(seconds.value / 60)
-  const s = seconds.value % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-})
 
 onMounted(async () => {
   await content.ensureLoaded()
   await rooms.enterRoom(route.params.id)
-  timer = setInterval(() => { if (seconds.value > 0) seconds.value-- }, 1000)
 })
 onUnmounted(() => {
-  clearInterval(timer)
+  leaveVoiceAudio()
   rooms.leaveRoom()
 })
+
+// Keep a valid active text channel selected as channels load/change.
+watch(
+  () => textChannels.value.map((c) => c.id).join(','),
+  () => { if (!textChannels.value.some((c) => c.id === activeText.value)) activeText.value = textChannels.value[0]?.id || '' },
+  { immediate: true }
+)
 
 // Auto-scroll chat to the newest message.
 watch(() => channelMsgs.value.length, async () => {
@@ -76,22 +66,47 @@ watch(() => channelMsgs.value.length, async () => {
 
 function send() {
   const text = draft.value.trim()
-  if (!text) return
+  if (!text || !activeText.value) return
   rooms.sendChat(text, activeText.value)
   draft.value = ''
 }
-function toggleVoice(id) {
-  if (myVoice.value === id) {
-    rooms.setVoice(null)
-  } else {
-    rooms.setVoice(id)
-    rooms.sendActivity(`joined ${VOICE_CHANNELS.find((c) => c.id === id)?.name} voice`)
+
+async function toggleVoice(c) {
+  if (myVoice.value === c.id) { rooms.setVoice(null); leaveVoiceAudio(); return }
+  if (myVoice.value) leaveVoiceAudio()
+  rooms.setVoice(c.id)
+  await joinVoiceAudio(c.id)
+  if (voiceMicError.value) dialog.toast(t('rooms.micDenied'), 'warning')
+  rooms.sendActivity(`joined ${c.name} voice`)
+}
+function disconnectVoice() {
+  rooms.setVoice(null)
+  leaveVoiceAudio()
+}
+
+async function addChannel(kind) {
+  const name = await dialog.promptText({
+    title: kind === 'voice' ? t('rooms.newVoice') : t('rooms.newText'),
+    label: t('rooms.channelName'),
+    placeholder: kind === 'voice' ? 'Study Hall' : 'general'
+  })
+  if (!name || !name.trim()) return
+  try {
+    await rooms.createChannel({ name, kind })
+  } catch (e) {
+    dialog.toast(e.message || t('rooms.createFailed'), 'error')
   }
 }
-function leaveVoice() { rooms.setVoice(null) }
-function toggleMic() { micOn.value = !micOn.value }
-function toggleCamera() { cameraOn.value = !cameraOn.value }
+async function removeChannel(c) {
+  if (c.kind === 'text' && textChannels.value.length <= 1) { dialog.toast(t('rooms.needOneText'), 'warning'); return }
+  const ok = await dialog.confirm({ message: t('rooms.deleteChannelConfirm', { name: c.name }), danger: true })
+  if (!ok) return
+  if (myVoice.value === c.id) disconnectVoice()
+  await rooms.deleteChannel(c.id)
+}
+
 function leaveRoom() {
+  leaveVoiceAudio()
   rooms.leaveRoom()
   router.push('/rooms')
 }
@@ -114,23 +129,29 @@ function clock(isoStr) {
       </div>
       <div v-if="subject" class="dc-room-sub">{{ subject.code }}</div>
 
-      <div class="dc-section">{{ t('rooms.textChannels') }}</div>
-      <button
-        v-for="c in TEXT_CHANNELS"
-        :key="c.id"
-        class="dc-channel"
-        :class="{ active: activeText === c.id }"
-        @click="activeText = c.id"
-      >
-        <i class="bi bi-hash"></i><span>{{ c.name }}</span>
-      </button>
-
-      <div class="dc-section">{{ t('rooms.voiceChannels') }}</div>
-      <div v-for="c in VOICE_CHANNELS" :key="c.id" class="dc-voice-group">
-        <button class="dc-channel" :class="{ active: myVoice === c.id }" @click="toggleVoice(c.id)">
-          <i class="bi bi-volume-up"></i><span>{{ c.name }}</span>
-          <span v-if="voiceMembers(c.id).length" class="dc-vcount">{{ voiceMembers(c.id).length }}</span>
+      <div class="dc-section">
+        <span>{{ t('rooms.textChannels') }}</span>
+        <button class="dc-add" :title="t('rooms.newText')" @click="addChannel('text')"><i class="bi bi-plus-lg"></i></button>
+      </div>
+      <div v-for="c in textChannels" :key="c.id" class="dc-ch-wrap">
+        <button class="dc-channel" :class="{ active: activeText === c.id }" @click="activeText = c.id">
+          <i class="bi bi-hash"></i><span>{{ c.name }}</span>
         </button>
+        <button class="dc-del" :title="t('rooms.deleteChannel')" @click.stop="removeChannel(c)"><i class="bi bi-x"></i></button>
+      </div>
+
+      <div class="dc-section">
+        <span>{{ t('rooms.voiceChannels') }}</span>
+        <button class="dc-add" :title="t('rooms.newVoice')" @click="addChannel('voice')"><i class="bi bi-plus-lg"></i></button>
+      </div>
+      <div v-for="c in voiceChannels" :key="c.id" class="dc-voice-group">
+        <div class="dc-ch-wrap">
+          <button class="dc-channel" :class="{ active: myVoice === c.id }" @click="toggleVoice(c)">
+            <i class="bi bi-volume-up"></i><span>{{ c.name }}</span>
+            <span v-if="voiceMembers(c.id).length" class="dc-vcount">{{ voiceMembers(c.id).length }}</span>
+          </button>
+          <button class="dc-del" :title="t('rooms.deleteChannel')" @click.stop="removeChannel(c)"><i class="bi bi-x"></i></button>
+        </div>
         <div v-for="m in voiceMembers(c.id)" :key="m.id" class="dc-voice-member">
           <span class="dc-mini-av">{{ initials(m.full_name) }}</span>
           <span class="dc-vm-name">{{ m.full_name }}<template v-if="m.id === meId"> ({{ t('rooms.you') }})</template></span>
@@ -143,14 +164,13 @@ function clock(isoStr) {
         <div class="dc-vb-info">
           <i class="bi bi-broadcast dc-vb-live"></i>
           <div>
-            <div class="dc-vb-status">{{ t('rooms.voiceConnected') }}</div>
+            <div class="dc-vb-status">{{ voiceMicError ? t('rooms.noMic') : t('rooms.voiceConnected') }}</div>
             <div class="dc-vb-name">{{ connectedVoiceName }}</div>
           </div>
         </div>
         <div class="dc-vb-controls">
-          <button class="dc-vb-btn" :class="{ off: !micOn }" :title="t('rooms.mute')" @click="toggleMic"><i class="bi" :class="micOn ? 'bi-mic-fill' : 'bi-mic-mute-fill'"></i></button>
-          <button class="dc-vb-btn" :class="{ off: !cameraOn }" :title="t('rooms.camera')" @click="toggleCamera"><i class="bi" :class="cameraOn ? 'bi-camera-video-fill' : 'bi-camera-video-off-fill'"></i></button>
-          <button class="dc-vb-btn danger" :title="t('rooms.disconnect')" @click="leaveVoice"><i class="bi bi-telephone-x-fill"></i></button>
+          <button class="dc-vb-btn" :class="{ off: voiceMuted }" :title="t('rooms.mute')" @click="toggleVoiceMute()"><i class="bi" :class="voiceMuted ? 'bi-mic-mute-fill' : 'bi-mic-fill'"></i></button>
+          <button class="dc-vb-btn danger" :title="t('rooms.disconnect')" @click="disconnectVoice"><i class="bi bi-telephone-x-fill"></i></button>
         </div>
       </div>
     </aside>
@@ -159,10 +179,7 @@ function clock(isoStr) {
     <main class="dc-main">
       <header class="dc-main-head">
         <div class="dc-ch-title"><i class="bi bi-hash"></i>{{ activeChannelName }}</div>
-        <div class="dc-head-right">
-          <span class="dc-pomodoro"><i class="bi bi-stopwatch"></i>{{ pomodoro }}</span>
-          <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
-        </div>
+        <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
       </header>
 
       <div ref="scroller" class="dc-messages">
@@ -187,7 +204,7 @@ function clock(isoStr) {
 
     <!-- Members -->
     <aside class="dc-members">
-      <div class="dc-section">{{ t('rooms.members', { n: online.length }) }}</div>
+      <div class="dc-section"><span>{{ t('rooms.members', { n: online.length }) }}</span></div>
       <div v-for="m in online" :key="m.id" class="dc-member">
         <span class="dc-mem-av">{{ initials(m.full_name) }}<span class="dc-presence"></span></span>
         <span class="dc-mem-name">{{ m.full_name }}<template v-if="m.id === meId"> ({{ t('rooms.you') }})</template></span>

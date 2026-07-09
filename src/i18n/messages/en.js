@@ -318,7 +318,15 @@ export default {
     voiceConnected: 'Voice connected',
     disconnect: 'Disconnect',
     channelEmpty: 'This is the start of #{channel}. Say hello!',
-    messageChannel: 'Message #{channel}'
+    messageChannel: 'Message #{channel}',
+    newText: 'New text channel',
+    newVoice: 'New voice channel',
+    channelName: 'Channel name',
+    deleteChannel: 'Delete channel',
+    deleteChannelConfirm: 'Delete the “{name}” channel? Its messages will be cleared.',
+    needOneText: 'A room needs at least one text channel.',
+    micDenied: 'Microphone access was blocked — you joined without voice.',
+    noMic: 'Connected (no mic)'
   },
 
   schedule: {

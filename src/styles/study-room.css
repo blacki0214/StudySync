@@ -218,9 +218,26 @@
 .dc-room-sub { font-size: 0.74rem; color: var(--c-text-faint); margin: 0.15rem 0 var(--space-2) 36px; }
 
 .dc-section {
+  display: flex; align-items: center; justify-content: space-between;
   font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--c-text-faint); padding: var(--space-3) var(--space-1) var(--space-1);
 }
+.dc-add {
+  border: none; background: none; color: var(--c-text-faint); cursor: pointer;
+  width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-size: 0.85rem;
+}
+.dc-add:hover { background: var(--c-hover, var(--c-surface)); color: var(--c-text); }
+
+/* Channel row wraps the channel button + a hover-only delete. */
+.dc-ch-wrap { position: relative; display: flex; align-items: center; }
+.dc-ch-wrap .dc-channel { flex: 1; }
+.dc-del {
+  position: absolute; right: 4px; border: none; background: none; cursor: pointer;
+  color: var(--c-text-faint); width: 20px; height: 20px; border-radius: 5px;
+  display: grid; place-items: center; opacity: 0; font-size: 0.9rem;
+}
+.dc-ch-wrap:hover .dc-del { opacity: 1; }
+.dc-del:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 .dc-channel {
   display: flex; align-items: center; gap: 0.5rem; width: 100%;
   border: none; background: none; text-align: left;
