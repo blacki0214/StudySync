@@ -23,14 +23,19 @@ const auth = useAuthStore()
 const dialog = useDialogStore()
 // Destructure so the refs unwrap correctly in the template (they're nested on
 // a plain object otherwise, which Vue does not auto-unwrap).
-const { muted: voiceMuted, micError: voiceMicError, join: joinVoiceAudio, leave: leaveVoiceAudio, toggleMute: toggleVoiceMute } = useVoiceChat()
+const { muted: voiceMuted, micError: voiceMicError, speakingIds, join: joinVoiceAudio, leave: leaveVoiceAudio, toggleMute: toggleVoiceMute } = useVoiceChat()
 
 const room = computed(() => content.rooms.find((r) => r.id === route.params.id) || content.rooms[0])
 const subject = computed(() => content.subjectById(room.value?.subject_id))
 
 const activeText = ref('')
+const stageVoice = ref(null) // voice channel whose stage is shown in main, or null (= chat)
 const draft = ref('')
 const scroller = ref(null)
+
+const isSpeaking = (id) => speakingIds.value.includes(id)
+const stageChannelName = computed(() => voiceChannels.value.find((c) => c.id === stageVoice.value)?.name || '')
+const stageMembers = computed(() => (stageVoice.value ? rooms.voiceMembers(stageVoice.value) : []))
 
 const meId = computed(() => auth.user?.id || 'anon')
 const online = computed(() => rooms.onlineUsers)
@@ -71,17 +76,25 @@ function send() {
   draft.value = ''
 }
 
-async function toggleVoice(c) {
-  if (myVoice.value === c.id) { rooms.setVoice(null); leaveVoiceAudio(); return }
+// Click a voice channel → show its stage in the main area and connect (if not
+// already in it). Leaving is only via the red disconnect button.
+async function selectVoice(c) {
+  stageVoice.value = c.id
+  if (myVoice.value === c.id) return
   if (myVoice.value) leaveVoiceAudio()
   rooms.setVoice(c.id)
   await joinVoiceAudio(c.id)
   if (voiceMicError.value) dialog.toast(t('rooms.micDenied'), 'warning')
   rooms.sendActivity(`joined ${c.name} voice`)
 }
+function selectText(c) {
+  activeText.value = c.id
+  stageVoice.value = null
+}
 function disconnectVoice() {
   rooms.setVoice(null)
   leaveVoiceAudio()
+  stageVoice.value = null
 }
 
 async function addChannel(kind) {
@@ -134,7 +147,7 @@ function clock(isoStr) {
         <button class="dc-add" :title="t('rooms.newText')" @click="addChannel('text')"><i class="bi bi-plus-lg"></i></button>
       </div>
       <div v-for="c in textChannels" :key="c.id" class="dc-ch-wrap">
-        <button class="dc-channel" :class="{ active: activeText === c.id }" @click="activeText = c.id">
+        <button class="dc-channel" :class="{ active: activeText === c.id && !stageVoice }" @click="selectText(c)">
           <i class="bi bi-hash"></i><span>{{ c.name }}</span>
         </button>
         <button class="dc-del" :title="t('rooms.deleteChannel')" @click.stop="removeChannel(c)"><i class="bi bi-x"></i></button>
@@ -146,16 +159,16 @@ function clock(isoStr) {
       </div>
       <div v-for="c in voiceChannels" :key="c.id" class="dc-voice-group">
         <div class="dc-ch-wrap">
-          <button class="dc-channel" :class="{ active: myVoice === c.id }" @click="toggleVoice(c)">
+          <button class="dc-channel" :class="{ active: stageVoice === c.id, connected: myVoice === c.id }" @click="selectVoice(c)">
             <i class="bi bi-volume-up"></i><span>{{ c.name }}</span>
             <span v-if="voiceMembers(c.id).length" class="dc-vcount">{{ voiceMembers(c.id).length }}</span>
           </button>
           <button class="dc-del" :title="t('rooms.deleteChannel')" @click.stop="removeChannel(c)"><i class="bi bi-x"></i></button>
         </div>
-        <div v-for="m in voiceMembers(c.id)" :key="m.id" class="dc-voice-member">
+        <div v-for="m in voiceMembers(c.id)" :key="m.id" class="dc-voice-member" :class="{ speaking: isSpeaking(m.id) }">
           <span class="dc-mini-av">{{ initials(m.full_name) }}</span>
           <span class="dc-vm-name">{{ m.full_name }}<template v-if="m.id === meId"> ({{ t('rooms.you') }})</template></span>
-          <i class="bi bi-mic-fill dc-vm-mic"></i>
+          <i class="bi dc-vm-mic" :class="m.id === meId && voiceMuted ? 'bi-mic-mute-fill muted' : 'bi-mic-fill'"></i>
         </div>
       </div>
 
@@ -175,31 +188,52 @@ function clock(isoStr) {
       </div>
     </aside>
 
-    <!-- Main: active text channel -->
+    <!-- Main: voice stage or the active text channel -->
     <main class="dc-main">
       <header class="dc-main-head">
-        <div class="dc-ch-title"><i class="bi bi-hash"></i>{{ activeChannelName }}</div>
+        <div class="dc-ch-title"><i class="bi" :class="stageVoice ? 'bi-volume-up' : 'bi-hash'"></i>{{ stageVoice ? stageChannelName : activeChannelName }}</div>
         <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
       </header>
 
-      <div ref="scroller" class="dc-messages">
-        <div v-if="!channelMsgs.length" class="dc-ch-empty">
-          <i class="bi bi-hash"></i>
-          <p>{{ t('rooms.channelEmpty', { channel: activeChannelName }) }}</p>
+      <!-- Voice stage: avatar tiles with a speaking ring -->
+      <div v-if="stageVoice" class="dc-stage">
+        <div v-if="!stageMembers.length" class="dc-ch-empty">
+          <i class="bi bi-mic"></i>
+          <p>{{ t('rooms.voiceEmpty') }}</p>
         </div>
-        <div v-for="(m, i) in channelMsgs" :key="i" class="dc-msg">
-          <span class="dc-msg-av">{{ initials(m.fullName) }}</span>
-          <div class="dc-msg-body">
-            <div class="dc-msg-meta"><span class="dc-msg-name">{{ m.fullName }}</span><span class="dc-msg-time">{{ clock(m.at) }}</span></div>
-            <div class="dc-msg-text">{{ m.text }}</div>
+        <div v-else class="dc-stage-grid">
+          <div v-for="m in stageMembers" :key="m.id" class="dc-stage-tile" :class="{ speaking: isSpeaking(m.id) }">
+            <div class="dc-stage-av">
+              <img v-if="m.avatar" :src="m.avatar" :alt="m.full_name" />
+              <span v-else>{{ initials(m.full_name) }}</span>
+              <span v-if="m.id === meId && voiceMuted" class="dc-stage-mute"><i class="bi bi-mic-mute-fill"></i></span>
+            </div>
+            <div class="dc-stage-name">{{ m.full_name }}<template v-if="m.id === meId"> ({{ t('rooms.you') }})</template></div>
           </div>
         </div>
       </div>
 
-      <div class="dc-composer">
-        <input v-model="draft" :placeholder="t('rooms.messageChannel', { channel: activeChannelName })" @keyup.enter="send" />
-        <button class="dc-send" :disabled="!draft.trim()" @click="send"><i class="bi bi-send-fill"></i></button>
-      </div>
+      <!-- Text channel chat -->
+      <template v-else>
+        <div ref="scroller" class="dc-messages">
+          <div v-if="!channelMsgs.length" class="dc-ch-empty">
+            <i class="bi bi-hash"></i>
+            <p>{{ t('rooms.channelEmpty', { channel: activeChannelName }) }}</p>
+          </div>
+          <div v-for="(m, i) in channelMsgs" :key="i" class="dc-msg">
+            <span class="dc-msg-av">{{ initials(m.fullName) }}</span>
+            <div class="dc-msg-body">
+              <div class="dc-msg-meta"><span class="dc-msg-name">{{ m.fullName }}</span><span class="dc-msg-time">{{ clock(m.at) }}</span></div>
+              <div class="dc-msg-text">{{ m.text }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dc-composer">
+          <input v-model="draft" :placeholder="t('rooms.messageChannel', { channel: activeChannelName })" @keyup.enter="send" />
+          <button class="dc-send" :disabled="!draft.trim()" @click="send"><i class="bi bi-send-fill"></i></button>
+        </div>
+      </template>
     </main>
 
     <!-- Members -->

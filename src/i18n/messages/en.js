@@ -326,7 +326,8 @@ export default {
     deleteChannelConfirm: 'Delete the “{name}” channel? Its messages will be cleared.',
     needOneText: 'A room needs at least one text channel.',
     micDenied: 'Microphone access was blocked — you joined without voice.',
-    noMic: 'Connected (no mic)'
+    noMic: 'Connected (no mic)',
+    voiceEmpty: 'No one is in this voice channel yet.'
   },
 
   schedule: {

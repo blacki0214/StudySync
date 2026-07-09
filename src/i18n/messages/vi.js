@@ -325,7 +325,8 @@ export default {
     deleteChannelConfirm: 'Xoá kênh “{name}”? Tin nhắn của kênh sẽ bị xoá.',
     needOneText: 'Phòng cần ít nhất một kênh chat.',
     micDenied: 'Micro bị chặn — bạn đã vào mà không có thoại.',
-    noMic: 'Đã kết nối (không micro)'
+    noMic: 'Đã kết nối (không micro)',
+    voiceEmpty: 'Chưa có ai trong kênh thoại này.'
   },
 
   schedule: {

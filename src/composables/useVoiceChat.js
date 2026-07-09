@@ -27,13 +27,59 @@ export function useVoiceChat() {
   const muted = ref(false)
   const micError = ref(false) // getUserMedia was denied/unavailable
   const peerCount = ref(0)
+  const speakingIds = ref([]) // ids currently talking (for the speaking ring)
 
   let localStream = null
   const peers = new Map() // peerId -> { pc, audioEl }
   let removeSignal = null
   let stopWatch = null
 
+  // --- Speaking detection (Web Audio) ---
+  let audioCtx = null
+  const analysers = new Map() // id -> { analyser, data, lastAbove }
+  let rafId = null
+
   const myId = () => auth.user?.id || 'anon'
+
+  function ensureCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext
+      if (!AC) return null
+      audioCtx = new AC()
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {})
+    return audioCtx
+  }
+  function addAnalyser(id, stream) {
+    const ctx = ensureCtx()
+    if (!ctx) return
+    try {
+      const src = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 512
+      src.connect(analyser)
+      analysers.set(id, { analyser, data: new Uint8Array(analyser.frequencyBinCount), lastAbove: 0 })
+      if (!rafId) rafId = requestAnimationFrame(levelLoop)
+    } catch { /* ignore */ }
+  }
+  function removeAnalyser(id) { analysers.delete(id) }
+  function levelLoop() {
+    const now = performance.now()
+    const speaking = []
+    for (const [id, a] of analysers) {
+      a.analyser.getByteTimeDomainData(a.data)
+      let sum = 0
+      for (let i = 0; i < a.data.length; i++) { const v = (a.data[i] - 128) / 128; sum += v * v }
+      const rms = Math.sqrt(sum / a.data.length)
+      // A local muted mic still produces samples, so suppress our own ring when muted.
+      const suppressed = id === myId() && muted.value
+      if (rms > 0.045 && !suppressed) a.lastAbove = now
+      if (now - a.lastAbove < 350) speaking.push(id) // short hangover to avoid flicker
+    }
+    const prev = speakingIds.value
+    if (speaking.length !== prev.length || speaking.some((id) => !prev.includes(id))) speakingIds.value = speaking
+    rafId = analysers.size ? requestAnimationFrame(levelLoop) : null
+  }
 
   async function join(voiceId) {
     try {
@@ -45,6 +91,9 @@ export function useVoiceChat() {
     }
     connected.value = true
     muted.value = false
+
+    // Analyse our own mic so our avatar ring lights up when we talk.
+    if (localStream) addAnalyser(myId(), localStream)
 
     removeSignal = rooms.onSignal(handleSignal)
     // Open/close peer connections as the voice channel's membership changes.
@@ -117,6 +166,8 @@ export function useVoiceChat() {
     }
     rec.audioEl.srcObject = stream
     rec.audioEl.play?.().catch(() => {})
+    // Light this peer's avatar ring when they talk.
+    addAnalyser(peerId, stream)
   }
 
   function closePeer(peerId) {
@@ -124,6 +175,7 @@ export function useVoiceChat() {
     if (!rec) return
     try { rec.pc.close() } catch { /* ignore */ }
     if (rec.audioEl) rec.audioEl.srcObject = null
+    removeAnalyser(peerId)
     peers.delete(peerId)
     peerCount.value = peers.size
   }
@@ -134,6 +186,9 @@ export function useVoiceChat() {
     for (const pid of [...peers.keys()]) closePeer(pid)
     localStream?.getTracks().forEach((t) => t.stop())
     localStream = null
+    analysers.clear()
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null }
+    speakingIds.value = []
     connected.value = false
     muted.value = false
     peerCount.value = 0
@@ -145,5 +200,5 @@ export function useVoiceChat() {
   }
   function toggleMute() { setMuted(!muted.value) }
 
-  return { connected, muted, micError, peerCount, join, leave, toggleMute, setMuted }
+  return { connected, muted, micError, peerCount, speakingIds, join, leave, toggleMute, setMuted }
 }

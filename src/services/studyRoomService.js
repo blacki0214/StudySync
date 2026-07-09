@@ -214,6 +214,7 @@ export const studyRoomService = {
       channel.track({
         id: user.id,
         full_name: user.full_name,
+        avatar: user.avatar_url || user.avatar || null,
         online_at: new Date().toISOString(),
         voice: currentVoice
       })
