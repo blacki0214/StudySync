@@ -14,6 +14,7 @@ import { useUiStore } from '../../stores/uiStore.js'
 import { usePaletteStore } from '../../stores/paletteStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
 import { shortcut } from '../../utils/platform.js'
+import NotificationBell from './NotificationBell.vue'
 import logoMark from '../../assets/images/logo_2.png'
 
 const searchShortcut = shortcut('K')
@@ -31,6 +32,7 @@ const links = [
   { to: '/subjects', icon: 'bi-journal-bookmark', key: 'nav.subjects' },
   { to: '/notes', icon: 'bi-file-earmark-text', key: 'nav.collabNotes', badge: 'live', badgeType: 'live' },
   { to: '/tasks', icon: 'bi-check2-square', key: 'nav.tasks' },
+  { to: '/schedule', icon: 'bi-calendar-week', key: 'nav.schedule' },
   { to: '/rooms', icon: 'bi-people', key: 'nav.studyRooms' },
   { to: '/flashcards', icon: 'bi-stars', key: 'nav.flashcards' },
   { to: '/community', icon: 'bi-chat-square-text', key: 'nav.community' },
@@ -115,9 +117,7 @@ async function logout() {
         </ul>
       </div>
 
-      <button class="sidebar-ctl" :aria-label="t('nav.notifications')" :title="t('nav.notifications')">
-        <i class="bi bi-bell"></i><span class="notif-dot"></span>
-      </button>
+      <NotificationBell />
     </div>
 
     <!-- Account -->

@@ -11,14 +11,28 @@
   padding: var(--space-4);
   margin-bottom: var(--space-4);
 }
-.composer .cp-row { display: flex; align-items: center; gap: var(--space-3); }
+.composer .cp-row { display: flex; align-items: flex-start; gap: var(--space-3); }
 .composer-avatar { width: 40px; height: 40px; }
-.composer input {
+.composer input,
+.composer .composer-input {
   flex: 1; border: 1px solid var(--c-border); background: var(--c-surface-2);
-  border-radius: var(--radius-pill); padding: 0.6rem 1rem; color: var(--c-text);
+  border-radius: var(--radius); padding: 0.6rem 1rem; color: var(--c-text);
+  font: inherit; resize: vertical; min-height: 44px; line-height: 1.5;
 }
-.composer input:focus { outline: none; border-color: var(--c-primary); }
-.composer .cp-foot { display: flex; justify-content: center; margin-top: var(--space-3); }
+.composer input:focus,
+.composer .composer-input:focus { outline: none; border-color: var(--c-primary); }
+.composer .cp-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3); margin-top: var(--space-3);
+}
+.composer .cp-hint { color: var(--c-text-faint); font-size: 0.78rem; }
+
+.community-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-2); padding: var(--space-6) var(--space-4);
+  color: var(--c-text-faint); text-align: center;
+}
+.community-empty i { font-size: 1.8rem; }
 
 .filter-pills { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
 .fp {

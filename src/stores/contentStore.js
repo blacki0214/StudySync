@@ -22,6 +22,7 @@
 import { defineStore } from 'pinia'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { deckService } from '../services/deckService.js'
+import { communityService } from '../services/communityService.js'
 import { timeAgo } from '../utils/formatDate.js'
 
 // Sample data — only used when no backend is configured (demo mode).
@@ -83,6 +84,28 @@ export const useContentStore = defineStore('content', {
       const deck = await deckService.createDeck(payload)
       this.decks.unshift(deck)
       return deck
+    },
+
+    /**
+     * Create a community post and add it to the top of the feed so it shows
+     * immediately. Works live (Supabase) or in demo. Mirrors createDeck.
+     */
+    async createPost(payload) {
+      const post = await communityService.createPost(payload)
+      this.posts.unshift(post)
+      return post
+    },
+
+    /**
+     * Persist a post's new vote count (the caller has already applied the
+     * optimistic change to the reactive object). Silently ignores demo mode.
+     */
+    async persistVotes(postId, votes) {
+      try {
+        await communityService.setVotes(postId, votes)
+      } catch (e) {
+        console.warn('[community] vote not persisted:', e.message)
+      }
     },
 
     /**

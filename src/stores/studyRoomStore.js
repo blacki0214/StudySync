@@ -16,7 +16,8 @@ export const useStudyRoomStore = defineStore('studyRooms', {
     loading: false,
     activeRoom: null,
     onlineUsers: [],
-    activityFeed: [] // newest first
+    activityFeed: [], // newest first
+    messages: [] // group chat, oldest first
   }),
 
   actions: {
@@ -36,6 +37,7 @@ export const useStudyRoomStore = defineStore('studyRooms', {
 
       this.activeRoom = await studyRoomService.getRoom(id)
       this.activityFeed = []
+      this.messages = []
 
       roomChannel = studyRoomService.joinRoom({
         roomId: id,
@@ -47,6 +49,10 @@ export const useStudyRoomStore = defineStore('studyRooms', {
           onActivity: (activity) => {
             // Prepend, cap the feed at 30 entries.
             this.activityFeed = [activity, ...this.activityFeed].slice(0, 30)
+          },
+          onChat: (message) => {
+            // Append, cap the log at 100 messages.
+            this.messages = [...this.messages, message].slice(-100)
           }
         }
       })
@@ -57,12 +63,19 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       roomChannel?.sendActivity({ message })
     },
 
+    /** Send a group-chat message to everyone in the room. */
+    sendChat(text) {
+      const clean = String(text || '').trim()
+      if (clean) roomChannel?.sendChat(clean)
+    },
+
     leaveRoom() {
       roomChannel?.leave()
       roomChannel = null
       this.activeRoom = null
       this.onlineUsers = []
       this.activityFeed = []
+      this.messages = []
     }
   }
 })

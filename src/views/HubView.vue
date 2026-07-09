@@ -62,7 +62,7 @@ function initials(name) {
         <p class="greet-sub">{{ t('dashboard.streakLine', { days: auth.user?.streak || 0 }) }}</p>
       </div>
       <div class="action-row">
-        <button class="btn btn-outline-soft"><i class="bi bi-calendar3"></i>{{ t('dashboard.schedule') }}</button>
+        <router-link to="/schedule" class="btn btn-outline-soft"><i class="bi bi-calendar3"></i>{{ t('dashboard.schedule') }}</router-link>
         <router-link to="/notes" class="btn btn-brand"><i class="bi bi-plus-lg"></i>{{ t('dashboard.newNote') }}</router-link>
       </div>
     </header>

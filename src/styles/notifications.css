@@ -1,0 +1,96 @@
+/* notifications.css
+   ----------------------------------------------------------------------------
+   The sidebar bell badge + its popover panel. Tokens only, so dark mode works. */
+
+.notif-wrap { position: relative; }
+
+/* Unread count badge on the bell. */
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--c-hard, #ef4444);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  border: 2px solid var(--c-surface);
+}
+
+/* Popover panel — opens above the footer bell. */
+.notif-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-width: 86vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.18));
+  z-index: 1200;
+  overflow: hidden;
+}
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--c-border);
+}
+.notif-title { font-weight: 700; font-size: 0.95rem; }
+.notif-readall {
+  border: none; background: none; color: var(--c-primary);
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+}
+.notif-readall:hover { text-decoration: underline; }
+
+.notif-list { overflow-y: auto; padding: var(--space-1); }
+.notif-empty {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  color: var(--c-text-faint); font-size: 0.86rem; padding: var(--space-5) var(--space-4);
+  text-align: center;
+}
+.notif-empty i { font-size: 1.6rem; color: var(--c-live, #22c55e); }
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+}
+.notif-item:hover { background: var(--c-surface-2); }
+.notif-item.unread { background: var(--c-primary-light); }
+.notif-item.unread:hover { filter: brightness(0.98); }
+
+.notif-icon {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 10px; display: grid; place-items: center;
+  color: #fff; font-size: 0.9rem;
+}
+.notif-body { display: flex; flex-direction: column; min-width: 0; gap: 0.1rem; }
+.notif-text { font-size: 0.85rem; color: var(--c-text); line-height: 1.35; }
+.notif-sub { font-size: 0.74rem; color: var(--c-text-faint); }
+.notif-unread-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--c-primary); flex-shrink: 0; margin-top: 6px; margin-left: auto;
+}
+
+@media (max-width: 767px) {
+  .notif-panel { position: fixed; left: var(--space-3); right: var(--space-3); width: auto; bottom: 76px; }
+}

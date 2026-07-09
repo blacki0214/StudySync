@@ -9,6 +9,7 @@ export default {
     mySubjects: 'Môn của tôi',
     collabNotes: 'Ghi chú nhóm',
     tasks: 'Nhiệm vụ',
+    schedule: 'Lịch',
     studyRooms: 'Phòng học',
     flashcards: 'Thẻ ghi nhớ',
     community: 'Cộng đồng',
@@ -288,7 +289,40 @@ export default {
     sharedResources: 'Tài nguyên chung',
     groupChat: 'Trò chuyện nhóm',
     messageRoom: 'Nhắn cho phòng...',
-    broadcastTitle: 'Phát một cập nhật'
+    broadcastTitle: 'Phát một cập nhật',
+    you: 'bạn',
+    connecting: 'Đang kết nối vào phòng…',
+    mute: 'Tắt tiếng',
+    camera: 'Camera',
+    react: 'Bày tỏ',
+    leave: 'Rời phòng',
+    noActivity: 'Chưa có hoạt động — chào mọi người nào!',
+    noResources: 'Chưa có tài nguyên chia sẻ.',
+    noMessages: 'Chưa có tin nhắn. Bắt đầu trò chuyện nào.'
+  },
+
+  schedule: {
+    title: 'Lịch',
+    sub: 'Hạn nhiệm vụ và bài tập của bạn trong một lịch duy nhất.',
+    today: 'Hôm nay',
+    openTasks: 'Mở nhiệm vụ',
+    prev: 'Tháng trước',
+    next: 'Tháng sau',
+    upcoming: 'Sắp tới',
+    task: 'Nhiệm vụ',
+    assignment: 'Bài tập',
+    noneOnDay: 'Không có hạn nào trong ngày này.',
+    noUpcoming: 'Không có hạn nào sắp tới. Bạn đã hoàn tất!',
+    loading: 'Đang tải các hạn chót…'
+  },
+
+  notif: {
+    markAllRead: 'Đánh dấu đã đọc',
+    empty: 'Bạn đã xem hết rồi.',
+    overdue: 'Quá hạn',
+    dueToday: 'Hạn hôm nay',
+    dueTomorrow: 'Hạn ngày mai',
+    dueInDays: 'Hạn sau {n} ngày'
   },
 
   flashcards: {
@@ -554,6 +588,11 @@ export default {
     newPost: 'Bài viết mới',
     askPlaceholder: 'Đặt câu hỏi hoặc chia sẻ điều hữu ích...',
     ai: 'AI',
+    post: 'Đăng',
+    posted: 'Đã đăng lên cộng đồng',
+    composerHint: 'Mẹo: thêm #thẻ để phân loại câu hỏi. Nhấn Enter để đăng.',
+    emptyFilter: 'Chưa có gì ở đây — hãy là người đăng đầu tiên.',
+    you: 'Bạn',
     hot: 'Nổi bật',
     new: 'Mới',
     top: 'Hàng đầu',

@@ -79,8 +79,11 @@ export const studyRoomService = {
       return createDemoRoomChannel({ user, handlers })
     }
 
+    // `broadcast.self: true` echoes our own chat/activity back to us, so the
+    // sender sees their message via the same handler as everyone else — no
+    // separate optimistic path needed.
     const channel = supabase.channel(`room:${roomId}`, {
-      config: { presence: { key: user.id } }
+      config: { presence: { key: user.id }, broadcast: { self: true } }
     })
 
     channel.on('presence', { event: 'sync' }, () => {
@@ -93,12 +96,22 @@ export const studyRoomService = {
       handlers.onActivity?.(payload)
     })
 
+    channel.on('broadcast', { event: 'chat' }, ({ payload }) => {
+      handlers.onChat?.(payload)
+    })
+
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         await channel.track({
           id: user.id,
           full_name: user.full_name,
           online_at: new Date().toISOString()
+        })
+        // Announce arrival so others see a live activity line.
+        handlers.onActivity && channel.send({
+          type: 'broadcast',
+          event: 'activity',
+          payload: { userId: user.id, fullName: user.full_name, message: 'joined the room', at: new Date().toISOString() }
         })
       }
     })
@@ -112,6 +125,18 @@ export const studyRoomService = {
             userId: user.id,
             fullName: user.full_name,
             ...activity,
+            at: new Date().toISOString()
+          }
+        })
+      },
+      sendChat(text) {
+        channel.send({
+          type: 'broadcast',
+          event: 'chat',
+          payload: {
+            userId: user.id,
+            fullName: user.full_name,
+            text,
             at: new Date().toISOString()
           }
         })
@@ -133,11 +158,17 @@ function createDemoRoomChannel({ user, handlers }) {
 
   const presenceTimer = setTimeout(() => handlers.onPresenceChange?.(peers), 500)
 
+  // Seed a little chat history so the panel isn't empty on entry.
+  const chatTimer = setTimeout(() => {
+    handlers.onChat?.({ userId: 'user-2', fullName: 'Linh Nguyen', text: 'Hey! Ready to review chapter 4?', at: new Date().toISOString() })
+    handlers.onChat?.({ userId: 'user-3', fullName: 'Minh Tran', text: 'Yep, sharing my notes now 📒', at: new Date().toISOString() })
+  }, 800)
+
   const messages = [
-    'joined the room',
     'added a new note',
     'started a quiz',
-    'reviewed 12 flashcards'
+    'reviewed 12 flashcards',
+    'shared a document'
   ]
   let i = 0
   const activityTimer = setInterval(() => {
@@ -152,11 +183,17 @@ function createDemoRoomChannel({ user, handlers }) {
   }, 5000)
 
   return {
-    sendActivity() {
-      /* no-op in demo mode */
+    sendActivity(activity) {
+      // Echo the local user's own activity so they see their action land.
+      handlers.onActivity?.({ userId: user.id, fullName: user.full_name, ...activity, at: new Date().toISOString() })
+    },
+    sendChat(text) {
+      // Echo locally (demo has no server to bounce it back).
+      handlers.onChat?.({ userId: user.id, fullName: user.full_name, text, at: new Date().toISOString() })
     },
     leave() {
       clearTimeout(presenceTimer)
+      clearTimeout(chatTimer)
       clearInterval(activityTimer)
     }
   }

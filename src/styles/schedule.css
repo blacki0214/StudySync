@@ -1,0 +1,122 @@
+/* schedule.css
+   ----------------------------------------------------------------------------
+   Month calendar + agenda rail for the Schedule view. Colours/spacing come from
+   the design tokens in variables.css, so dark mode works automatically. */
+
+.schedule-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ---- Calendar card ---- */
+.cal-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+.cal-month { font-weight: 700; font-size: 1.1rem; text-transform: capitalize; }
+.cal-nav {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border-strong); background: var(--c-surface);
+  color: var(--c-text); display: grid; place-items: center;
+}
+.cal-nav:hover { background: var(--c-surface-2); }
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+.cal-weekdays span {
+  text-align: center; font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--c-text-faint); padding: 0.25rem 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+.cal-cell {
+  min-height: 92px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.cal-cell:hover { border-color: var(--c-border-strong); }
+.cal-cell.out-month { background: var(--c-surface-2); opacity: 0.55; }
+.cal-cell.selected { border-color: var(--c-primary); box-shadow: 0 0 0 1px var(--c-primary); }
+.cal-cell .cc-day {
+  font-size: 0.8rem; font-weight: 600; color: var(--c-text-muted);
+  width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%;
+}
+.cal-cell.today .cc-day { background: var(--grad-button); color: #fff; }
+
+.cc-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cc-chip {
+  font-size: 0.66rem; font-weight: 600; color: #fff;
+  border-radius: 4px; padding: 1px 5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-chip.done { opacity: 0.5; text-decoration: line-through; }
+.cc-more { font-size: 0.64rem; color: var(--c-text-faint); font-weight: 600; padding-left: 2px; }
+
+/* ---- Agenda rail ---- */
+.agenda-rail { display: flex; flex-direction: column; gap: var(--space-4); }
+.rail-empty-lg { color: var(--c-text-faint); font-size: 0.88rem; padding: var(--space-2) 0; }
+
+.agenda-item {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-2) 0; border-top: 1px solid var(--c-border);
+  color: inherit;
+}
+.agenda-item:hover { text-decoration: none; }
+.agenda-item:hover .ai-title { color: var(--c-primary); }
+.ai-tick {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: grid; place-items: center; color: #fff; font-size: 0.85rem;
+}
+.ai-main { min-width: 0; }
+.ai-title { font-weight: 600; font-size: 0.9rem; }
+.ai-title.done { text-decoration: line-through; color: var(--c-text-faint); }
+.ai-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; flex-wrap: wrap; }
+.ai-kind { font-size: 0.75rem; color: var(--c-text-muted); }
+.ai-time { font-size: 0.75rem; color: var(--c-text-faint); }
+
+.up-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) 0; color: inherit;
+}
+.up-row:hover { text-decoration: none; }
+.up-row:hover .up-title { color: var(--c-primary); }
+.up-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.up-main { flex: 1; min-width: 0; }
+.up-title { font-weight: 600; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-title.done { text-decoration: line-through; color: var(--c-text-faint); }
+.up-sub { font-size: 0.74rem; color: var(--c-text-faint); }
+.up-date { font-size: 0.76rem; color: var(--c-text-muted); font-weight: 600; white-space: nowrap; }
+
+/* The gradient chips reuse the shared .grad-* backgrounds from main.css. */
+
+@media (max-width: 991px) {
+  .schedule-layout { grid-template-columns: 1fr; }
+}

@@ -9,6 +9,7 @@ export default {
     mySubjects: 'My Subjects',
     collabNotes: 'Collab Notes',
     tasks: 'Tasks',
+    schedule: 'Schedule',
     studyRooms: 'Study Rooms',
     flashcards: 'Flashcards',
     community: 'Community',
@@ -289,7 +290,40 @@ export default {
     sharedResources: 'Shared resources',
     groupChat: 'Group chat',
     messageRoom: 'Message the room...',
-    broadcastTitle: 'Broadcast an update'
+    broadcastTitle: 'Broadcast an update',
+    you: 'you',
+    connecting: 'Connecting to the room…',
+    mute: 'Mute',
+    camera: 'Camera',
+    react: 'React',
+    leave: 'Leave',
+    noActivity: 'No activity yet — say hi!',
+    noResources: 'No shared resources yet.',
+    noMessages: 'No messages yet. Start the conversation.'
+  },
+
+  schedule: {
+    title: 'Schedule',
+    sub: 'Your task and assignment deadlines in one calendar.',
+    today: 'Today',
+    openTasks: 'Open tasks',
+    prev: 'Previous month',
+    next: 'Next month',
+    upcoming: 'Upcoming',
+    task: 'Task',
+    assignment: 'Assignment',
+    noneOnDay: 'Nothing due on this day.',
+    noUpcoming: 'No upcoming deadlines. You’re all caught up!',
+    loading: 'Loading your deadlines…'
+  },
+
+  notif: {
+    markAllRead: 'Mark all read',
+    empty: 'You’re all caught up.',
+    overdue: 'Overdue',
+    dueToday: 'Due today',
+    dueTomorrow: 'Due tomorrow',
+    dueInDays: 'Due in {n} days'
   },
 
   flashcards: {
@@ -556,6 +590,11 @@ export default {
     newPost: 'New post',
     askPlaceholder: 'Ask a question or share something useful...',
     ai: 'AI',
+    post: 'Post',
+    posted: 'Posted to the community',
+    composerHint: 'Tip: add #tags to categorise your question. Enter to post.',
+    emptyFilter: 'Nothing here yet — be the first to post.',
+    you: 'You',
     hot: 'Hot',
     new: 'New',
     top: 'Top',
