@@ -23,6 +23,7 @@ import { defineStore } from 'pinia'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { deckService } from '../services/deckService.js'
 import { communityService } from '../services/communityService.js'
+import { studyRoomService } from '../services/studyRoomService.js'
 import { timeAgo } from '../utils/formatDate.js'
 
 // Sample data — only used when no backend is configured (demo mode).
@@ -84,6 +85,16 @@ export const useContentStore = defineStore('content', {
       const deck = await deckService.createDeck(payload)
       this.decks.unshift(deck)
       return deck
+    },
+
+    /**
+     * Create a study room and add it to the top of the list so it shows
+     * immediately. Works live (Supabase) or in demo.
+     */
+    async createRoom(payload) {
+      const room = await studyRoomService.createRoom(payload)
+      this.rooms.unshift(room)
+      return room
     },
 
     /**

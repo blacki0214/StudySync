@@ -299,7 +299,19 @@ export default {
     leave: 'Leave',
     noActivity: 'No activity yet — say hi!',
     noResources: 'No shared resources yet.',
-    noMessages: 'No messages yet. Start the conversation.'
+    noMessages: 'No messages yet. Start the conversation.',
+    create: 'Create room',
+    created: 'Study room created',
+    createFailed: 'Could not create the room. Please try again.',
+    createTitle: 'Create a study room',
+    nameLabel: 'Room name',
+    namePlaceholder: 'e.g. Vue Project Standup',
+    descLabel: 'Description',
+    descPlaceholder: 'What will you study or discuss here?',
+    subjectLabel: 'Subject (optional)',
+    noSubject: 'General — no subject',
+    emptyTitle: 'No study rooms yet',
+    emptySub: 'Create a room to study, chat and hang out with classmates in real time.'
   },
 
   schedule: {

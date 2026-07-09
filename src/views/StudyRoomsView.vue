@@ -1,27 +1,75 @@
 <script setup>
-/** StudyRoomsView — list of live/idle study rooms. Layout uses row/col grid;
- *  other styling is semantic classes in styles/study-room.css. */
-import { onMounted } from 'vue'
+/**
+ * StudyRoomsView — list of study rooms with the ability to CREATE one. A room
+ * is a casual, student-run space (text + voice channel) — unlike a Class, which
+ * has assignments and a gradebook. Anyone can spin one up and others can join.
+ * Layout uses row/col grid; styling is semantic classes in styles/study-room.css.
+ */
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useContentStore } from '../stores/contentStore.js'
+import { useDialogStore } from '../stores/dialogStore.js'
 
 const { t } = useI18n()
+const router = useRouter()
 const content = useContentStore()
+const dialog = useDialogStore()
+
 onMounted(() => content.ensureLoaded())
 
 function subjectCode(id) {
   return content.subjectById(id)?.code || 'General'
 }
+
+// --- Create room ---
+const showCreate = ref(false)
+const form = ref({ name: '', description: '', subjectId: '' })
+const creating = ref(false)
+
+function openCreate() {
+  form.value = { name: '', description: '', subjectId: '' }
+  showCreate.value = true
+}
+async function submitCreate() {
+  if (!form.value.name.trim()) return
+  creating.value = true
+  try {
+    const room = await content.createRoom({
+      name: form.value.name,
+      description: form.value.description,
+      subjectId: form.value.subjectId || null
+    })
+    showCreate.value = false
+    dialog.toast(t('rooms.created'), 'success')
+    router.push(`/rooms/${room.id}`)
+  } catch (e) {
+    dialog.toast(e.message || t('rooms.createFailed'), 'error')
+  } finally {
+    creating.value = false
+  }
+}
 </script>
 
 <template>
   <div>
-    <header class="page-header">
-      <h1>{{ t('rooms.title') }}</h1>
-      <p>{{ t('rooms.sub') }}</p>
+    <header class="page-head">
+      <div>
+        <h1 class="ph-title">{{ t('rooms.title') }}</h1>
+        <p class="ph-sub">{{ t('rooms.sub') }}</p>
+      </div>
+      <button class="btn btn-brand" @click="openCreate"><i class="bi bi-plus-lg"></i>{{ t('rooms.create') }}</button>
     </header>
 
-    <div class="row g-4">
+    <!-- Empty state -->
+    <div v-if="!content.rooms.length" class="rooms-empty">
+      <i class="bi bi-people"></i>
+      <h3>{{ t('rooms.emptyTitle') }}</h3>
+      <p>{{ t('rooms.emptySub') }}</p>
+      <button class="btn btn-brand" @click="openCreate"><i class="bi bi-plus-lg"></i>{{ t('rooms.create') }}</button>
+    </div>
+
+    <div v-else class="row g-4">
       <div v-for="room in content.rooms" :key="room.id" class="col-12 col-md-6 col-xl-4">
         <div class="room-card">
           <div class="rc-top">
@@ -36,6 +84,35 @@ function subjectCode(id) {
               <i class="bi bi-box-arrow-in-right"></i>{{ t('rooms.join') }}
             </router-link>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create room modal -->
+    <div v-if="showCreate" class="room-modal-backdrop" @click.self="showCreate = false">
+      <div class="room-modal" role="dialog" aria-modal="true">
+        <div class="rm-head">
+          <h3>{{ t('rooms.createTitle') }}</h3>
+          <button class="btn-icon-sq" :aria-label="t('common.cancel')" @click="showCreate = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="rm-body">
+          <label class="rm-label">{{ t('rooms.nameLabel') }}</label>
+          <input v-model="form.name" class="rm-input" :placeholder="t('rooms.namePlaceholder')" @keyup.enter="submitCreate" autofocus />
+
+          <label class="rm-label">{{ t('rooms.descLabel') }}</label>
+          <textarea v-model="form.description" class="rm-input" rows="2" :placeholder="t('rooms.descPlaceholder')"></textarea>
+
+          <label class="rm-label">{{ t('rooms.subjectLabel') }}</label>
+          <select v-model="form.subjectId" class="rm-input">
+            <option value="">{{ t('rooms.noSubject') }}</option>
+            <option v-for="s in content.subjects" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option>
+          </select>
+        </div>
+        <div class="rm-foot">
+          <button class="btn btn-outline-soft" @click="showCreate = false">{{ t('common.cancel') }}</button>
+          <button class="btn btn-brand" :disabled="creating || !form.name.trim()" @click="submitCreate">
+            <i class="bi" :class="creating ? 'bi-arrow-repeat spin' : 'bi-plus-lg'"></i>{{ t('rooms.create') }}
+          </button>
         </div>
       </div>
     </div>

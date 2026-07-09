@@ -9,6 +9,10 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient.js'
 import { sampleSubjects } from '../data/sampleSubjects.js'
 
+function localId(prefix) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 const demoRooms = [
   {
     id: 'room-1',
@@ -49,6 +53,34 @@ export const studyRoomService = {
       .from('study_rooms')
       .select('*, subject:subjects(*)')
       .order('created_at', { ascending: false })
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Create a study room. Returns it in the shape contentStore.rooms expects
+   * ({ id, subject_id, code, name, description, live, active_users }).
+   */
+  async createRoom({ name, description = '', subjectId = null }) {
+    const cleanName = String(name || '').trim() || 'Study Room'
+    if (!isSupabaseConfigured) {
+      const subject = sampleSubjects.find((s) => s.id === subjectId) || null
+      return {
+        id: localId('room'),
+        subject_id: subjectId,
+        code: subject?.code || 'General',
+        name: cleanName,
+        description: String(description || '').trim(),
+        live: true,
+        active_users: 1,
+        created_at: new Date().toISOString()
+      }
+    }
+    const { data, error } = await supabase
+      .from('study_rooms')
+      .insert({ subject_id: subjectId, name: cleanName, description: String(description || '').trim(), live: true, active_users: 1 })
+      .select()
+      .single()
     if (error) throw error
     return data
   },

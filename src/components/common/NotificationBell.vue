@@ -16,7 +16,25 @@ const notif = useNotificationStore()
 const content = useContentStore()
 
 const root = ref(null)
+const panelStyle = ref({})
 const unread = computed(() => notif.unreadCount)
+
+// Anchor the panel to a fixed position just above the bell so it never clips
+// against the sidebar's overflow or runs off the left edge of the screen.
+function onBell() {
+  if (!notif.open) {
+    const r = root.value?.getBoundingClientRect()
+    if (r) {
+      panelStyle.value = {
+        position: 'fixed',
+        left: `${Math.max(12, r.left)}px`,
+        bottom: `${Math.max(12, window.innerHeight - r.top + 8)}px`,
+        right: 'auto'
+      }
+    }
+  }
+  notif.toggle()
+}
 
 function actorName(id) {
   return content.userById(id)?.full_name || t('editor.someone')
@@ -53,12 +71,12 @@ onUnmounted(() => {
 
 <template>
   <div ref="root" class="notif-wrap">
-    <button class="sidebar-ctl" :aria-label="t('nav.notifications')" :title="t('nav.notifications')" @click.stop="notif.toggle()">
+    <button class="sidebar-ctl" :aria-label="t('nav.notifications')" :title="t('nav.notifications')" @click.stop="onBell()">
       <i class="bi bi-bell"></i>
       <span v-if="unread" class="notif-badge">{{ unread > 9 ? '9+' : unread }}</span>
     </button>
 
-    <div v-if="notif.open" class="notif-panel">
+    <div v-if="notif.open" class="notif-panel" :style="panelStyle">
       <div class="notif-head">
         <span class="notif-title">{{ t('nav.notifications') }}</span>
         <button v-if="unread" class="notif-readall" @click="notif.markAllRead()">{{ t('notif.markAllRead') }}</button>

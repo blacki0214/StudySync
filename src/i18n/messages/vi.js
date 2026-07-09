@@ -298,7 +298,19 @@ export default {
     leave: 'Rời phòng',
     noActivity: 'Chưa có hoạt động — chào mọi người nào!',
     noResources: 'Chưa có tài nguyên chia sẻ.',
-    noMessages: 'Chưa có tin nhắn. Bắt đầu trò chuyện nào.'
+    noMessages: 'Chưa có tin nhắn. Bắt đầu trò chuyện nào.',
+    create: 'Tạo phòng',
+    created: 'Đã tạo phòng học',
+    createFailed: 'Không thể tạo phòng. Vui lòng thử lại.',
+    createTitle: 'Tạo phòng học',
+    nameLabel: 'Tên phòng',
+    namePlaceholder: 'vd. Nhóm dự án Vue',
+    descLabel: 'Mô tả',
+    descPlaceholder: 'Bạn sẽ học hoặc thảo luận gì ở đây?',
+    subjectLabel: 'Môn học (tuỳ chọn)',
+    noSubject: 'Chung — không theo môn',
+    emptyTitle: 'Chưa có phòng học nào',
+    emptySub: 'Tạo một phòng để học, trò chuyện và giao lưu với bạn học theo thời gian thực.'
   },
 
   schedule: {
