@@ -39,39 +39,70 @@ const clip = (s) => String(s || '').slice(0, MAX_INPUT_CHARS)
 // ---------------------------------------------------------------------------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+// Default output cap. IMPORTANT: this gateway pre-reserves quota per request
+// from the model's FULL max output when max_tokens is omitted, which trips an
+// intermittent "insufficient_quota" guard even with credit. Always sending a
+// bounded max_tokens avoids that (and caps cost).
+const DEFAULT_MAX_TOKENS = Number(process.env.AI_MAX_TOKENS) || 1024
+
+// Abort each upstream attempt after this long (a hung channel otherwise waits
+// for Cloudflare's ~100s 524). Two attempts stay within a 60s Vercel budget.
+const TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS) || 28000
+const MAX_ATTEMPTS = 2
+
 /**
  * @param {Array<{role:'system'|'user'|'assistant', content:string}>} messages
- * @param {{ json?: boolean, temperature?: number }} opts
+ * @param {{ json?: boolean, temperature?: number, maxTokens?: number }} opts
  * @returns {Promise<string>} the assistant message content
  */
-async function callChat(messages, { json = false, temperature = 0.4 } = {}) {
-  const body = { model: MODEL, messages, temperature }
+async function callChat(messages, { json = false, temperature = 0.4, maxTokens } = {}) {
+  const body = {
+    model: MODEL,
+    messages,
+    temperature,
+    max_tokens: maxTokens || DEFAULT_MAX_TOKENS
+  }
+  // JSON mode requires the literal word "json" somewhere in the messages, or
+  // stricter upstream channels reject the request. Our task prompts include it.
   if (json) body.response_format = { type: 'json_object' }
 
-  // Retry transient server overload (500/503) with backoff. A 429 here is a
-  // rate-limit or depleted quota that won't clear within an interactive
-  // request — fail fast so the client falls back to the offline model instead
-  // of hanging (and risking a Vercel function timeout).
+  // The gateway load-balances across upstream channels; some hang (Cloudflare
+  // 524 after ~100s) or return a transient 5xx. Abort each attempt early so a
+  // hung channel doesn't blow the Vercel function budget, then retry once on a
+  // (hopefully healthier) channel. A 4xx (quota/auth/bad-request) is terminal —
+  // fail fast so the client falls back to the offline model.
+  const RETRYABLE = new Set([500, 502, 503, 504, 524])
   let lastDetail = ''
   let lastStatus = 0
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const resp = await fetch(`${BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify(body)
-    })
-    if (resp.ok) {
-      const data = await resp.json()
-      return String(data?.choices?.[0]?.message?.content || '').trim()
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+    try {
+      const resp = await fetch(`${BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      })
+      if (resp.ok) {
+        const data = await resp.json()
+        return String(data?.choices?.[0]?.message?.content || '').trim()
+      }
+      lastStatus = resp.status
+      lastDetail = await resp.text().catch(() => '')
+      if (!RETRYABLE.has(resp.status) || attempt === MAX_ATTEMPTS - 1) break
+    } catch (e) {
+      // Timeout abort or network error → treat as a gateway timeout and retry.
+      lastStatus = 504
+      lastDetail = e?.name === 'AbortError' ? `timeout after ${TIMEOUT_MS}ms` : String(e?.message || e)
+      if (attempt === MAX_ATTEMPTS - 1) break
+    } finally {
+      clearTimeout(timer)
     }
-    lastStatus = resp.status
-    lastDetail = await resp.text().catch(() => '')
-    const transient = resp.status === 500 || resp.status === 503
-    if (!transient || attempt === 3) break
-    await sleep(600 * Math.pow(2, attempt)) // 0.6s, 1.2s, 2.4s
+    await sleep(400)
   }
   const err = new Error(`AI ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
   err.status = lastStatus
@@ -109,20 +140,20 @@ const LANG_RULE =
   'Always answer in the SAME language as the study material (English or Vietnamese). Do not invent facts that are not supported by the material.'
 
 async function taskFlashcards({ text, max = 12 }) {
-  const system = `You are a study assistant that writes high-quality flashcards from a student's notes. Each card tests ONE fact: a clear, specific question and a concise answer (a phrase or single sentence). Avoid yes/no questions and duplicates. ${LANG_RULE} Return ONLY JSON of the exact shape {"flashcards":[{"question":"...","answer":"..."}]}.`
+  const system = `You are a study assistant that writes high-quality flashcards from a student's notes. Each card tests ONE fact: a clear, specific question and a concise answer (a phrase or single sentence). Avoid yes/no questions and duplicates. ${LANG_RULE} Return ONLY valid json of the exact shape {"flashcards":[{"question":"...","answer":"..."}]}.`
   const out = await callChat(
-    turns(system, `Create up to ${max} flashcards from these notes:\n\n${clip(text)}`),
-    { json: true, temperature: 0.3 }
+    turns(system, `Create up to ${max} flashcards (as json) from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.3, maxTokens: 1500 }
   )
   const parsed = parseJson(out, { flashcards: [] })
   return { flashcards: (parsed.flashcards || []).slice(0, max) }
 }
 
 async function taskQuiz({ text, max = 8 }) {
-  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. "explanation" is one or two sentences saying why the correct option is right (and, if helpful, why a tempting wrong one is not). ${LANG_RULE} Return ONLY JSON of the exact shape {"quiz":[{"question":"...","options":["a","b","c","d"],"correctAnswer":0,"explanation":"..."}]}.`
+  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. "explanation" is one or two sentences saying why the correct option is right (and, if helpful, why a tempting wrong one is not). ${LANG_RULE} Return ONLY valid json of the exact shape {"quiz":[{"question":"...","options":["a","b","c","d"],"correctAnswer":0,"explanation":"..."}]}.`
   const out = await callChat(
-    turns(system, `Write up to ${max} multiple-choice questions from these notes:\n\n${clip(text)}`),
-    { json: true, temperature: 0.4 }
+    turns(system, `Write up to ${max} multiple-choice questions (as json) from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.4, maxTokens: 2000 }
   )
   const parsed = parseJson(out, { quiz: [] })
   // Keep only well-formed 4-option questions with a valid answer index.
@@ -139,20 +170,20 @@ async function taskQuiz({ text, max = 8 }) {
 }
 
 async function taskSummary({ text, max = 4 }) {
-  const system = `You summarise study notes into the ${max} most important points. Each point is one short, self-contained sentence a student can revise from. ${LANG_RULE} Return ONLY JSON of the exact shape {"summary":["point one","point two"]}.`
+  const system = `You summarise study notes into the ${max} most important points. Each point is one short, self-contained sentence a student can revise from. ${LANG_RULE} Return ONLY valid json of the exact shape {"summary":["point one","point two"]}.`
   const out = await callChat(
-    turns(system, `Summarise these notes into up to ${max} key points:\n\n${clip(text)}`),
-    { json: true, temperature: 0.3 }
+    turns(system, `Summarise these notes (as json) into up to ${max} key points:\n\n${clip(text)}`),
+    { json: true, temperature: 0.3, maxTokens: 600 }
   )
   const parsed = parseJson(out, { summary: [] })
   return { summary: (parsed.summary || []).slice(0, max) }
 }
 
 async function taskKeywords({ text, limit = 12 }) {
-  const system = `You extract the most important keywords/terms from study notes. Return single words or short phrases. Mark "technical": true for domain/academic terms, false for everyday words. ${LANG_RULE} Return ONLY JSON of the exact shape {"keywords":[{"word":"...","technical":true}]}.`
+  const system = `You extract the most important keywords/terms from study notes. Return single words or short phrases. Mark "technical": true for domain/academic terms, false for everyday words. ${LANG_RULE} Return ONLY valid json of the exact shape {"keywords":[{"word":"...","technical":true}]}.`
   const out = await callChat(
-    turns(system, `Extract up to ${limit} key terms from these notes:\n\n${clip(text)}`),
-    { json: true, temperature: 0.2 }
+    turns(system, `Extract up to ${limit} key terms (as json) from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.2, maxTokens: 500 }
   )
   const parsed = parseJson(out, { keywords: [] })
   const haystack = String(text || '').toLowerCase()
@@ -166,23 +197,23 @@ async function taskKeywords({ text, limit = 12 }) {
 }
 
 async function taskTitle({ text }) {
-  const system = `You write a short, specific title for a study note based on its content. 3-8 words, descriptive, no surrounding quotes, no trailing punctuation. ${LANG_RULE} Return ONLY JSON of the exact shape {"title":"..."}.`
+  const system = `You write a short, specific title for a study note based on its content. 3-8 words, descriptive, no surrounding quotes, no trailing punctuation. ${LANG_RULE} Return ONLY valid json of the exact shape {"title":"..."}.`
   const out = await callChat(
-    turns(system, `Write a title for this note:\n\n${clip(text)}`),
-    { json: true, temperature: 0.4 }
+    turns(system, `Write a title (as json) for this note:\n\n${clip(text)}`),
+    { json: true, temperature: 0.4, maxTokens: 60 }
   )
   const parsed = parseJson(out, { title: '' })
   return { title: String(parsed.title || '').replace(/^["'\s]+|["'\s.]+$/g, '') }
 }
 
 async function taskAsk({ question, passages = [] }) {
-  const system = `You answer a student's question USING ONLY the provided source passages. Cite the sources you used. If the passages do not contain the answer, say so plainly instead of guessing. ${LANG_RULE} Return ONLY JSON of the exact shape {"answer":"...","citations":[{"source":"...","quote":"..."}]}.`
+  const system = `You answer a student's question USING ONLY the provided source passages. Cite the sources you used. If the passages do not contain the answer, say so plainly instead of guessing. ${LANG_RULE} Return ONLY valid json of the exact shape {"answer":"...","citations":[{"source":"...","quote":"..."}]}.`
   const sources = passages
     .map((p, i) => `[${i + 1}] (${p.source || 'source'}) ${clip(p.text)}`)
     .join('\n\n')
   const out = await callChat(
-    turns(system, `Question: ${question}\n\nSource passages:\n${sources}`),
-    { json: true, temperature: 0.2 }
+    turns(system, `Question: ${question}\n\nAnswer as json using these source passages:\n${sources}`),
+    { json: true, temperature: 0.2, maxTokens: 1000 }
   )
   return parseJson(out, { answer: '', citations: [] })
 }
@@ -200,7 +231,7 @@ async function taskChat({ messages = [], context = '' }) {
         content: String(m.content)
       }))
   ]
-  const text = await callChat(chatMessages, { temperature: 0.6 })
+  const text = await callChat(chatMessages, { temperature: 0.6, maxTokens: 1500 })
   return { text }
 }
 
@@ -217,7 +248,7 @@ const REWRITE_RULES = {
 async function taskRewrite({ text, mode = 'improve' }) {
   const rule = REWRITE_RULES[mode] || REWRITE_RULES.improve
   const system = `You are an editing assistant. ${rule} Output ONLY the resulting text, with no preamble, quotes or commentary. ${LANG_RULE}`
-  const out = await callChat(turns(system, clip(text)), { temperature: 0.5 })
+  const out = await callChat(turns(system, clip(text)), { temperature: 0.5, maxTokens: 2048 })
   return { text: out }
 }
 
