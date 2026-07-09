@@ -118,6 +118,10 @@ export const studyRoomService = {
       config: { presence: { key: user.id }, broadcast: { self: true } }
     })
 
+    // Which voice channel the local user is currently in (null = none). Tracked
+    // in presence so everyone sees who's in each voice channel (Discord-style).
+    let currentVoice = null
+
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState()
       const users = Object.values(state).map((entries) => entries[0])
@@ -132,13 +136,17 @@ export const studyRoomService = {
       handlers.onChat?.(payload)
     })
 
+    const track = () =>
+      channel.track({
+        id: user.id,
+        full_name: user.full_name,
+        online_at: new Date().toISOString(),
+        voice: currentVoice
+      })
+
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.track({
-          id: user.id,
-          full_name: user.full_name,
-          online_at: new Date().toISOString()
-        })
+        await track()
         // Announce arrival so others see a live activity line.
         handlers.onActivity && channel.send({
           type: 'broadcast',
@@ -161,17 +169,23 @@ export const studyRoomService = {
           }
         })
       },
-      sendChat(text) {
+      sendChat(text, channelId = 'general') {
         channel.send({
           type: 'broadcast',
           event: 'chat',
           payload: {
             userId: user.id,
             fullName: user.full_name,
+            channel: channelId,
             text,
             at: new Date().toISOString()
           }
         })
+      },
+      /** Join/leave a voice channel (updates presence for everyone). */
+      setVoice(voiceId) {
+        currentVoice = voiceId
+        track()
       },
       leave() {
         supabase.removeChannel(channel)
@@ -182,46 +196,42 @@ export const studyRoomService = {
 
 /** Simulated room channel for demo mode. */
 function createDemoRoomChannel({ user, handlers }) {
+  // Two peers already hanging out — one in the Study Hall voice channel.
   const peers = [
-    { id: user.id, full_name: user.full_name },
-    { id: 'user-2', full_name: 'Linh Nguyen' },
-    { id: 'user-3', full_name: 'Minh Tran' }
+    { id: user.id, full_name: user.full_name, voice: null },
+    { id: 'user-2', full_name: 'Linh Nguyen', voice: 'voice-study' },
+    { id: 'user-3', full_name: 'Minh Tran', voice: null }
   ]
+  const me = peers[0]
+  const emitPresence = () => handlers.onPresenceChange?.(peers.map((p) => ({ ...p })))
 
-  const presenceTimer = setTimeout(() => handlers.onPresenceChange?.(peers), 500)
+  const presenceTimer = setTimeout(emitPresence, 400)
 
-  // Seed a little chat history so the panel isn't empty on entry.
+  // Seed a little chat history across a couple of channels.
   const chatTimer = setTimeout(() => {
-    handlers.onChat?.({ userId: 'user-2', fullName: 'Linh Nguyen', text: 'Hey! Ready to review chapter 4?', at: new Date().toISOString() })
-    handlers.onChat?.({ userId: 'user-3', fullName: 'Minh Tran', text: 'Yep, sharing my notes now 📒', at: new Date().toISOString() })
-  }, 800)
+    handlers.onChat?.({ userId: 'user-2', fullName: 'Linh Nguyen', channel: 'general', text: 'Hey! Ready to review chapter 4?', at: new Date().toISOString() })
+    handlers.onChat?.({ userId: 'user-3', fullName: 'Minh Tran', channel: 'general', text: 'Yep, sharing my notes now 📒', at: new Date().toISOString() })
+    handlers.onChat?.({ userId: 'user-2', fullName: 'Linh Nguyen', channel: 'questions', text: 'Can someone explain question 3?', at: new Date().toISOString() })
+  }, 700)
 
-  const messages = [
-    'added a new note',
-    'started a quiz',
-    'reviewed 12 flashcards',
-    'shared a document'
-  ]
+  const messages = ['added a new note', 'started a quiz', 'reviewed 12 flashcards', 'shared a document']
   let i = 0
   const activityTimer = setInterval(() => {
     const peer = peers[1 + (i % 2)]
-    handlers.onActivity?.({
-      userId: peer.id,
-      fullName: peer.full_name,
-      message: messages[i % messages.length],
-      at: new Date().toISOString()
-    })
+    handlers.onActivity?.({ userId: peer.id, fullName: peer.full_name, message: messages[i % messages.length], at: new Date().toISOString() })
     i++
   }, 5000)
 
   return {
     sendActivity(activity) {
-      // Echo the local user's own activity so they see their action land.
       handlers.onActivity?.({ userId: user.id, fullName: user.full_name, ...activity, at: new Date().toISOString() })
     },
-    sendChat(text) {
-      // Echo locally (demo has no server to bounce it back).
-      handlers.onChat?.({ userId: user.id, fullName: user.full_name, text, at: new Date().toISOString() })
+    sendChat(text, channelId = 'general') {
+      handlers.onChat?.({ userId: user.id, fullName: user.full_name, channel: channelId, text, at: new Date().toISOString() })
+    },
+    setVoice(voiceId) {
+      me.voice = voiceId
+      emitPresence()
     },
     leave() {
       clearTimeout(presenceTimer)

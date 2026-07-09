@@ -311,7 +311,14 @@ export default {
     subjectLabel: 'Subject (optional)',
     noSubject: 'General — no subject',
     emptyTitle: 'No study rooms yet',
-    emptySub: 'Create a room to study, chat and hang out with classmates in real time.'
+    emptySub: 'Create a room to study, chat and hang out with classmates in real time.',
+    textChannels: 'Text channels',
+    voiceChannels: 'Voice channels',
+    members: 'Members — {n}',
+    voiceConnected: 'Voice connected',
+    disconnect: 'Disconnect',
+    channelEmpty: 'This is the start of #{channel}. Say hello!',
+    messageChannel: 'Message #{channel}'
   },
 
   schedule: {

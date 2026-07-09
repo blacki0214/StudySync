@@ -17,8 +17,18 @@ export const useStudyRoomStore = defineStore('studyRooms', {
     activeRoom: null,
     onlineUsers: [],
     activityFeed: [], // newest first
-    messages: [] // group chat, oldest first
+    messages: [], // group chat, oldest first (each has a `channel`)
+    myVoice: null // voice channel id the current user has joined, or null
   }),
+
+  getters: {
+    /** Messages in one text channel, oldest first. */
+    channelMessages: (state) => (channelId) =>
+      state.messages.filter((m) => (m.channel || 'general') === channelId),
+    /** Online users currently in a given voice channel. */
+    voiceMembers: (state) => (voiceId) =>
+      state.onlineUsers.filter((u) => u.voice === voiceId)
+  },
 
   actions: {
     async fetchRooms() {
@@ -38,6 +48,7 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       this.activeRoom = await studyRoomService.getRoom(id)
       this.activityFeed = []
       this.messages = []
+      this.myVoice = null
 
       roomChannel = studyRoomService.joinRoom({
         roomId: id,
@@ -63,10 +74,16 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       roomChannel?.sendActivity({ message })
     },
 
-    /** Send a group-chat message to everyone in the room. */
-    sendChat(text) {
+    /** Send a message to a specific text channel. */
+    sendChat(text, channelId = 'general') {
       const clean = String(text || '').trim()
-      if (clean) roomChannel?.sendChat(clean)
+      if (clean) roomChannel?.sendChat(clean, channelId)
+    },
+
+    /** Join a voice channel (or leave, with null). Broadcasts via presence. */
+    setVoice(voiceId) {
+      this.myVoice = voiceId
+      roomChannel?.setVoice(voiceId)
     },
 
     leaveRoom() {
@@ -76,6 +93,7 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       this.onlineUsers = []
       this.activityFeed = []
       this.messages = []
+      this.myVoice = null
     }
   }
 })

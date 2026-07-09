@@ -310,7 +310,14 @@ export default {
     subjectLabel: 'Môn học (tuỳ chọn)',
     noSubject: 'Chung — không theo môn',
     emptyTitle: 'Chưa có phòng học nào',
-    emptySub: 'Tạo một phòng để học, trò chuyện và giao lưu với bạn học theo thời gian thực.'
+    emptySub: 'Tạo một phòng để học, trò chuyện và giao lưu với bạn học theo thời gian thực.',
+    textChannels: 'Kênh chat',
+    voiceChannels: 'Kênh thoại',
+    members: 'Thành viên — {n}',
+    voiceConnected: 'Đã kết nối thoại',
+    disconnect: 'Ngắt kết nối',
+    channelEmpty: 'Đây là khởi đầu của #{channel}. Chào mọi người nào!',
+    messageChannel: 'Nhắn vào #{channel}'
   },
 
   schedule: {
