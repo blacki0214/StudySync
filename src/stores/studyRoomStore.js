@@ -30,9 +30,25 @@ export const useStudyRoomStore = defineStore('studyRooms', {
     /** Messages in one text channel, oldest first. */
     channelMessages: (state) => (channelId) =>
       state.messages.filter((m) => (m.channel || 'general') === channelId),
-    /** Online users currently in a given voice channel. */
-    voiceMembers: (state) => (voiceId) =>
-      state.onlineUsers.filter((u) => u.voice === voiceId),
+    /**
+     * Online users currently in a given voice channel. Remote members come from
+     * presence; the LOCAL user is included from `myVoice` (the source of truth
+     * for us) so our own tile appears instantly without waiting on a presence
+     * round-trip.
+     */
+    voiceMembers: (state) => (voiceId) => {
+      const auth = useAuthStore()
+      const meId = auth.user?.id || 'anon'
+      const others = state.onlineUsers.filter((u) => u.voice === voiceId && u.id !== meId)
+      if (state.myVoice === voiceId) {
+        const meEntry = state.onlineUsers.find((u) => u.id === meId) || {}
+        return [
+          { id: meId, full_name: auth.user?.full_name || 'You', avatar: auth.user?.avatar_url || null, ...meEntry, voice: voiceId },
+          ...others
+        ]
+      }
+      return others
+    },
     textChannels: (state) => state.channels.filter((c) => c.kind === 'text'),
     voiceChannels: (state) => state.channels.filter((c) => c.kind === 'voice')
   },

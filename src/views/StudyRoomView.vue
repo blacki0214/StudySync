@@ -242,7 +242,7 @@ function clock(isoStr) {
       <div v-for="m in online" :key="m.id" class="dc-member">
         <span class="dc-mem-av">{{ initials(m.full_name) }}<span class="dc-presence"></span></span>
         <span class="dc-mem-name">{{ m.full_name }}<template v-if="m.id === meId"> ({{ t('rooms.you') }})</template></span>
-        <i v-if="m.voice" class="bi bi-volume-up-fill dc-mem-voice" :title="t('rooms.voiceChannels')"></i>
+        <i v-if="m.id === meId ? myVoice : m.voice" class="bi bi-volume-up-fill dc-mem-voice" :title="t('rooms.voiceChannels')"></i>
       </div>
     </aside>
   </div>
