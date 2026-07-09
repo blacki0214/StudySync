@@ -1,16 +1,17 @@
 /**
  * aiService.js — the single interface every component/store uses for AI.
  * ----------------------------------------------------------------------------
- * Gemini API is PRIMARY; the offline rule-based engine in src/manual-ai is the
- * FALLBACK. Every generative method tries Gemini first (when enabled) and, on
- * any failure or when AI is disabled, returns the manual-ai result instead — so
- * the app always produces something.
+ * The AI proxy (/api/ai → an OpenAI-compatible provider) is PRIMARY; the offline
+ * rule-based engine in src/manual-ai is the FALLBACK. Every generative method
+ * tries the proxy first (when enabled) and, on any failure or when AI is
+ * disabled, returns the manual-ai result instead — so the app always produces
+ * something.
  *
- *   VITE_AI_ENABLED === 'true'  → Gemini via /api/ai, falling back to manual-ai.
+ *   VITE_AI_ENABLED === 'true'  → provider via /api/ai, falling back to manual-ai.
  *   otherwise                   → manual-ai only.
  *
- * The Gemini KEY lives only in the Vercel function, never here.
- * chat() and rewrite() have NO manual equivalent, so they require Gemini and
+ * The API KEY lives only in the Vercel function, never here.
+ * chat() and rewrite() have NO manual equivalent, so they require the proxy and
  * throw when it's unavailable — guard their UI with isAiConfigured.
  */
 
@@ -23,7 +24,7 @@ export const isAiConfigured = import.meta.env.VITE_AI_ENABLED === 'true'
 /** Throw early (with a clear message) when AI isn't enabled. For chat/rewrite. */
 function ensureAi() {
   if (!isAiConfigured) {
-    throw new Error('AI is disabled. Set VITE_AI_ENABLED=true and configure GEMINI_API_KEY.')
+    throw new Error('AI is disabled. Set VITE_AI_ENABLED=true and configure AI_API_KEY.')
   }
 }
 

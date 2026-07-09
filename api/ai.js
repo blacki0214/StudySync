@@ -1,79 +1,88 @@
 /**
- * api/ai.js — Vercel Serverless Function (the Gemini proxy).
+ * api/ai.js — Vercel Serverless Function (the AI proxy).
  * ----------------------------------------------------------------------------
- * The browser must NEVER see the Gemini key (anything in the Vite bundle is
+ * The browser must NEVER see the API key (anything in the Vite bundle is
  * public), so all model calls go through this server-side endpoint. The key
- * lives in the Vercel env var GEMINI_API_KEY and never leaves the server.
+ * lives in the Vercel env var AI_API_KEY and never leaves the server.
  *
- *   Browser (src/services/aiService.js)  ──POST {task, payload}──►  this fn  ──►  Gemini
+ *   Browser (src/services/aiService.js)  ──POST {task, payload}──►  this fn  ──►  provider
+ *
+ * Provider: an OpenAI-compatible chat-completions endpoint (default ShopAIKey,
+ * https://api.shopaikey.com/v1). Any OpenAI-compatible gateway works — just set
+ * AI_BASE_URL, AI_MODEL and AI_API_KEY. This keeps the frontend contract
+ * unchanged: the same {task, payload} in, the same typed JSON out, so
+ * aiService, manual-ai and the offline T5 fallback need no changes.
  *
  * Tasks: flashcards | quiz | summary | keywords | ask | chat | rewrite.
- * Structured tasks use Gemini's JSON mode (responseSchema) so the frontend
- * receives typed objects that match the existing manual-util shapes exactly.
+ * Structured tasks use JSON mode (response_format) plus an explicit shape in
+ * the prompt, so the frontend receives typed objects that match the existing
+ * manual-util shapes exactly.
  *
  * Optional auth: if SUPABASE_URL + SUPABASE_ANON_KEY are set in the Vercel env,
  * the caller's Supabase access token is verified, so only logged-in users can
- * spend your Gemini quota. If they aren't set, the endpoint stays open (demo).
+ * spend your credit. If they aren't set, the endpoint stays open (demo).
  *
  * Local dev: plain `vite` does NOT run this file. Use `vercel dev` to exercise
  * the AI features locally; otherwise aiService falls back to the manual utils.
  */
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
-const ENDPOINT = (model) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+const BASE_URL = (process.env.AI_BASE_URL || 'https://api.shopaikey.com/v1').replace(/\/+$/, '')
+const MODEL = process.env.AI_MODEL || 'gpt-4o-mini'
+const API_KEY = process.env.AI_API_KEY || process.env.SHOPAIKEY_API_KEY
 
 // Keep prompts (and cost) bounded — notes can be huge.
 const MAX_INPUT_CHARS = 12000
 const clip = (s) => String(s || '').slice(0, MAX_INPUT_CHARS)
 
 // ---------------------------------------------------------------------------
-// Gemini call
+// Chat-completions call (OpenAI-compatible)
 // ---------------------------------------------------------------------------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-async function callGemini(contents, { system, schema, temperature = 0.4 } = {}) {
-  const key = process.env.GEMINI_API_KEY
-  const body = { contents, generationConfig: { temperature } }
-  if (system) body.systemInstruction = { parts: [{ text: system }] }
-  if (schema) {
-    body.generationConfig.responseMimeType = 'application/json'
-    body.generationConfig.responseSchema = schema
-  }
+/**
+ * @param {Array<{role:'system'|'user'|'assistant', content:string}>} messages
+ * @param {{ json?: boolean, temperature?: number }} opts
+ * @returns {Promise<string>} the assistant message content
+ */
+async function callChat(messages, { json = false, temperature = 0.4 } = {}) {
+  const body = { model: MODEL, messages, temperature }
+  if (json) body.response_format = { type: 'json_object' }
 
-  // Retry transient failures (429 rate-limit, 500/503 overloaded) with backoff.
+  // Retry transient server overload (500/503) with backoff. A 429 here is a
+  // rate-limit or depleted quota that won't clear within an interactive
+  // request — fail fast so the client falls back to the offline model instead
+  // of hanging (and risking a Vercel function timeout).
   let lastDetail = ''
   let lastStatus = 0
   for (let attempt = 0; attempt < 4; attempt++) {
-    const resp = await fetch(`${ENDPOINT(MODEL)}?key=${key}`, {
+    const resp = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${API_KEY}`
+      },
       body: JSON.stringify(body)
     })
     if (resp.ok) {
       const data = await resp.json()
-      return (data?.candidates?.[0]?.content?.parts || [])
-        .map((p) => p.text || '')
-        .join('')
-        .trim()
+      return String(data?.choices?.[0]?.message?.content || '').trim()
     }
     lastStatus = resp.status
     lastDetail = await resp.text().catch(() => '')
-    // Retry only server-side overload (500/503). A 429 here is a rate-limit or a
-    // depleted quota, which won't clear within an interactive request — fail fast
-    // so the client falls back to the local model instead of hanging on retries
-    // (and risking a Vercel function timeout).
     const transient = resp.status === 500 || resp.status === 503
     if (!transient || attempt === 3) break
     await sleep(600 * Math.pow(2, attempt)) // 0.6s, 1.2s, 2.4s
   }
-  const err = new Error(`Gemini ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
+  const err = new Error(`AI ${lastStatus} (model ${MODEL}): ${lastDetail.slice(0, 400)}`)
   err.status = lastStatus
   throw err
 }
 
-// Wrap a plain user string as a Gemini `contents` array.
-const userTurn = (text) => [{ role: 'user', parts: [{ text }] }]
+// Build a system+user message pair (the common case).
+const turns = (system, user) => [
+  { role: 'system', content: system },
+  { role: 'user', content: user }
+]
 
 // Parse a JSON response defensively (model occasionally wraps it in prose).
 function parseJson(text, fallback) {
@@ -94,107 +103,26 @@ function parseJson(text, fallback) {
 }
 
 // ---------------------------------------------------------------------------
-// JSON schemas (uppercase types per Gemini's OpenAPI subset)
-// ---------------------------------------------------------------------------
-const flashcardsSchema = {
-  type: 'OBJECT',
-  properties: {
-    flashcards: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: { question: { type: 'STRING' }, answer: { type: 'STRING' } },
-        required: ['question', 'answer']
-      }
-    }
-  },
-  required: ['flashcards']
-}
-
-const quizSchema = {
-  type: 'OBJECT',
-  properties: {
-    quiz: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          question: { type: 'STRING' },
-          options: { type: 'ARRAY', items: { type: 'STRING' } },
-          correctAnswer: { type: 'INTEGER' }, // 0-based index into options
-          explanation: { type: 'STRING' } // why the correct option is right
-        },
-        required: ['question', 'options', 'correctAnswer', 'explanation']
-      }
-    }
-  },
-  required: ['quiz']
-}
-
-const summarySchema = {
-  type: 'OBJECT',
-  properties: { summary: { type: 'ARRAY', items: { type: 'STRING' } } },
-  required: ['summary']
-}
-
-const keywordsSchema = {
-  type: 'OBJECT',
-  properties: {
-    keywords: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: { word: { type: 'STRING' }, technical: { type: 'BOOLEAN' } },
-        required: ['word']
-      }
-    }
-  },
-  required: ['keywords']
-}
-
-const titleSchema = {
-  type: 'OBJECT',
-  properties: { title: { type: 'STRING' } },
-  required: ['title']
-}
-
-const askSchema = {
-  type: 'OBJECT',
-  properties: {
-    answer: { type: 'STRING' },
-    citations: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: { source: { type: 'STRING' }, quote: { type: 'STRING' } },
-        required: ['source']
-      }
-    }
-  },
-  required: ['answer']
-}
-
-// ---------------------------------------------------------------------------
 // Tasks
 // ---------------------------------------------------------------------------
 const LANG_RULE =
   'Always answer in the SAME language as the study material (English or Vietnamese). Do not invent facts that are not supported by the material.'
 
 async function taskFlashcards({ text, max = 12 }) {
-  const system = `You are a study assistant that writes high-quality flashcards from a student's notes. Each card tests ONE fact: a clear, specific question and a concise answer (a phrase or single sentence). Avoid yes/no questions and duplicates. ${LANG_RULE}`
-  const out = await callGemini(
-    userTurn(`Create up to ${max} flashcards from these notes:\n\n${clip(text)}`),
-    { system, schema: flashcardsSchema, temperature: 0.3 }
+  const system = `You are a study assistant that writes high-quality flashcards from a student's notes. Each card tests ONE fact: a clear, specific question and a concise answer (a phrase or single sentence). Avoid yes/no questions and duplicates. ${LANG_RULE} Return ONLY JSON of the exact shape {"flashcards":[{"question":"...","answer":"..."}]}.`
+  const out = await callChat(
+    turns(system, `Create up to ${max} flashcards from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.3 }
   )
   const parsed = parseJson(out, { flashcards: [] })
   return { flashcards: (parsed.flashcards || []).slice(0, max) }
 }
 
 async function taskQuiz({ text, max = 8 }) {
-  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. "explanation" is one or two sentences saying why the correct option is right (and, if helpful, why a tempting wrong one is not). ${LANG_RULE}`
-  const out = await callGemini(
-    userTurn(`Write up to ${max} multiple-choice questions from these notes:\n\n${clip(text)}`),
-    { system, schema: quizSchema, temperature: 0.4 }
+  const system = `You are a study assistant that writes multiple-choice quiz questions from a student's notes. Each question has EXACTLY 4 options, exactly one correct. Distractors must be plausible and drawn from the same topic. "correctAnswer" is the 0-based index of the correct option. "explanation" is one or two sentences saying why the correct option is right (and, if helpful, why a tempting wrong one is not). ${LANG_RULE} Return ONLY JSON of the exact shape {"quiz":[{"question":"...","options":["a","b","c","d"],"correctAnswer":0,"explanation":"..."}]}.`
+  const out = await callChat(
+    turns(system, `Write up to ${max} multiple-choice questions from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.4 }
   )
   const parsed = parseJson(out, { quiz: [] })
   // Keep only well-formed 4-option questions with a valid answer index.
@@ -211,20 +139,20 @@ async function taskQuiz({ text, max = 8 }) {
 }
 
 async function taskSummary({ text, max = 4 }) {
-  const system = `You summarise study notes into the ${max} most important points. Each point is one short, self-contained sentence a student can revise from. ${LANG_RULE}`
-  const out = await callGemini(
-    userTurn(`Summarise these notes into up to ${max} key points:\n\n${clip(text)}`),
-    { system, schema: summarySchema, temperature: 0.3 }
+  const system = `You summarise study notes into the ${max} most important points. Each point is one short, self-contained sentence a student can revise from. ${LANG_RULE} Return ONLY JSON of the exact shape {"summary":["point one","point two"]}.`
+  const out = await callChat(
+    turns(system, `Summarise these notes into up to ${max} key points:\n\n${clip(text)}`),
+    { json: true, temperature: 0.3 }
   )
   const parsed = parseJson(out, { summary: [] })
   return { summary: (parsed.summary || []).slice(0, max) }
 }
 
 async function taskKeywords({ text, limit = 12 }) {
-  const system = `You extract the most important keywords/terms from study notes. Return single words or short phrases. Mark "technical": true for domain/academic terms, false for everyday words. ${LANG_RULE}`
-  const out = await callGemini(
-    userTurn(`Extract up to ${limit} key terms from these notes:\n\n${clip(text)}`),
-    { system, schema: keywordsSchema, temperature: 0.2 }
+  const system = `You extract the most important keywords/terms from study notes. Return single words or short phrases. Mark "technical": true for domain/academic terms, false for everyday words. ${LANG_RULE} Return ONLY JSON of the exact shape {"keywords":[{"word":"...","technical":true}]}.`
+  const out = await callChat(
+    turns(system, `Extract up to ${limit} key terms from these notes:\n\n${clip(text)}`),
+    { json: true, temperature: 0.2 }
   )
   const parsed = parseJson(out, { keywords: [] })
   const haystack = String(text || '').toLowerCase()
@@ -238,23 +166,23 @@ async function taskKeywords({ text, limit = 12 }) {
 }
 
 async function taskTitle({ text }) {
-  const system = `You write a short, specific title for a study note based on its content. 3-8 words, descriptive, no surrounding quotes, no trailing punctuation. ${LANG_RULE}`
-  const out = await callGemini(
-    userTurn(`Write a title for this note:\n\n${clip(text)}`),
-    { system, schema: titleSchema, temperature: 0.4 }
+  const system = `You write a short, specific title for a study note based on its content. 3-8 words, descriptive, no surrounding quotes, no trailing punctuation. ${LANG_RULE} Return ONLY JSON of the exact shape {"title":"..."}.`
+  const out = await callChat(
+    turns(system, `Write a title for this note:\n\n${clip(text)}`),
+    { json: true, temperature: 0.4 }
   )
   const parsed = parseJson(out, { title: '' })
   return { title: String(parsed.title || '').replace(/^["'\s]+|["'\s.]+$/g, '') }
 }
 
 async function taskAsk({ question, passages = [] }) {
-  const system = `You answer a student's question USING ONLY the provided source passages. Cite the sources you used. If the passages do not contain the answer, say so plainly instead of guessing. ${LANG_RULE}`
+  const system = `You answer a student's question USING ONLY the provided source passages. Cite the sources you used. If the passages do not contain the answer, say so plainly instead of guessing. ${LANG_RULE} Return ONLY JSON of the exact shape {"answer":"...","citations":[{"source":"...","quote":"..."}]}.`
   const sources = passages
     .map((p, i) => `[${i + 1}] (${p.source || 'source'}) ${clip(p.text)}`)
     .join('\n\n')
-  const out = await callGemini(
-    userTurn(`Question: ${question}\n\nSource passages:\n${sources}`),
-    { system, schema: askSchema, temperature: 0.2 }
+  const out = await callChat(
+    turns(system, `Question: ${question}\n\nSource passages:\n${sources}`),
+    { json: true, temperature: 0.2 }
   )
   return parseJson(out, { answer: '', citations: [] })
 }
@@ -263,13 +191,16 @@ async function taskChat({ messages = [], context = '' }) {
   const system =
     `You are StudySync's study tutor: friendly, accurate and concise. Explain clearly, use examples, and prefer short paragraphs or bullet points. ${LANG_RULE}` +
     (context ? `\n\nThe student is working on this note:\n${clip(context)}` : '')
-  const contents = messages
-    .filter((m) => m && m.content)
-    .map((m) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: String(m.content) }]
-    }))
-  const text = await callGemini(contents, { system, temperature: 0.6 })
+  const chatMessages = [
+    { role: 'system', content: system },
+    ...messages
+      .filter((m) => m && m.content)
+      .map((m) => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: String(m.content)
+      }))
+  ]
+  const text = await callChat(chatMessages, { temperature: 0.6 })
   return { text }
 }
 
@@ -286,7 +217,7 @@ const REWRITE_RULES = {
 async function taskRewrite({ text, mode = 'improve' }) {
   const rule = REWRITE_RULES[mode] || REWRITE_RULES.improve
   const system = `You are an editing assistant. ${rule} Output ONLY the resulting text, with no preamble, quotes or commentary. ${LANG_RULE}`
-  const out = await callGemini(userTurn(clip(text)), { system, temperature: 0.5 })
+  const out = await callChat(turns(system, clip(text)), { temperature: 0.5 })
   return { text: out }
 }
 
@@ -317,7 +248,7 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST')
     return res.status(405).json({ error: 'Method not allowed' })
   }
-  if (!process.env.GEMINI_API_KEY) {
+  if (!API_KEY) {
     return res.status(503).json({ error: 'AI not configured' })
   }
   if (!(await isAuthorized(req))) {
