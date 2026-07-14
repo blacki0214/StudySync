@@ -30,7 +30,7 @@ const links = [
   { to: '/hub', icon: 'bi-house', key: 'nav.hub' },
   { to: '/my-subjects', icon: 'bi-folder', key: 'nav.mySubjects' },
   { to: '/subjects', icon: 'bi-journal-bookmark', key: 'nav.subjects' },
-  { to: '/notes', icon: 'bi-file-earmark-text', key: 'nav.collabNotes', badge: 'live', badgeType: 'live' },
+  { to: '/notes', icon: 'bi-file-earmark-text', key: 'nav.collabNotes' },
   { to: '/tasks', icon: 'bi-check2-square', key: 'nav.tasks' },
   { to: '/schedule', icon: 'bi-calendar-week', key: 'nav.schedule' },
   { to: '/rooms', icon: 'bi-people', key: 'nav.studyRooms' },

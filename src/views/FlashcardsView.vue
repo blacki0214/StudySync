@@ -280,7 +280,7 @@ onMounted(async () => {
         </div>
       </div>
       <div class="col-12 col-xl-4">
-        <KeywordExtractor v-if="noteForGen" :content="noteForGen.content" />
+        <KeywordExtractor v-if="noteForGen" :content="noteForGen.content" :cache-key="`note:${noteForGen.id}`" />
       </div>
     </div>
   </div>

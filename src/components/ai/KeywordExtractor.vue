@@ -6,11 +6,17 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { extractKeywords } from '../../services/aiService.js'
+import { cachedGenerate } from '../../services/studySetCacheService.js'
+import { useAuthStore } from '../../stores/authStore.js'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 const props = defineProps({
   content: { type: String, default: '' },
-  limit: { type: Number, default: 12 }
+  limit: { type: Number, default: 12 },
+  // When set (e.g. `note:<id>`), key terms are cached per user and reused
+  // instead of costing an AI call on every open. Empty string disables caching.
+  cacheKey: { type: String, default: '' }
 })
 
 const keywords = ref([])
@@ -22,7 +28,15 @@ async function run() {
   if (!props.content) { keywords.value = []; return }
   loading.value = true
   try {
-    keywords.value = await extractKeywords(props.content, { limit: props.limit })
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id,
+      kind: 'keywords',
+      sourceKey: props.cacheKey,
+      content: props.content,
+      options: { limit: props.limit },
+      generator: (c, o) => extractKeywords(c, o)
+    })
+    keywords.value = data || []
   } catch {
     failed.value = true
     keywords.value = []

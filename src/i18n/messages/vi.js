@@ -7,7 +7,7 @@ export default {
     dashboard: 'Tổng quan',
     subjects: 'Môn học',
     mySubjects: 'Môn của tôi',
-    collabNotes: 'Ghi chú nhóm',
+    collabNotes: 'Ghi chú',
     tasks: 'Nhiệm vụ',
     schedule: 'Lịch',
     studyRooms: 'Phòng học',

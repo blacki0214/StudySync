@@ -6,11 +6,17 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { summarize } from '../../services/aiService.js'
+import { cachedGenerate } from '../../services/studySetCacheService.js'
+import { useAuthStore } from '../../stores/authStore.js'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 const props = defineProps({
   content: { type: String, default: '' },
-  maxSentences: { type: Number, default: 4 }
+  maxSentences: { type: Number, default: 4 },
+  // When set (e.g. `note:<id>`), the summary is cached per user and reused
+  // instead of costing an AI call on every open. Empty string disables caching.
+  cacheKey: { type: String, default: '' }
 })
 
 const summary = ref([])
@@ -22,7 +28,15 @@ async function run() {
   if (!props.content) { summary.value = []; return }
   loading.value = true
   try {
-    summary.value = await summarize(props.content, { max: props.maxSentences })
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id,
+      kind: 'summary',
+      sourceKey: props.cacheKey,
+      content: props.content,
+      options: { max: props.maxSentences },
+      generator: (c, o) => summarize(c, o)
+    })
+    summary.value = data || []
   } catch {
     failed.value = true
     summary.value = []

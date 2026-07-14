@@ -7,7 +7,7 @@ export default {
     dashboard: 'Dashboard',
     subjects: 'Subjects',
     mySubjects: 'My Subjects',
-    collabNotes: 'Collab Notes',
+    collabNotes: 'Notes',
     tasks: 'Tasks',
     schedule: 'Schedule',
     studyRooms: 'Study Rooms',
