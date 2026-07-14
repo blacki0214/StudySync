@@ -175,6 +175,10 @@
 .app-select-option.active { background: var(--c-primary-light); color: var(--c-primary-dark); }
 .app-select-option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app-select-check { color: var(--c-primary); font-size: 0.95rem; flex-shrink: 0; }
+.app-select-group {
+  padding: 0.4rem 0.65rem 0.15rem; font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--c-text-faint);
+}
 
 /* Bootstrap modal (create-note dialog, etc.) — theme its surface so it isn't a
    white box in dark mode. */

@@ -81,20 +81,24 @@ onUnmounted(() => document.removeEventListener('click', onDocClick))
     </button>
 
     <ul v-if="open" class="app-select-menu" role="listbox">
-      <li v-for="(o, i) in options" :key="String(i)">
-        <button
-          type="button"
-          class="app-select-option"
-          :class="{ active: o.value === modelValue, highlight: i === activeIndex }"
-          role="option"
-          :aria-selected="o.value === modelValue"
-          @click="choose(o)"
-          @mouseenter="activeIndex = i"
-        >
-          <span class="app-select-option-label">{{ o.label }}</span>
-          <i v-if="o.value === modelValue" class="bi bi-check2 app-select-check"></i>
-        </button>
-      </li>
+      <template v-for="(o, i) in options" :key="String(i)">
+        <!-- Group header, shown once when the group changes (optional). -->
+        <li v-if="o.group && (i === 0 || options[i - 1].group !== o.group)" class="app-select-group" role="presentation">{{ o.group }}</li>
+        <li>
+          <button
+            type="button"
+            class="app-select-option"
+            :class="{ active: o.value === modelValue, highlight: i === activeIndex }"
+            role="option"
+            :aria-selected="o.value === modelValue"
+            @click="choose(o)"
+            @mouseenter="activeIndex = i"
+          >
+            <span class="app-select-option-label">{{ o.label }}</span>
+            <i v-if="o.value === modelValue" class="bi bi-check2 app-select-check"></i>
+          </button>
+        </li>
+      </template>
     </ul>
   </div>
 </template>

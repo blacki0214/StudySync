@@ -5,11 +5,12 @@
  * has assignments and a gradebook. Anyone can spin one up and others can join.
  * Layout uses row/col grid; styling is semantic classes in styles/study-room.css.
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useContentStore } from '../stores/contentStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
+import AppSelect from '../components/common/AppSelect.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -21,6 +22,11 @@ onMounted(() => content.ensureLoaded())
 function subjectCode(id) {
   return content.subjectById(id)?.code || 'General'
 }
+
+const subjectOptions = computed(() => [
+  { value: '', label: t('rooms.noSubject') },
+  ...content.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+])
 
 // --- Create room ---
 const showCreate = ref(false)
@@ -127,10 +133,7 @@ async function submitCreate() {
           <textarea v-model="form.description" class="rm-input" rows="2" :placeholder="t('rooms.descPlaceholder')"></textarea>
 
           <label class="rm-label">{{ t('rooms.subjectLabel') }}</label>
-          <select v-model="form.subjectId" class="rm-input">
-            <option value="">{{ t('rooms.noSubject') }}</option>
-            <option v-for="s in content.subjects" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option>
-          </select>
+          <AppSelect v-model="form.subjectId" :options="subjectOptions" :aria-label="t('rooms.subjectLabel')" />
         </div>
         <div class="rm-foot">
           <button class="btn btn-outline-soft" @click="showCreate = false">{{ t('common.cancel') }}</button>

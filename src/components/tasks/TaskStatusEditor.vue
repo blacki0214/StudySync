@@ -5,9 +5,10 @@
  * / reorder statuses within the four lifecycle groups, save the set as a new
  * template, and apply it to the board.
  */
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialogStore } from '../../stores/dialogStore.js'
+import AppSelect from '../common/AppSelect.vue'
 import {
   STATUS_GROUPS, STATUS_COLORS, BUILTIN_TEMPLATES, clone, statusIdFrom
 } from '../../utils/taskStatusTemplates.js'
@@ -31,6 +32,12 @@ const templateOptions = [
   ...BUILTIN_TEMPLATES.map((tpl) => ({ value: tpl.key, label: tpl.name, statuses: tpl.statuses })),
   ...props.templates.map((tpl) => ({ value: tpl.id, label: tpl.name, statuses: tpl.statuses }))
 ]
+// Grouped options for the themed AppSelect (headers via the `group` field).
+const templateSelectOptions = computed(() => [
+  ...BUILTIN_TEMPLATES.map((tpl) => ({ value: tpl.key, label: tpl.name, group: t('tasks.builtinTemplates') })),
+  ...props.templates.map((tpl) => ({ value: tpl.id, label: tpl.name, group: t('tasks.myTemplates') })),
+  { value: 'custom', label: t('tasks.customStatuses') }
+])
 
 function loadTemplate(key) {
   chosenTemplate.value = key
@@ -95,15 +102,7 @@ async function saveAsTemplate() {
           <!-- Template picker -->
           <div class="tse-template">
             <label class="tse-label">{{ t('tasks.statusTemplate') }}</label>
-            <select class="form-control" :value="chosenTemplate" @change="loadTemplate($event.target.value)">
-              <optgroup :label="t('tasks.builtinTemplates')">
-                <option v-for="tpl in BUILTIN_TEMPLATES" :key="tpl.key" :value="tpl.key">{{ tpl.name }}</option>
-              </optgroup>
-              <optgroup v-if="templates.length" :label="t('tasks.myTemplates')">
-                <option v-for="tpl in templates" :key="tpl.id" :value="tpl.id">{{ tpl.name }}</option>
-              </optgroup>
-              <option value="custom">{{ t('tasks.customStatuses') }}</option>
-            </select>
+            <AppSelect :model-value="chosenTemplate" :options="templateSelectOptions" :aria-label="t('tasks.statusTemplate')" @update:model-value="loadTemplate" />
           </div>
 
           <!-- Groups -->

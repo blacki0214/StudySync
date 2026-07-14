@@ -111,7 +111,7 @@ function stop(e) { e.stopPropagation() }
       </div>
       <label class="dg-size">
         <span>{{ t('editor.dataGridPerPage') }}</span>
-        <select v-model.number="pageSize" @mousedown="stop">
+        <select v-model.number="pageSize" class="form-select form-select-sm" @mousedown="stop">
           <option v-for="s in sizeOptions" :key="s" :value="s">{{ s }}</option>
         </select>
       </label>
