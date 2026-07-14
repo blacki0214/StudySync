@@ -21,6 +21,7 @@
 
 import { defineStore } from 'pinia'
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
+import { useAuthStore } from './authStore.js'
 import { deckService } from '../services/deckService.js'
 import { communityService } from '../services/communityService.js'
 import { studyRoomService } from '../services/studyRoomService.js'
@@ -178,6 +179,11 @@ export const useContentStore = defineStore('content', {
 
     /** LIVE MODE — everything comes from Supabase. No sample data is touched. */
     async _loadFromDb() {
+      // Notes are per-user: the table is public-read at the RLS level, so we
+      // must filter to the signed-in user or their picker would list everyone's
+      // notes (including previous accounts on this device).
+      const auth = useAuthStore()
+      const uid = auth.user?.id
       const [
         profilesRes,
         subjectsRes,
@@ -192,7 +198,10 @@ export const useContentStore = defineStore('content', {
       ] = await Promise.all([
         supabase.from('profiles').select('*').order('reputation', { ascending: false }),
         supabase.from('subjects').select('*').order('code'),
-        supabase.from('notes').select('*').order('updated_at', { ascending: false }),
+        (uid
+          ? supabase.from('notes').select('*').eq('author_id', uid)
+          : supabase.from('notes').select('*')
+        ).order('updated_at', { ascending: false }),
         supabase.from('decks').select('*, cards:deck_cards(*)').order('created_at'),
         supabase.from('study_rooms').select('*').order('created_at', { ascending: false }),
         supabase.from('community_posts').select('*, author:profiles(*)').order('created_at', { ascending: false }),

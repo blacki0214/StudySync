@@ -21,8 +21,16 @@ let demoIdCounter = 1000
 const nextDemoId = (prefix) => `${prefix}-${++demoIdCounter}`
 
 export const noteService = {
-  /** List notes, optionally filtered by subject and/or class. */
-  async listNotes({ subjectId, classId } = {}) {
+  /**
+   * List notes, optionally filtered by subject and/or class.
+   *
+   * IMPORTANT — per-user scoping: the `notes` table grants public read at the
+   * RLS level, so a bare select returns EVERY user's notes. Pass `authorId` to
+   * restrict the list to the current user's own notes (otherwise a new account
+   * would see notes created by other/previous accounts). Demo mode is a single
+   * local user, so it keeps showing the bundled sample notes.
+   */
+  async listNotes({ subjectId, classId, authorId } = {}) {
     if (!isSupabaseConfigured) {
       let notes = demoNotes
       if (subjectId) notes = notes.filter((n) => n.subject_id === subjectId)
@@ -31,6 +39,7 @@ export const noteService = {
     }
 
     let query = supabase.from('notes').select('*').order('updated_at', { ascending: false })
+    if (authorId) query = query.eq('author_id', authorId)
     if (subjectId) query = query.eq('subject_id', subjectId)
     if (classId) query = query.eq('class_id', classId)
     const { data, error } = await query

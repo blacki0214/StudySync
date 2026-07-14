@@ -5,8 +5,26 @@
  * to the router guard and the navbar.
  */
 
-import { defineStore } from 'pinia'
+import { defineStore, getActivePinia } from 'pinia'
 import { authService } from '../services/authService.js'
+
+// Stores that hold app-wide / device-level state (theme, transient UI) rather
+// than the signed-in user's data — these must survive an account switch.
+const KEEP_STORES = new Set(['auth', 'ui', 'palette', 'dialog'])
+
+/**
+ * Wipe every data-bearing Pinia store so one account never sees another's
+ * cached data. Called on login/register/logout. Iterating the active Pinia
+ * instance means new stores are covered automatically (no per-store upkeep).
+ */
+function resetUserStores() {
+  const pinia = getActivePinia()
+  if (!pinia) return
+  pinia._s.forEach((store) => {
+    if (KEEP_STORES.has(store.$id)) return
+    try { store.$reset() } catch { /* not an option store — nothing to reset */ }
+  })
+}
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -47,7 +65,11 @@ export const useAuthStore = defineStore('auth', {
         const result = await authService.signUp(payload)
         // Only mark as signed-in when a session exists (i.e. no email
         // confirmation needed, or demo mode).
-        if (!result.needsConfirmation && result.user) this.user = result.user
+        if (!result.needsConfirmation && result.user) {
+          // Clear any previous account's cached data before the new account loads.
+          resetUserStores()
+          this.user = result.user
+        }
         return result
       } catch (e) {
         this.error = e.message || 'Registration failed.'
@@ -89,7 +111,10 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        this.user = await authService.signIn({ email, password })
+        const user = await authService.signIn({ email, password })
+        // Clear any previous account's cached data before the new account loads.
+        resetUserStores()
+        this.user = user
         return this.user
       } catch (e) {
         this.error = e.message || 'Invalid email or password.'
@@ -102,6 +127,8 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       await authService.signOut()
       this.user = null
+      // Drop the signed-out user's cached data so the next account starts clean.
+      resetUserStores()
     }
   }
 })

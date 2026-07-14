@@ -67,9 +67,11 @@ export const useNoteStore = defineStore('notes', {
 
   actions: {
     async fetchNotes(subjectId) {
+      const auth = useAuthStore()
       this.loading = true
       try {
-        this.notes = await noteService.listNotes({ subjectId })
+        // Scope to the signed-in user so accounts never see each other's notes.
+        this.notes = await noteService.listNotes({ subjectId, authorId: auth.user?.id })
       } finally {
         this.loading = false
       }
