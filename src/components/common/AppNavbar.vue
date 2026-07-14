@@ -107,7 +107,7 @@ function initials(name) {
             <div class="pm-sub">{{ auth.user?.program || 'Student' }}</div>
           </li>
           <li><hr class="dropdown-divider" /></li>
-          <li><router-link class="dropdown-item" to="/profile"><i class="bi bi-person"></i>{{ t('nav.profile') }}</router-link></li>
+          <li><router-link class="dropdown-item" to="/settings"><i class="bi bi-gear"></i>{{ t('nav.settings') }}</router-link></li>
           <li><button class="dropdown-item text-danger" @click="logout"><i class="bi bi-box-arrow-right"></i>{{ t('nav.logout') }}</button></li>
         </ul>
       </div>

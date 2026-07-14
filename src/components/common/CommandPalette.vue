@@ -60,7 +60,7 @@ const index = computed(() => {
     { icon: 'bi-check2-square', label: t('nav.tasks'), to: '/tasks' },
     { icon: 'bi-calendar-week', label: t('nav.schedule'), to: '/schedule' },
     { icon: 'bi-people', label: t('nav.studyRooms'), to: '/rooms' },
-    { icon: 'bi-person', label: t('nav.profile'), to: '/profile' }
+    { icon: 'bi-gear', label: t('nav.settings'), to: '/settings' }
   ].forEach((p) => entries.push({ type: 'actions', icon: p.icon, label: p.label, sublabel: t('palette.goTo'), run: () => go(p.to) }))
 
   // Searchable entities (sourced from the DB in live mode, samples in demo mode).

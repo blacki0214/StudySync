@@ -41,7 +41,8 @@ const routes = [
   { path: '/classes', name: 'classes', component: () => import('../views/ClassesView.vue') },
   { path: '/classes/:id', name: 'class-detail', component: () => import('../views/ClassDetailView.vue'), props: true },
   { path: '/join', name: 'join-class', component: () => import('../views/JoinClassView.vue') },
-  { path: '/profile', name: 'profile', component: () => import('../views/ProfileView.vue') },
+  { path: '/settings', name: 'settings', component: () => import('../views/SettingsView.vue') },
+  { path: '/profile', redirect: '/settings' }, // profile became settings
 
   { path: '/:pathMatch(.*)*', redirect: '/hub' }
 ]

@@ -14,6 +14,7 @@ import { useScheduleStore } from './scheduleStore.js'
 import { useContentStore } from './contentStore.js'
 
 const READ_KEY = 'studysync_notif_read'
+const PREFS_KEY = 'studysync_notif_prefs'
 
 function loadRead() {
   try {
@@ -24,6 +25,10 @@ function loadRead() {
 }
 function saveRead(set) {
   try { localStorage.setItem(READ_KEY, JSON.stringify([...set])) } catch { /* ignore */ }
+}
+function loadPrefs() {
+  try { return { deadlines: true, activity: true, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') } }
+  catch { return { deadlines: true, activity: true } }
 }
 
 function isoDate(d) {
@@ -45,14 +50,16 @@ export const useNotificationStore = defineStore('notifications', {
     open: false,
     built: false,
     readIds: loadRead(),
-    deadlineItems: []
+    deadlineItems: [],
+    // User notification preferences (Settings → Notifications).
+    prefs: loadPrefs()
   }),
 
   getters: {
     /** Deadline alerts first (actionable), then the activity stream. */
     items(state) {
       const content = useContentStore()
-      const activityItems = (content.activities || []).map((a) => ({
+      const activityItems = state.prefs.activity ? (content.activities || []).map((a) => ({
         id: `act-${a.id}`,
         kind: 'activity',
         icon: a.icon || 'bi-bell',
@@ -62,7 +69,7 @@ export const useNotificationStore = defineStore('notifications', {
         params: a.params || {},
         ago: a.ago,
         to: a.to
-      }))
+      })) : []
       return [...state.deadlineItems, ...activityItems]
     },
     unreadCount(state) {
@@ -79,7 +86,7 @@ export const useNotificationStore = defineStore('notifications', {
       if (!schedule.loaded) await schedule.load()
 
       const items = []
-      for (const ev of schedule.events) {
+      for (const ev of (this.prefs.deadlines ? schedule.events : [])) {
         if (ev.done) continue
         const days = daysUntil(ev.date)
         if (days > 3) continue // only surface soon/overdue
@@ -117,6 +124,13 @@ export const useNotificationStore = defineStore('notifications', {
       set.add(id)
       this.readIds = set
       saveRead(set)
+    },
+
+    /** Update a notification preference (Settings) and rebuild the feed. */
+    setPref(key, value) {
+      this.prefs = { ...this.prefs, [key]: value }
+      try { localStorage.setItem(PREFS_KEY, JSON.stringify(this.prefs)) } catch { /* ignore */ }
+      this.built = false // force a rebuild on next open
     }
   }
 })

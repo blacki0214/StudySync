@@ -24,7 +24,7 @@ const allFeatures = [
   { to: '/community', icon: 'bi-chat-square-text-fill', grad: 'grad-fuchsia', key: 'nav.community' },
   { to: '/classes', icon: 'bi-easel2-fill', grad: 'grad-orange', key: 'nav.classes' },
   { to: '/join', icon: 'bi-box-arrow-in-right', grad: 'grad-green', key: 'nav.joinClass' },
-  { to: '/profile', icon: 'bi-person-fill', grad: 'grad-green', key: 'nav.profile' }
+  { to: '/settings', icon: 'bi-gear-fill', grad: 'grad-green', key: 'nav.settings' }
 ]
 
 const features = computed(() =>
