@@ -14,9 +14,11 @@ import { useAuthStore } from '../stores/authStore.js'
 import { useContentStore } from '../stores/contentStore.js'
 import StatCard from '../components/common/StatCard.vue'
 import LineAreaChart from '../components/charts/LineAreaChart.vue'
-import ContinueStudying from '../components/hub/ContinueStudying.vue'
-import QuickLaunch from '../components/hub/QuickLaunch.vue'
 import HubActivityFeed from '../components/hub/HubActivityFeed.vue'
+import RecentNotes from '../components/hub/RecentNotes.vue'
+import FlashcardsDue from '../components/hub/FlashcardsDue.vue'
+import UpcomingSchedule from '../components/hub/UpcomingSchedule.vue'
+import TasksOverview from '../components/hub/TasksOverview.vue'
 
 const auth = useAuthStore()
 const content = useContentStore()
@@ -46,10 +48,6 @@ const stats = computed(() => [
 ])
 
 const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0).slice(0, 4))
-
-function initials(name) {
-  return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
-}
 </script>
 
 <template>
@@ -67,20 +65,14 @@ function initials(name) {
       </div>
     </header>
 
-    <!-- Jump back in -->
-    <ContinueStudying />
-
-    <!-- Quick launch tiles -->
-    <QuickLaunch />
-
-    <!-- Stat cards -->
+    <!-- Stat cards (personal analytics) -->
     <div class="row g-3 row-gap-section">
       <div v-for="s in stats" :key="s.label" class="col-6 col-xl-3">
         <StatCard v-bind="s" />
       </div>
     </div>
 
-    <!-- Chart + activity feed -->
+    <!-- Weekly focus (analytics) + what's next -->
     <div class="row g-4 row-gap-section">
       <div class="col-12 col-xl-8">
         <div class="chart-card">
@@ -94,44 +86,30 @@ function initials(name) {
           <LineAreaChart v-if="content.weeklyFocus" :labels="content.weeklyFocus.labels" :values="content.weeklyFocus.values" :max="content.weeklyFocus.max" :ticks="4" area :height="260" />
         </div>
       </div>
-
       <div class="col-12 col-xl-4">
-        <HubActivityFeed />
+        <UpcomingSchedule />
       </div>
     </div>
 
-    <!-- Upcoming sessions + your subjects -->
+    <!-- Recent notes · flashcards due · tasks -->
     <div class="row g-4 row-gap-section">
-      <div class="col-12 col-xl-4">
-        <div class="rail-card">
-          <div class="rail-head">
-            <h3>{{ t('dashboard.upcomingSessions') }}</h3>
-            <i class="bi bi-chevron-right rail-chevron"></i>
-          </div>
-          <div v-for="s in content.sessions" :key="s.id" class="session-item">
-            <div class="ses-bar" :style="{ background: s.color }"></div>
-            <div class="ses-main">
-              <div class="ses-title">{{ s.title }}</div>
-              <div class="ses-when">{{ s.when }}</div>
-              <div class="ses-foot">
-                <span class="avatar-stack">
-                  <span v-for="uid in s.avatars" :key="uid" class="mini-av">{{ initials(content.userById(uid)?.full_name) }}</span>
-                </span>
-                <span class="ses-joining">{{ t('dashboard.joining', { n: s.joining }) }}</span>
-              </div>
-            </div>
-          </div>
-          <router-link to="/rooms" class="btn btn-outline-soft open-rooms-btn">{{ t('dashboard.openStudyRooms') }}</router-link>
-        </div>
-      </div>
+      <div class="col-12 col-md-6 col-xl-4"><RecentNotes /></div>
+      <div class="col-12 col-md-6 col-xl-4"><FlashcardsDue /></div>
+      <div class="col-12 col-xl-4"><TasksOverview /></div>
+    </div>
 
+    <!-- Recent activity + your subjects -->
+    <div class="row g-4 row-gap-section">
       <div class="col-12 col-xl-8">
+        <HubActivityFeed />
+      </div>
+      <div class="col-12 col-xl-4">
         <div class="section-head">
           <h3>{{ t('dashboard.yourSubjects') }}</h3>
           <router-link to="/subjects" class="link-more">{{ t('common.viewAll') }} <i class="bi bi-chevron-right"></i></router-link>
         </div>
         <div class="row g-3">
-          <div v-for="s in mySubjects" :key="s.id" class="col-12 col-md-6">
+          <div v-for="s in mySubjects" :key="s.id" class="col-12">
             <router-link :to="{ name: 'subject-hub', params: { id: s.id } }" class="subject-progress-card">
               <div class="sp-head">
                 <span class="icon-tile sp-icon" :class="s.color">{{ s.letters }}</span>
@@ -143,6 +121,9 @@ function initials(name) {
               </div>
               <div class="progress-track"><div class="progress-fill" :style="{ width: s.progress + '%' }"></div></div>
             </router-link>
+          </div>
+          <div v-if="!mySubjects.length" class="col-12">
+            <p class="hub-widget-empty">{{ t('hub.noSubjects') }}</p>
           </div>
         </div>
       </div>
