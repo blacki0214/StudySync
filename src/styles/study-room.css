@@ -333,6 +333,11 @@
 }
 .dc-ch-title { font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
 .dc-ch-title i { color: var(--c-text-faint); }
+.dc-head-actions { display: flex; align-items: center; gap: var(--space-2); }
+.rm-invite-desc { color: var(--c-text-muted); font-size: 0.9rem; margin: 0 0 var(--space-2); line-height: 1.5; }
+.rm-invite-row { display: flex; gap: var(--space-2); align-items: stretch; }
+.rm-invite-row .rm-input { flex: 1; font-family: var(--font-mono, monospace); font-size: 0.85rem; }
+.rm-invite-row .btn { white-space: nowrap; }
 .dc-head-right { display: flex; align-items: center; gap: var(--space-3); }
 .dc-pomodoro {
   display: inline-flex; align-items: center; gap: 0.35rem;

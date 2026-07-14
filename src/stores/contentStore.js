@@ -208,10 +208,12 @@ export const useContentStore = defineStore('content', {
           ? supabase.from('decks').select('*, cards:deck_cards(*)').eq('owner_id', uid)
           : supabase.from('decks').select('*, cards:deck_cards(*)')
         ).order('created_at'),
-        (uid
-          ? supabase.from('study_rooms').select('*').eq('owner_id', uid)
-          : supabase.from('study_rooms').select('*')
-        ).order('created_at', { ascending: false }),
+        // Rooms = owned + invite-joined (see studyRoomService). Wrapped to keep
+        // the { data, error } shape the rest of this loader expects.
+        (async () => {
+          try { return { data: await studyRoomService.listRoomsForUser(uid), error: null } }
+          catch (error) { return { data: null, error } }
+        })(),
         supabase.from('community_posts').select('*, author:profiles(*)').order('created_at', { ascending: false }),
         supabase.from('trending_topics').select('*').order('posts', { ascending: false }),
         supabase.from('achievements').select('*').order('sort'),

@@ -27,6 +27,11 @@ const K_CHANNELS = 'studysync_demo_room_channels'
 const readChannels = () => { try { return JSON.parse(localStorage.getItem(K_CHANNELS) || '[]') } catch { return [] } }
 const writeChannels = (v) => { try { localStorage.setItem(K_CHANNELS, JSON.stringify(v)) } catch { /* ignore */ } }
 
+// Demo-mode room memberships (invites) — [{ room_id, user_id }].
+const K_MEMBERS = 'studysync_demo_room_members'
+const readMembers = () => { try { return JSON.parse(localStorage.getItem(K_MEMBERS) || '[]') } catch { return [] } }
+const writeMembers = (v) => { try { localStorage.setItem(K_MEMBERS, JSON.stringify(v)) } catch { /* ignore */ } }
+
 const demoRooms = [
   {
     id: 'room-1',
@@ -56,25 +61,54 @@ const demoRooms = [
 
 export const studyRoomService = {
   /**
-   * List study rooms (joined with their subject name). Pass `ownerId` to scope
-   * to the current user's own rooms — the table is public-read at the RLS level,
-   * so without this a new account would list every account's rooms.
+   * List the rooms a user can see: the ones they OWN plus the ones they've
+   * JOINED via an invite link (room_members). The tables are public-read at the
+   * RLS level, so without this scoping a new account would list every room.
    */
-  async listRooms({ ownerId } = {}) {
+  async listRoomsForUser(userId) {
     if (!isSupabaseConfigured) {
       return demoRooms.map((r) => ({
         ...r,
         subject: sampleSubjects.find((s) => s.id === r.subject_id) || null
       }))
     }
+    if (!userId) return []
+
+    // Room ids this user joined via invite.
+    const { data: mem } = await supabase
+      .from('room_members').select('room_id').eq('user_id', userId)
+    const joinedIds = (mem || []).map((m) => m.room_id)
+
     let query = supabase
       .from('study_rooms')
       .select('*, subject:subjects(*)')
       .order('created_at', { ascending: false })
-    if (ownerId) query = query.eq('owner_id', ownerId)
+    query = joinedIds.length
+      ? query.or(`owner_id.eq.${userId},id.in.(${joinedIds.join(',')})`)
+      : query.eq('owner_id', userId)
+
     const { data, error } = await query
     if (error) throw error
     return data
+  },
+
+  /**
+   * Join a room as a member (the invite mechanism). Idempotent — re-joining is a
+   * no-op. After this the room appears in the user's own room list.
+   */
+  async joinRoomAsMember({ roomId, userId }) {
+    if (!roomId || !userId) return
+    if (!isSupabaseConfigured) {
+      const all = readMembers()
+      if (!all.some((m) => m.room_id === roomId && m.user_id === userId)) {
+        writeMembers([...all, { room_id: roomId, user_id: userId }])
+      }
+      return
+    }
+    const { error } = await supabase
+      .from('room_members')
+      .upsert({ room_id: roomId, user_id: userId }, { onConflict: 'room_id,user_id', ignoreDuplicates: true })
+    if (error) throw error
   },
 
   /**
@@ -118,7 +152,7 @@ export const studyRoomService = {
       .from('study_rooms')
       .select('*, subject:subjects(*)')
       .eq('id', id)
-      .single()
+      .maybeSingle() // null (not an error) when the id doesn't exist — e.g. a bad invite link
     if (error) throw error
     return data
   },

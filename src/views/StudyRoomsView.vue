@@ -31,6 +31,27 @@ function openCreate() {
   form.value = { name: '', description: '', subjectId: '' }
   showCreate.value = true
 }
+
+// --- Join via invite link ---
+// Accepts a full room URL or a raw room id; extracts the id and opens the room
+// (entering it records membership, so it then appears in this list).
+function extractRoomId(input) {
+  const url = String(input || '').trim()
+  const fromLink = url.match(/rooms\/([0-9a-fA-F-]{8,})/)
+  if (fromLink) return fromLink[1]
+  return /^[0-9a-fA-F-]{8,}$/.test(url) ? url : ''
+}
+async function joinByLink() {
+  const input = await dialog.promptText({
+    title: t('rooms.joinByLinkTitle'),
+    label: t('rooms.joinByLinkLabel'),
+    placeholder: `${window.location.origin}/rooms/…`
+  })
+  if (input === null) return
+  const id = extractRoomId(input)
+  if (!id) { dialog.toast(t('rooms.joinByLinkInvalid'), 'error'); return }
+  router.push(`/rooms/${id}`)
+}
 async function submitCreate() {
   if (!form.value.name.trim()) return
   creating.value = true
@@ -58,7 +79,10 @@ async function submitCreate() {
         <h1 class="ph-title">{{ t('rooms.title') }}</h1>
         <p class="ph-sub">{{ t('rooms.sub') }}</p>
       </div>
-      <button class="btn btn-brand" @click="openCreate"><i class="bi bi-plus-lg"></i>{{ t('rooms.create') }}</button>
+      <div class="action-row">
+        <button class="btn btn-outline-soft" @click="joinByLink"><i class="bi bi-box-arrow-in-right"></i>{{ t('rooms.joinByLink') }}</button>
+        <button class="btn btn-brand" @click="openCreate"><i class="bi bi-plus-lg"></i>{{ t('rooms.create') }}</button>
+      </div>
     </header>
 
     <!-- Empty state -->

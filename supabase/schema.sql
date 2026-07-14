@@ -27,6 +27,7 @@ drop table if exists public.user_achievements cascade;
 drop table if exists public.achievements    cascade;
 drop table if exists public.trending_topics cascade;
 drop table if exists public.community_posts  cascade;
+drop table if exists public.room_members    cascade;
 drop table if exists public.study_rooms     cascade;
 drop table if exists public.generated_study_sets cascade;
 drop table if exists public.quizzes         cascade;
@@ -227,6 +228,16 @@ create table public.study_rooms (
   created_at   timestamptz not null default now()
 );
 
+-- 9a. room_members (invites: who has joined a room they don't own) ------------
+create table public.room_members (
+  id         uuid primary key default gen_random_uuid(),
+  room_id    uuid not null references public.study_rooms (id) on delete cascade,
+  user_id    uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (room_id, user_id)
+);
+create index room_members_user on public.room_members (user_id);
+
 -- 10. community_posts + trending_topics --------------------------------------
 create table public.community_posts (
   id           uuid primary key default gen_random_uuid(),
@@ -375,6 +386,12 @@ alter table public.deck_cards      enable row level security;
 alter table public.flashcards      enable row level security;
 alter table public.quizzes         enable row level security;
 alter table public.study_rooms     enable row level security;
+alter table public.room_members    enable row level security;
+
+-- Room memberships (invites) are private: a user manages only their own.
+create policy "rm read"   on public.room_members for select using (user_id = auth.uid());
+create policy "rm insert" on public.room_members for insert to authenticated with check (user_id = auth.uid());
+create policy "rm delete" on public.room_members for delete to authenticated using (user_id = auth.uid());
 alter table public.community_posts enable row level security;
 alter table public.trending_topics enable row level security;
 alter table public.achievements    enable row level security;

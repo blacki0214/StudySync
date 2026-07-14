@@ -25,8 +25,22 @@ const dialog = useDialogStore()
 // a plain object otherwise, which Vue does not auto-unwrap).
 const { muted: voiceMuted, micError: voiceMicError, speakingIds, join: joinVoiceAudio, leave: leaveVoiceAudio, toggleMute: toggleVoiceMute } = useVoiceChat()
 
-const room = computed(() => content.rooms.find((r) => r.id === route.params.id) || content.rooms[0])
+// Prefer the room we actually entered (fetched by id, unscoped) so an
+// invite-opened room the user doesn't own still resolves; fall back to the list.
+const room = computed(() => rooms.activeRoom || content.rooms.find((r) => r.id === route.params.id))
 const subject = computed(() => content.subjectById(room.value?.subject_id))
+
+// --- Invite (share link) ---
+const showInvite = ref(false)
+const inviteLink = computed(() => `${window.location.origin}/rooms/${room.value?.id || route.params.id}`)
+async function copyInvite() {
+  try {
+    await navigator.clipboard.writeText(inviteLink.value)
+    dialog.toast(t('rooms.inviteCopied'), 'success')
+  } catch {
+    dialog.toast(t('rooms.inviteCopyFailed'), 'error')
+  }
+}
 
 const activeText = ref('')
 const stageVoice = ref(null) // voice channel whose stage is shown in main, or null (= chat)
@@ -37,6 +51,9 @@ const isSpeaking = (id) => speakingIds.value.includes(id)
 const stageChannelName = computed(() => voiceChannels.value.find((c) => c.id === stageVoice.value)?.name || '')
 const stageMembers = computed(() => (stageVoice.value ? rooms.voiceMembers(stageVoice.value) : []))
 
+// Distinguish "still entering" from "room genuinely not found" so a bad invite
+// link shows a message instead of hanging on a blank screen.
+const entering = ref(true)
 const meId = computed(() => auth.user?.id || 'anon')
 const online = computed(() => rooms.onlineUsers)
 const myVoice = computed(() => rooms.myVoice)
@@ -49,7 +66,19 @@ const voiceMembers = (id) => rooms.voiceMembers(id)
 
 onMounted(async () => {
   await content.ensureLoaded()
-  await rooms.enterRoom(route.params.id)
+  const alreadyListed = content.rooms.some((r) => r.id === route.params.id)
+  try {
+    await rooms.enterRoom(route.params.id) // records membership for non-owners
+  } finally {
+    entering.value = false
+  }
+  // Surface a newly-joined room in the user's list immediately + confirm the join.
+  if (rooms.activeRoom && !alreadyListed) {
+    content.rooms.unshift(rooms.activeRoom)
+    if (rooms.activeRoom.owner_id && rooms.activeRoom.owner_id !== auth.user?.id) {
+      dialog.toast(t('rooms.joinedViaInvite', { name: rooms.activeRoom.name }), 'success')
+    }
+  }
 })
 onUnmounted(() => {
   leaveVoiceAudio()
@@ -192,7 +221,10 @@ function clock(isoStr) {
     <main class="dc-main">
       <header class="dc-main-head">
         <div class="dc-ch-title"><i class="bi" :class="stageVoice ? 'bi-volume-up' : 'bi-hash'"></i>{{ stageVoice ? stageChannelName : activeChannelName }}</div>
-        <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
+        <div class="dc-head-actions">
+          <button class="btn btn-brand btn-sm" @click="showInvite = true"><i class="bi bi-person-plus"></i>{{ t('rooms.invite') }}</button>
+          <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
+        </div>
       </header>
 
       <!-- Voice stage: avatar tiles with a speaking ring -->
@@ -245,5 +277,32 @@ function clock(isoStr) {
         <i v-if="m.id === meId ? myVoice : m.voice" class="bi bi-volume-up-fill dc-mem-voice" :title="t('rooms.voiceChannels')"></i>
       </div>
     </aside>
+
+    <!-- Invite modal: share this link so others can join the room -->
+    <div v-if="showInvite" class="room-modal-backdrop" @click.self="showInvite = false">
+      <div class="room-modal" role="dialog" aria-modal="true">
+        <div class="rm-head">
+          <h3>{{ t('rooms.inviteTitle') }}</h3>
+          <button class="btn-icon-sq" :aria-label="t('common.cancel')" @click="showInvite = false"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="rm-body">
+          <p class="rm-invite-desc">{{ t('rooms.inviteDesc') }}</p>
+          <div class="rm-invite-row">
+            <input class="rm-input" :value="inviteLink" readonly @focus="$event.target.select()" />
+            <button class="btn btn-brand" @click="copyInvite"><i class="bi bi-clipboard"></i>{{ t('rooms.inviteCopy') }}</button>
+          </div>
+        </div>
+        <div class="rm-foot">
+          <button class="btn btn-outline-soft" @click="showInvite = false">{{ t('common.close') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invalid / expired invite link, or a room that no longer exists -->
+  <div v-else-if="!entering" class="empty-state">
+    <i class="bi bi-door-closed empty-icon"></i>
+    <p>{{ t('rooms.notFound') }}</p>
+    <router-link to="/rooms" class="btn btn-brand">{{ t('rooms.title') }}</router-link>
   </div>
 </template>

@@ -58,8 +58,8 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       const auth = useAuthStore()
       this.loading = true
       try {
-        // Scope to the signed-in user so accounts never see each other's rooms.
-        this.rooms = await studyRoomService.listRooms({ ownerId: auth.user?.id })
+        // Owned + invite-joined rooms only — never other accounts' rooms.
+        this.rooms = await studyRoomService.listRoomsForUser(auth.user?.id)
       } finally {
         this.loading = false
       }
@@ -71,6 +71,15 @@ export const useStudyRoomStore = defineStore('studyRooms', {
       this.leaveRoom()
 
       this.activeRoom = await studyRoomService.getRoom(id)
+      if (!this.activeRoom) return // bad/expired invite link — nothing to enter
+
+      // Invite mechanism: reaching a room you don't own means you followed a
+      // share link — record membership so it stays in your room list.
+      if (auth.user?.id && this.activeRoom.owner_id && this.activeRoom.owner_id !== auth.user.id) {
+        try { await studyRoomService.joinRoomAsMember({ roomId: id, userId: auth.user.id }) }
+        catch (e) { console.warn('[rooms] join membership failed:', e.message) }
+      }
+
       this.activityFeed = []
       this.messages = []
       this.myVoice = null
