@@ -307,6 +307,9 @@ async function remove(id) {
   padding: var(--space-3); margin-bottom: var(--space-3);
   background: var(--c-surface-2); border: 1px solid var(--c-border); border-radius: var(--radius);
 }
+/* The tile's size normally comes from a .subject-card ancestor; the preview has
+   none, so size it here. */
+.subject-preview :deep(.icon-tile) { width: 52px; height: 52px; font-size: 1rem; }
 .sp-preview-name { font-weight: 700; }
 .sp-preview-cat { color: var(--c-text-muted); font-size: 0.82rem; }
 
