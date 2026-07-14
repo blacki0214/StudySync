@@ -20,10 +20,11 @@ function localId(prefix) {
  * @param {string} input.name
  * @param {string} [input.subjectCode]
  * @param {string} [input.color]
+ * @param {string} [input.ownerId]  creator id — decks are scoped to their owner
  * @param {Array<{question:string, answer:string}>} input.cards
  * @returns {Promise<object>} the created deck (contentStore shape)
  */
-export async function createDeck({ name, subjectCode = '', color = 'grad-blue', cards = [] }) {
+export async function createDeck({ name, subjectCode = '', color = 'grad-blue', ownerId = null, cards = [] }) {
   const clean = cards
     .filter((c) => c && c.question && c.answer)
     .map((c, i) => ({ question: c.question, answer: c.answer, position: i }))
@@ -32,6 +33,7 @@ export async function createDeck({ name, subjectCode = '', color = 'grad-blue', 
   if (!isSupabaseConfigured || !supabase) {
     return {
       id: localId('deck'),
+      owner_id: ownerId,
       name,
       subject_code: subjectCode,
       subject: subjectCode,
@@ -45,7 +47,7 @@ export async function createDeck({ name, subjectCode = '', color = 'grad-blue', 
   // Live: insert the deck, then its cards (deck_cards cascades on delete).
   const { data: deck, error } = await supabase
     .from('decks')
-    .insert({ name, subject_code: subjectCode || null, color, due: 0, total: clean.length })
+    .insert({ name, subject_code: subjectCode || null, color, owner_id: ownerId, due: 0, total: clean.length })
     .select()
     .single()
   if (error) throw error

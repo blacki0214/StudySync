@@ -83,7 +83,8 @@ export const useContentStore = defineStore('content', {
      * top of the list so it shows immediately. Works live (Supabase) or in demo.
      */
     async createDeck(payload) {
-      const deck = await deckService.createDeck(payload)
+      const auth = useAuthStore()
+      const deck = await deckService.createDeck({ ownerId: auth.user?.id, ...payload })
       this.decks.unshift(deck)
       return deck
     },
@@ -93,7 +94,8 @@ export const useContentStore = defineStore('content', {
      * immediately. Works live (Supabase) or in demo.
      */
     async createRoom(payload) {
-      const room = await studyRoomService.createRoom(payload)
+      const auth = useAuthStore()
+      const room = await studyRoomService.createRoom({ ownerId: auth.user?.id, ...payload })
       this.rooms.unshift(room)
       return room
     },
@@ -179,9 +181,9 @@ export const useContentStore = defineStore('content', {
 
     /** LIVE MODE — everything comes from Supabase. No sample data is touched. */
     async _loadFromDb() {
-      // Notes are per-user: the table is public-read at the RLS level, so we
-      // must filter to the signed-in user or their picker would list everyone's
-      // notes (including previous accounts on this device).
+      // Notes, decks and study rooms are per-user: these tables are public-read
+      // at the RLS level, so we must filter to the signed-in user or a new
+      // account would see everyone's (incl. previous accounts on this device).
       const auth = useAuthStore()
       const uid = auth.user?.id
       const [
@@ -202,8 +204,14 @@ export const useContentStore = defineStore('content', {
           ? supabase.from('notes').select('*').eq('author_id', uid)
           : supabase.from('notes').select('*')
         ).order('updated_at', { ascending: false }),
-        supabase.from('decks').select('*, cards:deck_cards(*)').order('created_at'),
-        supabase.from('study_rooms').select('*').order('created_at', { ascending: false }),
+        (uid
+          ? supabase.from('decks').select('*, cards:deck_cards(*)').eq('owner_id', uid)
+          : supabase.from('decks').select('*, cards:deck_cards(*)')
+        ).order('created_at'),
+        (uid
+          ? supabase.from('study_rooms').select('*').eq('owner_id', uid)
+          : supabase.from('study_rooms').select('*')
+        ).order('created_at', { ascending: false }),
         supabase.from('community_posts').select('*, author:profiles(*)').order('created_at', { ascending: false }),
         supabase.from('trending_topics').select('*').order('posts', { ascending: false }),
         supabase.from('achievements').select('*').order('sort'),

@@ -55,18 +55,24 @@ const demoRooms = [
 ]
 
 export const studyRoomService = {
-  /** List available study rooms (joined with their subject name). */
-  async listRooms() {
+  /**
+   * List study rooms (joined with their subject name). Pass `ownerId` to scope
+   * to the current user's own rooms — the table is public-read at the RLS level,
+   * so without this a new account would list every account's rooms.
+   */
+  async listRooms({ ownerId } = {}) {
     if (!isSupabaseConfigured) {
       return demoRooms.map((r) => ({
         ...r,
         subject: sampleSubjects.find((s) => s.id === r.subject_id) || null
       }))
     }
-    const { data, error } = await supabase
+    let query = supabase
       .from('study_rooms')
       .select('*, subject:subjects(*)')
       .order('created_at', { ascending: false })
+    if (ownerId) query = query.eq('owner_id', ownerId)
+    const { data, error } = await query
     if (error) throw error
     return data
   },
@@ -75,12 +81,13 @@ export const studyRoomService = {
    * Create a study room. Returns it in the shape contentStore.rooms expects
    * ({ id, subject_id, code, name, description, live, active_users }).
    */
-  async createRoom({ name, description = '', subjectId = null }) {
+  async createRoom({ name, description = '', subjectId = null, ownerId = null }) {
     const cleanName = String(name || '').trim() || 'Study Room'
     if (!isSupabaseConfigured) {
       const subject = sampleSubjects.find((s) => s.id === subjectId) || null
       return {
         id: localId('room'),
+        owner_id: ownerId,
         subject_id: subjectId,
         code: subject?.code || 'General',
         name: cleanName,
@@ -92,7 +99,7 @@ export const studyRoomService = {
     }
     const { data, error } = await supabase
       .from('study_rooms')
-      .insert({ subject_id: subjectId, name: cleanName, description: String(description || '').trim(), live: true, active_users: 1 })
+      .insert({ subject_id: subjectId, owner_id: ownerId, name: cleanName, description: String(description || '').trim(), live: true, active_users: 1 })
       .select()
       .single()
     if (error) throw error

@@ -55,9 +55,11 @@ export const useStudyRoomStore = defineStore('studyRooms', {
 
   actions: {
     async fetchRooms() {
+      const auth = useAuthStore()
       this.loading = true
       try {
-        this.rooms = await studyRoomService.listRooms()
+        // Scope to the signed-in user so accounts never see each other's rooms.
+        this.rooms = await studyRoomService.listRooms({ ownerId: auth.user?.id })
       } finally {
         this.loading = false
       }

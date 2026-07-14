@@ -143,6 +143,7 @@ create table public.note_comments (
 -- 6. decks + deck_cards (Flashcards page) ------------------------------------
 create table public.decks (
   id           uuid primary key default gen_random_uuid(),
+  owner_id     uuid references public.profiles (id) on delete cascade,  -- creator; lists are scoped to this
   name         text not null,
   subject_code text,
   color        text default 'grad-blue',
@@ -216,6 +217,7 @@ create table public.documents (
 -- 9. study_rooms -------------------------------------------------------------
 create table public.study_rooms (
   id           uuid primary key default gen_random_uuid(),
+  owner_id     uuid references public.profiles (id) on delete cascade,  -- creator; lists are scoped to this
   subject_id   uuid references public.subjects (id) on delete set null,
   code         text,
   name         text not null,
