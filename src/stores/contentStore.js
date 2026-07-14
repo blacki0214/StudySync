@@ -33,17 +33,11 @@ import { sampleSubjects } from '../data/sampleSubjects.js'
 import { sampleNotes } from '../data/sampleNotes.js'
 import { sampleDecks } from '../data/sampleDecks.js'
 import { sampleRooms } from '../data/sampleRooms.js'
-import { communityPosts, trendingTopics, topContributors } from '../data/sampleCommunity.js'
+import { communityPosts, trendingTopics } from '../data/sampleCommunity.js'
 import { achievements as sampleAchievements, reputationSeries } from '../data/sampleAchievements.js'
 import { activityFeed } from '../data/sampleActivity.js'
 import { weeklyFocus, upcomingSessions, weeklyLeaderboard } from '../data/sampleDashboard.js'
 import { flashcardStats as sampleFlashcardStats } from '../data/sampleDecks.js'
-
-/** Format a reputation number like 12400 -> "12.4K". */
-function repK(n) {
-  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`
-  return String(n)
-}
 
 let loadPromise = null
 
@@ -59,7 +53,6 @@ export const useContentStore = defineStore('content', {
     rooms: [],
     posts: [],
     trending: [],
-    contributors: [],
     achievements: [],
     activities: [],
 
@@ -169,7 +162,6 @@ export const useContentStore = defineStore('content', {
       this.rooms = [...sampleRooms]
       this.posts = communityPosts.map((p) => ({ ...p }))
       this.trending = [...trendingTopics]
-      this.contributors = [...topContributors]
       this.achievements = [...sampleAchievements]
       this.activities = [...activityFeed]
       this.weeklyFocus = weeklyFocus
@@ -282,10 +274,9 @@ export const useContentStore = defineStore('content', {
         reviewedLast7: [], todayCount: 0, weekCount: 0, retention: 0
       }
 
-      // Leaderboard + top contributors are DERIVED from real profiles.
+      // Leaderboard is DERIVED from real profiles.
       const ranked = [...this.profiles].sort((a, b) => (b.reputation || 0) - (a.reputation || 0))
       this.leaderboard = ranked.slice(0, 5).map((u) => ({ id: u.id, full_name: u.full_name, points: u.reputation || 0 }))
-      this.contributors = ranked.slice(0, 4).map((u) => ({ id: u.id, full_name: u.full_name, rep: repK(u.reputation || 0) }))
 
       // Upcoming sessions are derived from live rooms (no separate table).
       const palette = ['#6366f1', '#8b5cf6', '#10b981']

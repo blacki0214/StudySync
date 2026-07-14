@@ -92,3 +92,33 @@
 .contrib-row .cr-avatar { width: 30px; height: 30px; }
 .contrib-row .cr-name { font-weight: 600; font-size: 0.88rem; }
 .contrib-row .cr-rep { margin-left: auto; color: var(--c-text-muted); font-size: 0.82rem; }
+
+/* Post actions (reply / share / save) + reply thread */
+.post-action {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: none; border: none; padding: 0.15rem 0.1rem; cursor: pointer;
+  color: var(--c-text-muted); font-size: 0.85rem; font-weight: 600;
+}
+.post-action:hover { color: var(--c-primary); }
+.post-action.active { color: var(--c-primary); }
+
+.reply-thread {
+  margin-top: var(--space-3); padding-top: var(--space-3);
+  border-top: 1px solid var(--c-border);
+}
+.reply-loading, .reply-empty { color: var(--c-text-muted); font-size: 0.85rem; margin: 0 0 var(--space-2); }
+.reply-row { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.4rem 0; }
+.reply-avatar { width: 30px; height: 30px; font-size: 0.7rem; flex-shrink: 0; }
+.reply-main { flex: 1; min-width: 0; }
+.reply-meta { font-size: 0.8rem; }
+.reply-name { font-weight: 700; }
+.reply-ago { color: var(--c-text-faint); margin-left: 0.3rem; }
+.reply-body { font-size: 0.9rem; line-height: 1.5; margin-top: 0.1rem; white-space: pre-wrap; }
+.reply-del { background: none; border: none; color: var(--c-text-faint); cursor: pointer; padding: 0.2rem; }
+.reply-del:hover { color: var(--c-danger, #ef4444); }
+.reply-composer { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+.reply-input {
+  flex: 1; background: var(--c-surface-2); border: 1px solid var(--c-border);
+  border-radius: 8px; color: var(--c-text); padding: 0.45rem 0.7rem; font-size: 0.9rem;
+}
+.reply-input:focus { outline: none; border-color: var(--c-primary); }
