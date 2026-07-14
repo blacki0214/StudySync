@@ -10,7 +10,9 @@ import { useScheduleStore } from '../../stores/scheduleStore.js'
 const { t } = useI18n()
 const schedule = useScheduleStore()
 
-onMounted(() => { if (!schedule.loaded) schedule.load() })
+// Refresh on each visit so task edits show up without a page reload (falls back
+// to the cached events while the reload is in flight).
+onMounted(() => { if (!schedule.loading) schedule.load() })
 
 const events = computed(() => schedule.upcoming.slice(0, 5))
 

@@ -11,8 +11,9 @@ import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 const { t } = useI18n()
 const tasks = useTaskStore()
 
-// Load the personal board (subjectId: null) when the Hub opens.
-onMounted(() => { if (!tasks.tasks.length && !tasks.loading) tasks.load({ subjectId: null }) })
+// Always (re)load the PERSONAL board on Hub visit — refreshes after edits and
+// corrects the scope if the Tasks page last viewed a subject board.
+onMounted(() => { if (!tasks.loading) tasks.load({ subjectId: null }) })
 
 const counts = computed(() => tasks.counts)
 const pct = computed(() => (counts.value.total ? Math.round((counts.value.done / counts.value.total) * 100) : 0))
