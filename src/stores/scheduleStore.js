@@ -79,6 +79,7 @@ export const useScheduleStore = defineStore('schedule', {
           if (!t.due_date) continue
           const subj = content.subjectById(t.subject_id)
           const statuses = statusesByScope.get(t.subject_id || null)
+          const st = statuses?.find((s) => s.id === t.status) || null
           events.push({
             id: `task-${t.id}`,
             kind: 'task',
@@ -88,6 +89,8 @@ export const useScheduleStore = defineStore('schedule', {
             subject: subj?.code || '',
             color: subj?.color || 'grad-blue',
             done: isDoneStatus(t.status, statuses),
+            statusName: st?.name || '',
+            statusColor: st?.color || null,
             priority: t.priority || 'medium',
             to: t.subject_id
               ? { name: 'subject-workspace', params: { id: t.subject_id } }

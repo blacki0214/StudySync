@@ -120,3 +120,12 @@
 @media (max-width: 991px) {
   .schedule-layout { grid-template-columns: 1fr; }
 }
+
+/* Status visualisation on schedule events */
+.ai-status {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.08rem 0.5rem; border-radius: var(--radius-pill);
+  font-size: 0.72rem; font-weight: 700;
+}
+.ai-status-dot { width: 7px; height: 7px; border-radius: 50%; }
+.up-status { font-weight: 600; }

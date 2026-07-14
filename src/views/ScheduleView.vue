@@ -122,8 +122,9 @@ function goToday() {
                   v-for="ev in cell.events.slice(0, 3)"
                   :key="ev.id"
                   class="cc-chip"
-                  :class="[ev.color, { done: ev.done }]"
-                  :title="ev.title"
+                  :class="[{ done: ev.done }, !ev.statusColor && ev.color]"
+                  :style="ev.statusColor ? { background: ev.statusColor + '22', color: ev.statusColor, borderLeft: '3px solid ' + ev.statusColor } : null"
+                  :title="ev.statusName ? ev.title + ' · ' + ev.statusName : ev.title"
                 >{{ ev.title }}</span>
                 <span v-if="cell.events.length > 3" class="cc-more">+{{ cell.events.length - 3 }}</span>
               </span>
@@ -138,10 +139,11 @@ function goToday() {
           <div class="section-title"><i class="bi bi-calendar-day"></i>{{ selectedLabel }}</div>
           <p v-if="!selectedEvents.length" class="rail-empty-lg">{{ t('schedule.noneOnDay') }}</p>
           <router-link v-for="ev in selectedEvents" :key="ev.id" :to="ev.to" class="agenda-item">
-            <span class="ai-tick" :class="ev.color"><i class="bi" :class="ev.kind === 'assignment' ? 'bi-easel2' : 'bi-check2-square'"></i></span>
+            <span class="ai-tick" :class="!ev.statusColor && ev.color" :style="ev.statusColor ? { background: ev.statusColor } : null"><i class="bi" :class="ev.kind === 'assignment' ? 'bi-easel2' : 'bi-check2-square'"></i></span>
             <div class="ai-main">
               <div class="ai-title" :class="{ done: ev.done }">{{ ev.title }}</div>
               <div class="ai-meta">
+                <span v-if="ev.statusName" class="ai-status" :style="{ background: ev.statusColor + '22', color: ev.statusColor }"><span class="ai-status-dot" :style="{ background: ev.statusColor }"></span>{{ ev.statusName }}</span>
                 <span v-if="ev.subject" class="badge-outline">{{ ev.subject }}</span>
                 <span class="ai-kind">{{ ev.kind === 'assignment' ? t('schedule.assignment') : t('schedule.task') }}</span>
                 <span v-if="ev.time" class="ai-time">{{ ev.time }}</span>
@@ -155,10 +157,13 @@ function goToday() {
           <p v-if="schedule.loading" class="rail-empty-lg"><i class="bi bi-arrow-repeat spin"></i> {{ t('schedule.loading') }}</p>
           <p v-else-if="!schedule.upcoming.length" class="rail-empty-lg">{{ t('schedule.noUpcoming') }}</p>
           <router-link v-for="ev in schedule.upcoming" :key="ev.id" :to="ev.to" class="up-row" @click="selected = ev.date">
-            <span class="up-dot" :class="ev.color"></span>
+            <span class="up-dot" :class="!ev.statusColor && ev.color" :style="ev.statusColor ? { background: ev.statusColor } : null"></span>
             <div class="up-main">
               <div class="up-title" :class="{ done: ev.done }">{{ ev.title }}</div>
-              <div class="up-sub">{{ ev.subject }}</div>
+              <div class="up-sub">
+                <span v-if="ev.subject">{{ ev.subject }}</span>
+                <span v-if="ev.statusName" class="up-status" :style="{ color: ev.statusColor }">{{ ev.subject ? ' · ' : '' }}{{ ev.statusName }}</span>
+              </div>
             </div>
             <span class="up-date">{{ new Date(ev.date + 'T00:00:00').toLocaleDateString(locale, { month: 'short', day: 'numeric' }) }}</span>
           </router-link>
