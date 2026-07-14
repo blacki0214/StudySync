@@ -27,8 +27,13 @@ const categories = [
   { value: 'Languages', key: 'subjects.cat.languages' }
 ]
 
+// The catalog is the COMMUNITY view: only public/shared subjects (seed subjects
+// have no `visibility`, so treat anything not explicitly 'private' as public).
+// A user's own PRIVATE subjects live in My Subjects, not here — so hide them.
+const catalog = computed(() => subjectStore.subjects.filter((s) => s.visibility !== 'private'))
+
 const filtered = computed(() => {
-  let list = subjectStore.subjects
+  let list = catalog.value
   if (category.value !== 'All') list = list.filter((s) => s.category === category.value)
   if (search.value) {
     const q = search.value.toLowerCase()
@@ -38,7 +43,7 @@ const filtered = computed(() => {
 })
 
 const trending = computed(() =>
-  [...subjectStore.subjects].sort((a, b) => b.students - a.students).slice(0, 2)
+  [...catalog.value].sort((a, b) => b.students - a.students).slice(0, 2)
 )
 </script>
 
