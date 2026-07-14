@@ -7,6 +7,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSubjectStore } from '../stores/subjectStore.js'
+import SubjectIcon from '../components/subjects/SubjectIcon.vue'
 
 const subjectStore = useSubjectStore()
 const { t } = useI18n()
@@ -88,7 +89,7 @@ const trending = computed(() =>
     <div class="row g-4">
       <div v-for="s in filtered" :key="s.id" class="col-12 col-md-6 col-xl-3">
         <router-link :to="{ name: 'subject-hub', params: { id: s.id } }" class="subject-card">
-          <span class="icon-tile sc-badge" :class="s.color">{{ s.letters }}</span>
+          <SubjectIcon :subject="s" />
           <div class="sc-code">{{ s.code }} · {{ s.category }}</div>
           <div class="sc-name">{{ s.name }}</div>
           <div class="sc-row">

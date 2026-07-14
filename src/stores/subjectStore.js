@@ -46,6 +46,19 @@ export const useSubjectStore = defineStore('subjects', {
       return row
     },
 
+    /** Update a subject and reconcile the local copy (rename, icon, sharing…). */
+    async updateSubject(id, patch) {
+      const updated = await subjectService.updateSubject(id, patch)
+      const row = this.subjects.find((s) => s.id === id)
+      if (row) Object.assign(row, updated || patch)
+      return row
+    },
+
+    /** Toggle whether a personal subject is shared to the public catalog. */
+    async setShared(id, shared) {
+      return this.updateSubject(id, { visibility: shared ? 'public' : 'private' })
+    },
+
     async deleteSubject(id) {
       await subjectService.deleteSubject(id)
       this.subjects = this.subjects.filter((s) => s.id !== id)

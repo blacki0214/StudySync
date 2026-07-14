@@ -26,6 +26,7 @@ import DocumentUploader from '../components/documents/DocumentUploader.vue'
 import DocumentList from '../components/documents/DocumentList.vue'
 import AskSourcesPanel from '../components/documents/AskSourcesPanel.vue'
 import QuizGenerator from '../components/ai/QuizGenerator.vue'
+import SubjectIcon from '../components/subjects/SubjectIcon.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import TaskManager from '../components/tasks/TaskManager.vue'
 
@@ -229,7 +230,7 @@ async function doExport(kind) {
     <!-- Header -->
     <header class="page-head">
       <div class="ws-head">
-        <span class="icon-tile ws-badge" :class="subject.color">{{ subject.letters }}</span>
+        <SubjectIcon :subject="subject" tile-class="ws-badge" />
         <div>
           <h1 class="ph-title">{{ subject.name }}</h1>
           <p class="ph-sub">{{ t('workspace.sub', { n: docs.length }) }}</p>

@@ -489,7 +489,22 @@ export default {
     colorBlue: 'Xanh dương',
     colorGreen: 'Xanh lá',
     colorFuchsia: 'Hồng',
-    colorOrange: 'Cam'
+    colorOrange: 'Cam',
+    categoryOther: 'Khác…',
+    categoryCustomPlaceholder: 'Nhập danh mục',
+    icon: 'Biểu tượng',
+    iconLetters: 'Dùng chữ cái',
+    iconUpload: 'Tải ảnh lên',
+    iconTooBig: 'Ảnh quá lớn (tối đa 3 MB).',
+    iconFailed: 'Không thể xử lý ảnh đó.',
+    share: 'Chia sẻ với cộng đồng',
+    shareHint: 'Hiển thị môn học này trong danh mục công khai để người khác có thể tìm thấy.',
+    makeShared: 'Chia sẻ với cộng đồng',
+    nowShared: 'Đã chia sẻ môn học với cộng đồng',
+    nowPrivate: 'Môn học đã chuyển sang riêng tư',
+    shareFailed: 'Không thể cập nhật chia sẻ. Vui lòng thử lại.',
+    sharedBadge: 'Đã chia sẻ',
+    privateBadge: 'Riêng tư'
   },
 
   workspace: {

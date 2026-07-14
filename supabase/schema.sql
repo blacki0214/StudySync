@@ -75,6 +75,7 @@ create table public.subjects (
   code         text not null,
   letters      text,
   color        text default 'grad-blue',
+  icon         text,                       -- bi-icon name or uploaded data-URL; null = letter badge
   name         text not null,
   description  text,
   category     text,

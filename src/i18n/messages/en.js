@@ -490,7 +490,22 @@ export default {
     colorBlue: 'Blue',
     colorGreen: 'Green',
     colorFuchsia: 'Fuchsia',
-    colorOrange: 'Orange'
+    colorOrange: 'Orange',
+    categoryOther: 'Other…',
+    categoryCustomPlaceholder: 'Type a category',
+    icon: 'Icon',
+    iconLetters: 'Use letters',
+    iconUpload: 'Upload an image',
+    iconTooBig: 'Image is too large (max 3 MB).',
+    iconFailed: 'Could not process that image.',
+    share: 'Share to community',
+    shareHint: 'Make this subject visible in the public catalog so others can find it.',
+    makeShared: 'Share to community',
+    nowShared: 'Subject shared to the community',
+    nowPrivate: 'Subject is now private',
+    shareFailed: 'Could not update sharing. Please try again.',
+    sharedBadge: 'Shared',
+    privateBadge: 'Private'
   },
 
   workspace: {

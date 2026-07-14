@@ -62,23 +62,29 @@ export const subjectService = {
     return data
   },
 
-  /** Create a personal subject owned by the current user. */
-  async createSubject({ name, description = '', category = 'Personal', color = 'grad-blue', ownerId }) {
+  /**
+   * Create a personal subject owned by the current user.
+   * @param {object} input
+   * @param {string} [input.icon]    bi-icon name or uploaded image data-URL
+   * @param {boolean} [input.shared] true = visible in the public/community catalog
+   */
+  async createSubject({ name, description = '', category = 'Personal', color = 'grad-blue', icon = null, shared = false, ownerId }) {
     const trimmed = (name || '').trim()
     const base = {
       code: codeFrom(trimmed),
       letters: lettersFrom(trimmed),
       color,
+      icon: icon || null,
       name: trimmed,
       description,
-      category,
+      category: (category || 'Personal').trim() || 'Personal',
       rating: 0,
       notes_count: 0,
       students: 1,
       progress: 0,
       owner_id: ownerId,
       owner_type: 'personal',
-      visibility: 'private'
+      visibility: shared ? 'public' : 'private'
     }
 
     if (!isSupabaseConfigured) {
@@ -90,6 +96,22 @@ export const subjectService = {
     }
 
     const { data, error } = await supabase.from('subjects').insert(base).select().single()
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Update a subject the user owns (rename, recolor, change icon/category, or
+   * toggle sharing via `visibility`). RLS restricts live updates to the owner.
+   */
+  async updateSubject(id, patch = {}) {
+    if (!isSupabaseConfigured) {
+      const list = readDemo()
+      const row = list.find((s) => s.id === id)
+      if (row) { Object.assign(row, patch); writeDemo(list) }
+      return row || null
+    }
+    const { data, error } = await supabase.from('subjects').update(patch).eq('id', id).select().single()
     if (error) throw error
     return data
   },
