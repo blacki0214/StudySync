@@ -11,6 +11,7 @@
 import { defineStore } from 'pinia'
 import { scheduleService } from '../services/scheduleService.js'
 import { assignmentService } from '../services/assignmentService.js'
+import { taskStatusService } from '../services/taskStatusService.js'
 import { useAuthStore } from './authStore.js'
 import { useClassStore } from './classStore.js'
 import { useContentStore } from './contentStore.js'
@@ -61,12 +62,23 @@ export const useScheduleStore = defineStore('schedule', {
           classes.fetchAll().catch(() => {})
         ])
 
+        // Load each involved board's custom status set so "done" is accurate for
+        // custom statuses (e.g. "Mastered"/"Cancelled"), not just the built-ins.
+        const subjectIds = [...new Set(tasks.filter((t) => t.subject_id).map((t) => t.subject_id))]
+        const [personalSet, ...subjectSets] = await Promise.all([
+          taskStatusService.getStatusSet({ subjectId: null, ownerId: auth.user?.id }).catch(() => ({ statuses: null })),
+          ...subjectIds.map((id) => taskStatusService.getStatusSet({ subjectId: id, ownerId: auth.user?.id }).catch(() => ({ statuses: null })))
+        ])
+        const statusesByScope = new Map([[null, personalSet.statuses]])
+        subjectIds.forEach((id, i) => statusesByScope.set(id, subjectSets[i].statuses))
+
         const events = []
 
         // --- Tasks (due_date is a YYYY-MM-DD string) ---
         for (const t of tasks) {
           if (!t.due_date) continue
           const subj = content.subjectById(t.subject_id)
+          const statuses = statusesByScope.get(t.subject_id || null)
           events.push({
             id: `task-${t.id}`,
             kind: 'task',
@@ -75,7 +87,7 @@ export const useScheduleStore = defineStore('schedule', {
             time: '',
             subject: subj?.code || '',
             color: subj?.color || 'grad-blue',
-            done: isDoneStatus(t.status),
+            done: isDoneStatus(t.status, statuses),
             priority: t.priority || 'medium',
             to: t.subject_id
               ? { name: 'subject-workspace', params: { id: t.subject_id } }
