@@ -1,7 +1,30 @@
 -- migration_community_reddit.sql
 -- ---------------------------------------------------------------------------
 -- Reddit-style community: threaded (nested) replies + per-user up/down votes on
--- posts. Run after migration_community_interactions.sql. Safe to re-run.
+-- posts. Ideally run AFTER migration_community_interactions.sql, but this file
+-- is self-contained (it creates community_comments if that migration hasn't run
+-- yet). Safe to re-run.
+--
+-- NOTE: the Save feature also needs `community_saves` from
+-- migration_community_interactions.sql — run that one too.
+
+-- Ensure the comments table exists (in case this runs before the other file).
+create table if not exists public.community_comments (
+  id         uuid primary key default gen_random_uuid(),
+  post_id    uuid not null references public.community_posts (id) on delete cascade,
+  author_id  uuid references public.profiles (id) on delete set null,
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists community_comments_post on public.community_comments (post_id);
+
+alter table public.community_comments enable row level security;
+drop policy if exists "cc read"   on public.community_comments;
+drop policy if exists "cc insert" on public.community_comments;
+drop policy if exists "cc delete" on public.community_comments;
+create policy "cc read"   on public.community_comments for select using (true);
+create policy "cc insert" on public.community_comments for insert to authenticated with check (author_id = auth.uid());
+create policy "cc delete" on public.community_comments for delete to authenticated using (author_id = auth.uid());
 
 -- Nested replies: a comment may reply to another comment.
 alter table public.community_comments
