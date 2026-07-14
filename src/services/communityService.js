@@ -100,8 +100,9 @@ export async function setVotes(postId, votes) {
 // Replies (comments) + saved posts (bookmarks)
 // ---------------------------------------------------------------------------
 
-const C_KEY = 'studysync_demo_community_comments' // [{ id, post_id, author_id, author_name, body, created_at }]
+const C_KEY = 'studysync_demo_community_comments' // [{ id, post_id, parent_id, author_id, author_name, body, created_at }]
 const S_KEY = 'studysync_demo_community_saves'    // [{ user_id, post_id }]
+const V_KEY = 'studysync_demo_community_votes'    // [{ user_id, post_id, value }]
 const readLS = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]') } catch { return [] } }
 const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* ignore */ } }
 
@@ -122,14 +123,14 @@ export async function listComments(postId) {
   return (data || []).map((c) => ({ ...c, ago: timeAgo(c.created_at) }))
 }
 
-/** Add a reply and bump the post's reply count. Returns the created comment. */
-export async function addComment({ postId, body, author, newReplyCount }) {
+/** Add a reply (optionally nested under `parentId`) and bump the reply count. */
+export async function addComment({ postId, body, author, parentId = null, newReplyCount }) {
   const clean = String(body || '').trim()
   if (!clean) throw new Error('Empty comment')
 
   if (!isSupabaseConfigured || !supabase) {
     const row = {
-      id: localId('cmt'), post_id: postId, author_id: author?.id || 'demo-user',
+      id: localId('cmt'), post_id: postId, parent_id: parentId, author_id: author?.id || 'demo-user',
       author_name: author?.full_name || 'You', body: clean, created_at: new Date().toISOString()
     }
     writeLS(C_KEY, [...readLS(C_KEY), row])
@@ -138,7 +139,7 @@ export async function addComment({ postId, body, author, newReplyCount }) {
 
   const { data, error } = await supabase
     .from('community_comments')
-    .insert({ post_id: postId, author_id: author?.id || null, body: clean })
+    .insert({ post_id: postId, parent_id: parentId, author_id: author?.id || null, body: clean })
     .select('*, author:profiles(full_name, avatar_url)')
     .single()
   if (error) throw error
@@ -147,12 +148,53 @@ export async function addComment({ postId, body, author, newReplyCount }) {
   return { ...data, ago: timeAgo(data.created_at) }
 }
 
-/** Delete a reply and decrement the post's reply count. */
-export async function deleteComment({ id, postId, newReplyCount }) {
+/** The user's post votes as a Map of postId -> (+1 | -1). */
+export async function listVotes(userId) {
+  if (!userId) return new Map()
   if (!isSupabaseConfigured || !supabase) {
-    writeLS(C_KEY, readLS(C_KEY).filter((c) => c.id !== id))
+    return new Map(readLS(V_KEY).filter((v) => v.user_id === userId).map((v) => [v.post_id, v.value]))
+  }
+  const { data, error } = await supabase.from('community_votes').select('post_id, value').eq('user_id', userId)
+  if (error) return new Map()
+  return new Map((data || []).map((r) => [r.post_id, r.value]))
+}
+
+/**
+ * Set (or clear, value 0) the user's vote on a post and store the post's new net
+ * score. The caller computes both from the optimistic UI.
+ */
+export async function setVote({ userId, postId, value, newScore }) {
+  if (!userId) return
+  if (!isSupabaseConfigured || !supabase) {
+    const rows = readLS(V_KEY).filter((v) => !(v.user_id === userId && v.post_id === postId))
+    if (value !== 0) rows.push({ user_id: userId, post_id: postId, value })
+    writeLS(V_KEY, rows)
     return
   }
+  if (value === 0) {
+    await supabase.from('community_votes').delete().eq('user_id', userId).eq('post_id', postId)
+  } else {
+    await supabase.from('community_votes').upsert({ user_id: userId, post_id: postId, value }, { onConflict: 'user_id,post_id' })
+  }
+  await supabase.from('community_posts').update({ votes: newScore }).eq('id', postId)
+}
+
+/** Delete a reply (and its nested replies) and decrement the post's count. */
+export async function deleteComment({ id, postId, newReplyCount }) {
+  if (!isSupabaseConfigured || !supabase) {
+    // Cascade to descendants so orphaned replies don't linger.
+    const all = readLS(C_KEY)
+    const remove = new Set([id])
+    for (let changed = true; changed;) {
+      changed = false
+      for (const c of all) {
+        if (c.parent_id && remove.has(c.parent_id) && !remove.has(c.id)) { remove.add(c.id); changed = true }
+      }
+    }
+    writeLS(C_KEY, all.filter((c) => !remove.has(c.id)))
+    return
+  }
+  // Live: FK on delete cascade removes children automatically.
   const { error } = await supabase.from('community_comments').delete().eq('id', id)
   if (error) throw error
   await supabase.from('community_posts').update({ replies: newReplyCount }).eq('id', postId)
@@ -188,6 +230,7 @@ export async function toggleSave({ userId, postId, saved }) {
 }
 
 export const communityService = {
-  createPost, setVotes, listComments, addComment, deleteComment, listSavedIds, toggleSave
+  createPost, setVotes, listComments, addComment, deleteComment,
+  listSavedIds, toggleSave, listVotes, setVote
 }
 export default communityService
