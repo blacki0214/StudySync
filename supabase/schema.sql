@@ -54,6 +54,7 @@ create table public.profiles (
   role        text,                       -- 'student' | 'teacher'
   purpose     text,                       -- 'personal' | 'education' | 'teaching'
   avatar_url  text,
+  bio         text,
   program     text,
   school      text,
   location    text,

@@ -129,6 +129,13 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       // Drop the signed-out user's cached data so the next account starts clean.
       resetUserStores()
+    },
+
+    /** Personalise the profile (name, avatar, bio, banner colour, …). */
+    async updateProfile(patch) {
+      const updated = await authService.updateProfile(patch)
+      this.user = { ...this.user, ...updated }
+      return this.user
     }
   }
 })

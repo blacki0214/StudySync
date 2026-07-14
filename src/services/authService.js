@@ -167,6 +167,30 @@ export const authService = {
     if (!isSupabaseConfigured) return
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) throw error
+  },
+
+  /**
+   * Update the current user's profile (name, avatar, bio, banner colour, …).
+   * Returns the merged/updated user object. Demo mode writes to localStorage.
+   */
+  async updateProfile(patch = {}) {
+    if (!isSupabaseConfigured) {
+      const raw = localStorage.getItem(DEMO_STORAGE_KEY)
+      const base = raw ? JSON.parse(raw) : { ...currentUser }
+      const user = { ...base, ...patch }
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(user))
+      return user
+    }
+    const { data: session } = await supabase.auth.getUser()
+    if (!session.user) throw new Error('Not signed in')
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(patch)
+      .eq('id', session.user.id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
   }
 }
 

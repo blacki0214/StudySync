@@ -737,7 +737,27 @@ export default {
     last12: 'Last 12 months',
     ytd: '+{n} YTD',
     achievements: 'Achievements',
-    unlockedOf: '{n} unlocked of {total}'
+    unlockedOf: '{n} unlocked of {total}',
+    about: 'About',
+    editTitle: 'Edit profile',
+    save: 'Save changes',
+    saved: 'Profile updated',
+    saveFailed: 'Could not save your profile. Please try again.',
+    handleTaken: 'That @handle is already taken.',
+    fullName: 'Full name',
+    handle: 'Handle',
+    program: 'Program',
+    programPlaceholder: 'e.g. Computer Science',
+    school: 'School',
+    schoolPlaceholder: 'e.g. Swinburne',
+    location: 'Location',
+    locationPlaceholder: 'e.g. Ho Chi Minh City',
+    bannerColour: 'Banner colour',
+    uploadAvatar: 'Upload',
+    removeAvatar: 'Remove',
+    avatarTooBig: 'Image is too large (max 5 MB).',
+    avatarFailed: 'Could not process that image.',
+    bioPlaceholder: 'Tell others a little about yourself…'
   },
 
   auth: {

@@ -735,7 +735,27 @@ export default {
     last12: '12 tháng qua',
     ytd: '+{n} từ đầu năm',
     achievements: 'Thành tích',
-    unlockedOf: 'Đã mở {n} trong {total}'
+    unlockedOf: 'Đã mở {n} trong {total}',
+    about: 'Giới thiệu',
+    editTitle: 'Chỉnh sửa hồ sơ',
+    save: 'Lưu thay đổi',
+    saved: 'Đã cập nhật hồ sơ',
+    saveFailed: 'Không thể lưu hồ sơ. Vui lòng thử lại.',
+    handleTaken: 'Tên @handle này đã được sử dụng.',
+    fullName: 'Họ và tên',
+    handle: 'Tên định danh',
+    program: 'Ngành học',
+    programPlaceholder: 'vd. Khoa học máy tính',
+    school: 'Trường',
+    schoolPlaceholder: 'vd. Swinburne',
+    location: 'Địa điểm',
+    locationPlaceholder: 'vd. TP. Hồ Chí Minh',
+    bannerColour: 'Màu bìa',
+    uploadAvatar: 'Tải lên',
+    removeAvatar: 'Xóa',
+    avatarTooBig: 'Ảnh quá lớn (tối đa 5 MB).',
+    avatarFailed: 'Không thể xử lý ảnh đó.',
+    bioPlaceholder: 'Giới thiệu đôi chút về bạn…'
   },
 
   auth: {
