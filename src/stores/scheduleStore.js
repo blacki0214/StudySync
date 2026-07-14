@@ -12,10 +12,15 @@ import { defineStore } from 'pinia'
 import { scheduleService } from '../services/scheduleService.js'
 import { assignmentService } from '../services/assignmentService.js'
 import { taskStatusService } from '../services/taskStatusService.js'
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient.js'
 import { useAuthStore } from './authStore.js'
 import { useClassStore } from './classStore.js'
 import { useContentStore } from './contentStore.js'
 import { isDoneStatus } from '../utils/taskStatusTemplates.js'
+
+// Module-scoped realtime handle (kept out of reactive state).
+let liveChannel = null
+let liveTimer = null
 
 /** Local YYYY-MM-DD for a Date or an ISO/date string (avoids UTC shifting). */
 function isoDate(value) {
@@ -127,6 +132,28 @@ export const useScheduleStore = defineStore('schedule', {
       } finally {
         this.loading = false
       }
+    },
+
+    /**
+     * Subscribe to live task changes so the calendar stays current without a
+     * reload (live mode only). A burst of edits is debounced into one reload.
+     * Call teardown() when leaving the Schedule.
+     */
+    subscribeLive() {
+      if (!isSupabaseConfigured || liveChannel) return
+      liveChannel = supabase
+        .channel('schedule-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+          clearTimeout(liveTimer)
+          liveTimer = setTimeout(() => this.load(), 300)
+        })
+        .subscribe()
+    },
+
+    teardown() {
+      clearTimeout(liveTimer)
+      liveTimer = null
+      if (liveChannel) { supabase.removeChannel(liveChannel); liveChannel = null }
     }
   }
 })

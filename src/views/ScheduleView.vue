@@ -5,7 +5,7 @@
  * with an "Upcoming" agenda rail. Month grid is computed locally (no date lib);
  * styling is semantic classes in styles/schedule.css.
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useScheduleStore } from '../stores/scheduleStore.js'
 
@@ -25,7 +25,10 @@ function iso(d) {
   return `${y}-${m}-${day}`
 }
 
-onMounted(() => { if (!schedule.loaded) schedule.load() })
+// Refresh every time the Schedule opens (SPA navigation isn't a page reload),
+// and stay live via the realtime subscription while it's on screen.
+onMounted(() => { schedule.load(); schedule.subscribeLive() })
+onUnmounted(() => schedule.teardown())
 
 const monthLabel = computed(() =>
   new Date(viewYear.value, viewMonth.value, 1).toLocaleDateString(locale.value, { month: 'long', year: 'numeric' })
