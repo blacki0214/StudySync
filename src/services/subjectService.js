@@ -43,12 +43,21 @@ function hash(s) {
 }
 
 export const subjectService = {
-  /** All subjects visible in the catalog (seed/public + user-created). */
-  async listAll() {
+  /**
+   * Subjects visible to a user: the public/seed catalog PLUS their own personal
+   * subjects — but never another user's private ones. The table is public-read
+   * at the RLS level, so this scoping must happen in the query. Pass `userId`.
+   */
+  async listAll({ userId } = {}) {
     if (!isSupabaseConfigured) {
       return [...readDemo(), ...sampleSubjects]
     }
-    const { data, error } = await supabase.from('subjects').select('*').order('code', { ascending: true })
+    let query = supabase.from('subjects').select('*').order('code', { ascending: true })
+    // Public/seed (owner_id null or visibility public) + the user's own subjects.
+    query = userId
+      ? query.or(`owner_id.is.null,visibility.eq.public,owner_id.eq.${userId}`)
+      : query.or('owner_id.is.null,visibility.eq.public')
+    const { data, error } = await query
     if (error) throw error
     return data
   },

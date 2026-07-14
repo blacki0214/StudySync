@@ -29,9 +29,11 @@ export const useSubjectStore = defineStore('subjects', {
 
   actions: {
     async fetchSubjects() {
+      const auth = useAuthStore()
       this.loading = true
       try {
-        this.subjects = await subjectService.listAll()
+        // Public catalog + the user's own subjects (never others' private ones).
+        this.subjects = await subjectService.listAll({ userId: auth.user?.id })
       } finally {
         this.loading = false
       }

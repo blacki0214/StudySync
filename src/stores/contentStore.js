@@ -181,9 +181,10 @@ export const useContentStore = defineStore('content', {
 
     /** LIVE MODE — everything comes from Supabase. No sample data is touched. */
     async _loadFromDb() {
-      // Notes, decks and study rooms are per-user: these tables are public-read
-      // at the RLS level, so we must filter to the signed-in user or a new
-      // account would see everyone's (incl. previous accounts on this device).
+      // Notes, decks, study rooms and subjects are per-user: these tables are
+      // public-read at the RLS level, so we must filter to the signed-in user or
+      // a new account would see everyone's (incl. previous accounts). Subjects
+      // additionally keep the shared public/seed catalog visible to everyone.
       const auth = useAuthStore()
       const uid = auth.user?.id
       const [
@@ -199,7 +200,11 @@ export const useContentStore = defineStore('content', {
         statsRes
       ] = await Promise.all([
         supabase.from('profiles').select('*').order('reputation', { ascending: false }),
-        supabase.from('subjects').select('*').order('code'),
+        // Public/seed catalog + the user's own subjects — never others' private.
+        (uid
+          ? supabase.from('subjects').select('*').or(`owner_id.is.null,visibility.eq.public,owner_id.eq.${uid}`)
+          : supabase.from('subjects').select('*').or('owner_id.is.null,visibility.eq.public')
+        ).order('code'),
         (uid
           ? supabase.from('notes').select('*').eq('author_id', uid)
           : supabase.from('notes').select('*')
