@@ -159,7 +159,7 @@ export default {
   },
 
   notes: {
-    title: 'Collab Notes',
+    title: 'Notes',
     sub: 'Find shared notes or create your own.',
     newNote: 'New note',
     searchPlaceholder: 'Search notes by title or content...',

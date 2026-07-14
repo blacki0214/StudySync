@@ -159,7 +159,7 @@ export default {
   },
 
   notes: {
-    title: 'Ghi chú nhóm',
+    title: 'Ghi chú',
     sub: 'Tìm ghi chú được chia sẻ hoặc tạo ghi chú của riêng bạn.',
     newNote: 'Ghi chú mới',
     searchPlaceholder: 'Tìm ghi chú theo tiêu đề hoặc nội dung...',
