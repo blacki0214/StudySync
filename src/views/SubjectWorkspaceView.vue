@@ -18,6 +18,8 @@ import { useDocumentStore } from '../stores/documentStore.js'
 import { useContentStore } from '../stores/contentStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { isAiConfigured, summarize, generateFlashcards, generateQuiz, extractKeywords } from '../services/aiService.js'
+import { cachedGenerate } from '../services/studySetCacheService.js'
+import { useAuthStore } from '../stores/authStore.js'
 import { cleanText } from '../utils/textAnalyzer.js'
 import { exportStudyMarkdown, exportFlashcardsCsv, exportFlashcardsAnki } from '../utils/exporters.js'
 import DocumentUploader from '../components/documents/DocumentUploader.vue'
@@ -33,6 +35,7 @@ const subjectStore = useSubjectStore()
 const documentStore = useDocumentStore()
 const content = useContentStore()
 const dialog = useDialogStore()
+const auth = useAuthStore()
 
 const ready = ref(false)
 const busy = ref(false)
@@ -62,30 +65,52 @@ let genTimer = null
 const genKey = { summary: '', flashcards: '', keywords: '' }
 const sig = (c) => `${c.length}:${c.slice(0, 40)}`
 
-async function genSummary() {
+// The generated material is cached per user, keyed by this subject. Reused on
+// revisit (and when the same corpus recurs); the Regenerate buttons pass
+// force=true to spend an AI call and overwrite the cached set.
+const sourceKey = `subject:${props.id}`
+
+async function genSummary(force = false) {
   if (!corpus.value) { summary.value = []; return }
   genKey.summary = sig(corpus.value)
   gen.summary = true
-  try { summary.value = await summarize(corpus.value, { max: 6 }) }
-  catch { summary.value = []; genKey.summary = '' }
+  try {
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id, kind: 'summary', sourceKey,
+      content: corpus.value, options: { max: 6 },
+      generator: (c, o) => summarize(c, o), force
+    })
+    summary.value = data || []
+  } catch { summary.value = []; genKey.summary = '' }
   finally { gen.summary = false }
 }
-async function genFlash() {
+async function genFlash(force = false) {
   if (!corpus.value) { flashcards.value = []; return }
   genKey.flashcards = sig(corpus.value)
   gen.flashcards = true
   try {
-    flashcards.value = await generateFlashcards(corpus.value, { max: 12 })
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id, kind: 'flashcards', sourceKey,
+      content: corpus.value, options: { max: 12 },
+      generator: (c, o) => generateFlashcards(c, o), force
+    })
+    flashcards.value = data || []
     revealed.value = new Set()
   } catch { flashcards.value = []; genKey.flashcards = '' }
   finally { gen.flashcards = false }
 }
-async function genKeywords() {
+async function genKeywords(force = false) {
   if (!corpus.value) { keywords.value = []; return }
   genKey.keywords = sig(corpus.value)
   gen.keywords = true
-  try { keywords.value = await extractKeywords(corpus.value, { limit: 14 }) }
-  catch { keywords.value = []; genKey.keywords = '' }
+  try {
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id, kind: 'keywords', sourceKey,
+      content: corpus.value, options: { limit: 14 },
+      generator: (c, o) => extractKeywords(c, o), force
+    })
+    keywords.value = data || []
+  } catch { keywords.value = []; genKey.keywords = '' }
   finally { gen.keywords = false }
 }
 
@@ -263,7 +288,7 @@ async function doExport(kind) {
               <div class="section-title mb-0"><i class="bi bi-card-list"></i>{{ t('workspace.tabSummary') }}
                 <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
               </div>
-              <button class="btn btn-soft btn-sm" :disabled="gen.summary" @click="genSummary">
+              <button class="btn btn-soft btn-sm" :disabled="gen.summary" @click="genSummary(true)">
                 <i class="bi" :class="gen.summary ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
               </button>
             </div>
@@ -282,7 +307,7 @@ async function doExport(kind) {
                 <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
               </div>
               <div class="ws-head-actions">
-                <button class="btn btn-soft btn-sm" :disabled="gen.flashcards" @click="genFlash">
+                <button class="btn btn-soft btn-sm" :disabled="gen.flashcards" @click="genFlash(true)">
                   <i class="bi" :class="gen.flashcards ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
                 </button>
                 <button class="btn btn-brand btn-sm" :disabled="saving || !flashcards.length" @click="saveDeck">
@@ -302,7 +327,7 @@ async function doExport(kind) {
 
           <!-- Quiz (interactive, AI-backed) -->
           <div v-else-if="tab==='quiz'" class="panel ws-panel">
-            <QuizGenerator :content="corpus" />
+            <QuizGenerator :content="corpus" :cache-key="sourceKey" />
           </div>
 
           <!-- Keywords -->
@@ -311,7 +336,7 @@ async function doExport(kind) {
               <div class="section-title mb-0"><i class="bi bi-tags"></i>{{ t('keywords.title') }}
                 <span v-if="isAiConfigured" class="badge-soft ws-ai"><i class="bi bi-stars"></i> AI</span>
               </div>
-              <button class="btn btn-soft btn-sm" :disabled="gen.keywords" @click="genKeywords">
+              <button class="btn btn-soft btn-sm" :disabled="gen.keywords" @click="genKeywords(true)">
                 <i class="bi" :class="gen.keywords ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>{{ t('workspace.regenerate') }}
               </button>
             </div>

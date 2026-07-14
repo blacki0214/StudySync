@@ -16,6 +16,8 @@ import { useContentStore } from '../stores/contentStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { useStudyStatsStore } from '../stores/studyStatsStore.js'
 import { isAiConfigured, generateFlashcards as aiGenerateFlashcards } from '../services/aiService.js'
+import { cachedGenerate } from '../services/studySetCacheService.js'
+import { useAuthStore } from '../stores/authStore.js'
 import AppSelect from '../components/common/AppSelect.vue'
 import StatCard from '../components/common/StatCard.vue'
 import BarChart from '../components/charts/BarChart.vue'
@@ -27,6 +29,7 @@ const { t } = useI18n()
 const content = useContentStore()
 const dialog = useDialogStore()
 const srs = useStudyStatsStore()
+const auth = useAuthStore()
 const subjectByCode = (code) => content.subjectByCode(code)
 // Note picker options (value is the note object, matched by identity).
 const noteOptions = computed(() => content.notes.map((n) => ({ value: n, label: n.title })))
@@ -70,11 +73,22 @@ const noteForGen = ref(null)
 const generated = ref([])
 const generating = ref(false)
 
-async function runGenerate() {
+// Reuse the per-user cached cards for this note when available; pass force=true
+// (the Regenerate button) to spend an AI call and overwrite the cache.
+async function runGenerate(force = false) {
   if (!noteForGen.value) { generated.value = []; return }
   generating.value = true
   try {
-    generated.value = await aiGenerateFlashcards(noteForGen.value.content, { max: 12 })
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id,
+      kind: 'flashcards',
+      sourceKey: `note:${noteForGen.value.id}`,
+      content: noteForGen.value.content,
+      options: { max: 12 },
+      generator: (c, o) => aiGenerateFlashcards(c, o),
+      force
+    })
+    generated.value = data || []
   } catch {
     generated.value = []
     dialog.toast(t('ai.failed'), 'error')
@@ -83,9 +97,10 @@ async function runGenerate() {
   }
 }
 
-// (Re)generate whenever the selected note changes — including the initial pick
-// made in onMounted, which flips noteForGen from null to a note.
-watch(noteForGen, runGenerate)
+// Load whenever the selected note changes — including the initial pick made in
+// onMounted, which flips noteForGen from null to a note. Never force here, so
+// switching notes reuses cached cards instead of costing a credit each time.
+watch(noteForGen, () => runGenerate())
 
 // Persist the generated cards as a studyable deck, then jump into Study mode.
 const saving = ref(false)
@@ -235,7 +250,7 @@ onMounted(async () => {
         <label>{{ t('flashcards.fromNote') }}</label>
         <AppSelect v-model="noteForGen" class="note-select" :options="noteOptions" :aria-label="t('flashcards.fromNote')" />
       </div>
-      <QuizGenerator v-if="noteForGen" :content="noteForGen.content" />
+      <QuizGenerator v-if="noteForGen" :content="noteForGen.content" :cache-key="`note:${noteForGen.id}`" />
     </div>
 
     <!-- CREATE CARDS (manual flashcard generator + keyword analysis) -->
@@ -246,7 +261,7 @@ onMounted(async () => {
           <AppSelect v-model="noteForGen" class="note-select" :options="noteOptions" :aria-label="t('flashcards.generateFromNote')" />
           <span v-if="generating" class="badge-soft"><i class="bi bi-arrow-repeat spin"></i> {{ t('flashcards.generating') }}</span>
           <span v-else class="badge-soft">{{ isAiConfigured ? t('flashcards.cardsViaAi', { n: generated.length }) : t('flashcards.cardsViaPatterns', { n: generated.length }) }}</span>
-          <button class="btn btn-soft btn-sm" :disabled="generating || !noteForGen" @click="runGenerate"><i class="bi bi-stars"></i>{{ t('flashcards.regenerate') }}</button>
+          <button class="btn btn-soft btn-sm" :disabled="generating || !noteForGen" @click="runGenerate(true)"><i class="bi bi-stars"></i>{{ t('flashcards.regenerate') }}</button>
           <button class="btn btn-brand btn-sm" :disabled="saving || generating || !generated.length" @click="saveAsDeck">
             <i class="bi" :class="saving ? 'bi-arrow-repeat spin' : 'bi-folder-plus'"></i>{{ t('flashcards.saveDeck') }}
           </button>

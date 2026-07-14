@@ -413,6 +413,7 @@ export default {
     scored: 'Bạn được {score} / {total}',
     reviewHint: 'Xem lại các đáp án được tô sáng bên dưới, hoặc thử lại.',
     retake: 'Làm lại',
+    newQuestions: 'Câu hỏi mới',
     back: 'Quay lại',
     next: 'Tiếp',
     finish: 'Hoàn thành'

@@ -8,10 +8,17 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { generateQuiz } from '../../services/aiService.js'
+import { cachedGenerate } from '../../services/studySetCacheService.js'
+import { useAuthStore } from '../../stores/authStore.js'
 
 const { t } = useI18n()
+const auth = useAuthStore()
 const props = defineProps({
-  content: { type: String, default: '' }
+  content: { type: String, default: '' },
+  // Stable id for the quiz's source (e.g. `note:<id>` / `subject:<id>`). When
+  // set, the generated quiz is cached per user and reused instead of costing an
+  // AI call on every visit. Empty string disables caching.
+  cacheKey: { type: String, default: '' }
 })
 
 const questions = ref([])
@@ -20,18 +27,35 @@ const answers = ref([]) // selected option index per question
 const finished = ref(false)
 const building = ref(false)
 
-async function build() {
+// Reset the attempt state (score/selections) WITHOUT re-generating — used by
+// "Retake" so the same questions can be re-attempted for free.
+function resetAttempt() {
+  current.value = 0
+  answers.value = new Array(questions.value.length).fill(null)
+  finished.value = false
+}
+
+// Load the quiz. Reuses the per-user cached set when available; pass force=true
+// (the "New questions" button) to spend an AI call and overwrite the cache.
+async function build(force = false) {
   building.value = true
   try {
-    questions.value = await generateQuiz(props.content, { max: 8 })
+    const { data } = await cachedGenerate({
+      userId: auth.user?.id,
+      kind: 'quiz',
+      sourceKey: props.cacheKey,
+      content: props.content,
+      options: { max: 8 },
+      generator: (c, o) => generateQuiz(c, o),
+      force
+    })
+    questions.value = data || []
   } catch {
     questions.value = []
   } finally {
     building.value = false
   }
-  current.value = 0
-  answers.value = new Array(questions.value.length).fill(null)
-  finished.value = false
+  resetAttempt()
 }
 
 function select(optionIndex) {
@@ -71,7 +95,10 @@ function optionClass(qi, oi) {
   return ''
 }
 
-watch(() => props.content, build, { immediate: true })
+// Re-load (from cache when possible) whenever the source content changes,
+// including on first mount. Never force here — that would spend a credit on
+// every navigation, which is exactly what the cache avoids.
+watch(() => props.content, () => build(), { immediate: true })
 </script>
 
 <template>
@@ -98,7 +125,10 @@ watch(() => props.content, build, { immediate: true })
       <div class="score-circle">{{ percent }}%</div>
       <h4>{{ t('quiz.scored', { score, total: questions.length }) }}</h4>
       <p class="quiz-result-sub">{{ t('quiz.reviewHint') }}</p>
-      <button class="btn btn-brand" @click="build"><i class="bi bi-arrow-repeat"></i>{{ t('quiz.retake') }}</button>
+      <div class="quiz-result-actions">
+        <button class="btn btn-brand" @click="resetAttempt"><i class="bi bi-arrow-repeat"></i>{{ t('quiz.retake') }}</button>
+        <button class="btn btn-soft" :disabled="building" @click="build(true)"><i class="bi bi-stars"></i>{{ t('quiz.newQuestions') }}</button>
+      </div>
 
       <div class="quiz-review">
         <div v-for="(q, qi) in questions" :key="qi" class="quiz-review-item">

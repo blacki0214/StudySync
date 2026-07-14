@@ -28,6 +28,7 @@ drop table if exists public.achievements    cascade;
 drop table if exists public.trending_topics cascade;
 drop table if exists public.community_posts  cascade;
 drop table if exists public.study_rooms     cascade;
+drop table if exists public.generated_study_sets cascade;
 drop table if exists public.quizzes         cascade;
 drop table if exists public.flashcards      cascade;
 drop table if exists public.deck_cards      cascade;
@@ -177,6 +178,23 @@ create table public.quizzes (
   correct_answer  int  not null,
   created_at      timestamptz not null default now()
 );
+
+-- 8a. generated_study_sets (per-user cache of AI-generated material) ---------
+-- One row per (user, kind, source). `content_hash` lets us reuse the cached set
+-- while the source is unchanged and regenerate (upsert) when it changes — so we
+-- don't spend AI credits re-generating on every visit.
+create table public.generated_study_sets (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references public.profiles (id) on delete cascade,
+  kind         text not null,          -- flashcards | quiz | summary | keywords
+  source_key   text not null,          -- e.g. 'note:<uuid>' or 'subject:<uuid>'
+  content_hash text not null,
+  payload      jsonb not null,
+  updated_at   timestamptz not null default now(),
+  unique (user_id, kind, source_key)
+);
+create index generated_study_sets_lookup
+  on public.generated_study_sets (user_id, kind, source_key);
 
 -- 8b. documents (NotebookLM-style sources added into a subject) --------------
 create table public.documents (
@@ -360,6 +378,13 @@ alter table public.trending_topics enable row level security;
 alter table public.achievements    enable row level security;
 alter table public.activities      enable row level security;
 alter table public.documents       enable row level security;
+alter table public.generated_study_sets enable row level security;
+
+-- Own-row access only — a user's cached study sets are private to them.
+create policy "gss read"   on public.generated_study_sets for select using (user_id = auth.uid());
+create policy "gss insert" on public.generated_study_sets for insert to authenticated with check (user_id = auth.uid());
+create policy "gss update" on public.generated_study_sets for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "gss delete" on public.generated_study_sets for delete to authenticated using (user_id = auth.uid());
 
 -- Public read for everything the app displays.
 do $$

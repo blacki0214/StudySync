@@ -87,6 +87,7 @@
 .quiz-review { text-align: left; margin-top: var(--space-4); }
 .quiz-review-item { margin-bottom: var(--space-4); }
 .quiz-result-sub { color: var(--c-text-muted); }
+.quiz-result-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
 .empty-text { color: var(--c-text-muted); }
 .quiz-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: var(--space-5); }
 .quiz-question { font-weight: 700; font-size: 1.1rem; margin-bottom: var(--space-4); }

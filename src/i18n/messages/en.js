@@ -414,6 +414,7 @@ export default {
     scored: 'You scored {score} / {total}',
     reviewHint: 'Review the highlighted answers below, or try again.',
     retake: 'Retake quiz',
+    newQuestions: 'New questions',
     back: 'Back',
     next: 'Next',
     finish: 'Finish'
