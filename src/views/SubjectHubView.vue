@@ -83,6 +83,14 @@ function initials(name) {
 
     <!-- Notes -->
     <div v-if="tab === 'notes'">
+      <div class="shh-notes-bar">
+        <router-link :to="{ name: 'notes', query: { subject: props.id } }" class="btn btn-outline-soft btn-sm">
+          <i class="bi bi-box-arrow-up-right"></i>{{ t('subjectHub.openInNotes') }}
+        </router-link>
+        <router-link :to="{ name: 'notes', query: { subject: props.id, new: 1 } }" class="btn btn-brand btn-sm">
+          <i class="bi bi-plus-lg"></i>{{ t('subjectHub.newNote') }}
+        </router-link>
+      </div>
       <EmptyState v-if="!notes.length" icon="bi-sticky" :title="t('subjectHub.noNotes')" />
       <div v-else class="row g-4">
         <div v-for="n in notes" :key="n.id" class="col-12 col-md-6 col-xl-4">

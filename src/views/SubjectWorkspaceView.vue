@@ -237,6 +237,12 @@ async function doExport(kind) {
         </div>
       </div>
       <div class="action-row">
+        <router-link :to="{ name: 'notes', query: { subject: props.id } }" class="btn btn-outline-soft">
+          <i class="bi bi-journal-text"></i>{{ t('workspace.notes') }}
+        </router-link>
+        <router-link :to="{ name: 'notes', query: { subject: props.id, new: 1 } }" class="btn btn-brand">
+          <i class="bi bi-plus-lg"></i>{{ t('workspace.newNote') }}
+        </router-link>
         <div class="dropdown">
           <button class="btn btn-outline-soft" :disabled="!hasMaterial" data-bs-toggle="dropdown">
             <i class="bi bi-download"></i>{{ t('workspace.export') }}

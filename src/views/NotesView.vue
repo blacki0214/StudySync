@@ -50,6 +50,8 @@ async function confirmDelete() {
 
 onMounted(async () => {
   await Promise.all([subjectStore.fetchSubjects(), noteStore.fetchNotes()])
+  // Arriving from a subject with ?new=1 opens the create form pre-scoped to it.
+  if (route.query.new) openForm()
 })
 
 // Keep the filter in sync if the route query changes (e.g. navbar search).
@@ -60,9 +62,11 @@ watch(() => route.query, (q) => {
 
 const subjectCode = (id) => subjectStore.getById(id)?.code || ''
 
-const subjectOptions = computed(() =>
-  subjectStore.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
-)
+// A note can belong to a subject or none — offer an explicit "No subject" option.
+const subjectOptions = computed(() => [
+  { value: '', label: t('notes.noSubject') },
+  ...subjectStore.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+])
 
 const filtered = computed(() => {
   let list = [...noteStore.notes]
@@ -80,16 +84,17 @@ const filtered = computed(() => {
 })
 
 function openForm() {
-  form.value = { title: '', content: '', subject_id: subjectId.value || subjectStore.subjects[0]?.id || '' }
+  // Default to the active subject filter (if any); otherwise no subject.
+  form.value = { title: '', content: '', subject_id: subjectId.value || '' }
   showForm.value = true
 }
 
 async function createNote() {
-  if (!form.value.title.trim() || !form.value.subject_id) return
+  if (!form.value.title.trim()) return // subject is optional now
   creating.value = true
   try {
     await noteStore.createNote({
-      subjectId: form.value.subject_id,
+      subjectId: form.value.subject_id || null,
       title: form.value.title.trim(),
       content: form.value.content.trim()
     })

@@ -189,7 +189,9 @@ export default {
     noNotes: 'No notes for this subject yet.',
     noDecks: 'No flashcard decks for this subject yet.',
     noRooms: 'No study rooms for this subject yet.',
-    noPosts: 'No community questions for this subject yet.'
+    noPosts: 'No community questions for this subject yet.',
+    openInNotes: 'Open in Notes',
+    newNote: 'New note'
   },
 
   notes: {
@@ -206,6 +208,7 @@ export default {
     createNote: 'Create note',
     modalTitle: 'Create a new note',
     subject: 'Subject',
+    noSubject: 'No subject',
     titleField: 'Title',
     content: 'Content',
     titlePlaceholder: 'e.g. Vue reactivity basics',
@@ -532,6 +535,8 @@ export default {
     loading: 'Opening workspace…',
     notFound: 'Subject not found.',
     sub: '{n} sources',
+    notes: 'Notes',
+    newNote: 'New note',
     export: 'Export',
     exportMd: 'Study pack (Markdown)',
     exportCsv: 'Flashcards (CSV)',

@@ -189,7 +189,9 @@ export default {
     noNotes: 'Chưa có ghi chú cho môn học này.',
     noDecks: 'Chưa có bộ thẻ ghi nhớ cho môn học này.',
     noRooms: 'Chưa có phòng học cho môn học này.',
-    noPosts: 'Chưa có câu hỏi cộng đồng cho môn học này.'
+    noPosts: 'Chưa có câu hỏi cộng đồng cho môn học này.',
+    openInNotes: 'Mở trong Ghi chú',
+    newNote: 'Ghi chú mới'
   },
 
   notes: {
@@ -206,6 +208,7 @@ export default {
     createNote: 'Tạo ghi chú',
     modalTitle: 'Tạo ghi chú mới',
     subject: 'Môn học',
+    noSubject: 'Không có môn học',
     titleField: 'Tiêu đề',
     content: 'Nội dung',
     titlePlaceholder: 'vd. Khái niệm reactivity trong Vue',
@@ -531,6 +534,8 @@ export default {
     loading: 'Đang mở không gian…',
     notFound: 'Không tìm thấy môn học.',
     sub: '{n} nguồn',
+    notes: 'Ghi chú',
+    newNote: 'Ghi chú mới',
     export: 'Xuất',
     exportMd: 'Gói học tập (Markdown)',
     exportCsv: 'Thẻ ghi nhớ (CSV)',
