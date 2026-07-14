@@ -265,19 +265,19 @@ async function remove(id) {
 
             <!-- Share toggle -->
             <div class="form-group">
-              <div class="share-toggle">
-                <div class="share-toggle-text">
-                  <div class="share-toggle-label"><i class="bi bi-globe2"></i>{{ t('mySubjects.share') }}</div>
-                  <div class="share-toggle-hint">{{ t('mySubjects.shareHint') }}</div>
+              <div class="sub-share-toggle">
+                <div class="sub-share-toggle-text">
+                  <div class="sub-share-toggle-label"><i class="bi bi-globe2"></i>{{ t('mySubjects.share') }}</div>
+                  <div class="sub-share-toggle-hint">{{ t('mySubjects.shareHint') }}</div>
                 </div>
                 <button
                   type="button"
-                  class="switch"
+                  class="sub-switch"
                   :class="{ on: form.shared }"
                   role="switch"
                   :aria-checked="form.shared"
                   @click="form.shared = !form.shared"
-                ><span class="switch-knob"></span></button>
+                ><span class="sub-switch-knob"></span></button>
               </div>
             </div>
 
@@ -331,24 +331,25 @@ async function remove(id) {
 }
 .color-swatch.active { border-color: var(--c-text); }
 
-/* Share toggle */
-.share-toggle {
+/* Share toggle (uniquely named so it can't clash with the global .switch) */
+.sub-share-toggle {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
   padding: var(--space-3); background: var(--c-surface-2);
   border: 1px solid var(--c-border); border-radius: var(--radius);
 }
-.share-toggle-label { font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
-.share-toggle-hint { color: var(--c-text-muted); font-size: 0.8rem; margin-top: 0.15rem; }
-.switch {
+.sub-share-toggle-label { font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
+.sub-share-toggle-hint { color: var(--c-text-muted); font-size: 0.8rem; margin-top: 0.15rem; }
+.sub-switch {
   flex-shrink: 0; width: 44px; height: 26px; border-radius: 999px; padding: 3px;
   background: var(--c-border); border: none; cursor: pointer; transition: background .15s;
+  box-sizing: border-box; display: flex; align-items: center;
 }
-.switch.on { background: var(--c-primary); }
-.switch-knob {
+.sub-switch.on { background: var(--c-primary); }
+.sub-switch-knob {
   display: block; width: 20px; height: 20px; border-radius: 50%; background: #fff;
   transition: transform .15s;
 }
-.switch.on .switch-knob { transform: translateX(18px); }
+.sub-switch.on .sub-switch-knob { transform: translateX(18px); }
 
 .field-error { color: var(--c-danger, #ef4444); font-size: 0.8rem; margin: 0.4rem 0 0; }
 
