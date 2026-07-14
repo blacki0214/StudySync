@@ -53,6 +53,7 @@ export default {
   tasks: {
     title: 'Nhiệm vụ của tôi',
     subtitle: 'Theo dõi mọi việc bạn cần học và hoàn thành.',
+    general: 'Chung',
     list: 'Danh sách',
     table: 'Bảng',
     board: 'Bảng Kanban',

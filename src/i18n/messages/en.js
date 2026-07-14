@@ -53,6 +53,7 @@ export default {
   tasks: {
     title: 'My Tasks',
     subtitle: 'Track everything you need to study and get done.',
+    general: 'General',
     list: 'List',
     table: 'Table',
     board: 'Board',

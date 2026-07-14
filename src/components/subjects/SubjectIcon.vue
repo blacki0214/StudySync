@@ -29,6 +29,7 @@ const isBiIcon = computed(() => icon.value.startsWith('bi-'))
 
 <style scoped>
 .subject-icon-img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-/* Bootstrap icons default to 1rem, which looks lost in the tile — scale it up. */
-.subject-icon-bi { font-size: 1.6rem; line-height: 1; }
+/* Bootstrap icons default to 1rem, which looks lost in the tile. Scale relative
+   to the tile's font-size so it fits big cards and small badges alike. */
+.subject-icon-bi { font-size: 1.4em; line-height: 1; }
 </style>

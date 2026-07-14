@@ -329,3 +329,24 @@
   .tl-colhead, .tl-row { grid-template-columns: 1fr 70px 70px; }
   .tl-c-priority, .tl-colhead .tl-c-priority { display: none; }
 }
+
+/* ---- Task scope switcher (General + subjects) ---- */
+.task-scope-bar {
+  display: flex; gap: var(--space-2); margin-bottom: var(--space-4);
+  overflow-x: auto; padding-bottom: 0.25rem;
+}
+.task-scope {
+  display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+  padding: 0.35rem 0.7rem 0.35rem 0.4rem; border-radius: var(--radius-pill);
+  background: var(--c-surface-2); border: 1px solid var(--c-border);
+  color: var(--c-text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.task-scope:hover { color: var(--c-text); }
+.task-scope.active { color: var(--c-text); border-color: var(--c-primary); background: var(--c-primary-light); }
+.task-scope-name { white-space: nowrap; }
+.task-scope-general {
+  width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center;
+  background: var(--c-surface); color: var(--c-text-muted); font-size: 0.85rem;
+}
+.task-scope-badge { width: 24px; height: 24px; font-size: 0.72rem; border-radius: 6px; }
