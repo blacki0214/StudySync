@@ -7,18 +7,22 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppSelect from '../common/AppSelect.vue'
-import { STATUSES, PRIORITIES, TYPES, toOptions } from '../../utils/taskMeta.js'
+import StatusPicker from './StatusPicker.vue'
+import { PRIORITIES, TYPES, toOptions } from '../../utils/taskMeta.js'
+import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 
-const props = defineProps({ tasks: { type: Array, default: () => [] } })
+const props = defineProps({
+  tasks: { type: Array, default: () => [] },
+  statuses: { type: Array, default: () => [] }
+})
 const emit = defineEmits(['update', 'open', 'delete', 'create'])
 const { t } = useI18n()
 
-const statusOptions = computed(() => toOptions(STATUSES, t))
 const priorityOptions = computed(() => toOptions(PRIORITIES, t))
 const typeOptions = computed(() => toOptions(TYPES, t))
 
 function overdue(task) {
-  if (!task.due_date || task.status === 'done') return false
+  if (!task.due_date || isDoneStatus(task.status, props.statuses)) return false
   return new Date(task.due_date) < new Date(new Date().toDateString())
 }
 </script>
@@ -49,7 +53,7 @@ function overdue(task) {
           />
         </span>
         <span class="tt-col tt-status">
-          <AppSelect class="tt-select" :model-value="task.status" :options="statusOptions" @update:model-value="(v) => emit('update', task.id, { status: v })" />
+          <StatusPicker :model-value="task.status" :statuses="statuses" @update:model-value="(v) => emit('update', task.id, { status: v })" />
         </span>
         <span class="tt-col tt-assignee">{{ task.assignee_name || t('tasks.unassigned') }}</span>
         <span class="tt-col tt-due">

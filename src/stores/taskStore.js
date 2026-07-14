@@ -9,25 +9,39 @@
 
 import { defineStore } from 'pinia'
 import { taskService } from '../services/taskService.js'
+import { taskStatusService } from '../services/taskStatusService.js'
 import { useAuthStore } from './authStore.js'
+import { DEFAULT_STATUSES, isDoneStatus } from '../utils/taskStatusTemplates.js'
 
 export const useTaskStore = defineStore('tasks', {
   state: () => ({
     tasks: [],
     loading: false,
     scope: { subjectId: null }, // the scope currently loaded
+
+    // Customizable statuses for the current board (ClickUp-style).
+    statuses: DEFAULT_STATUSES(),
+    statusTemplateKey: 'basic',
+    statusTemplates: [], // the user's saved custom templates
+
     _unsub: null
   }),
 
   getters: {
     byStatus: (state) => (status) =>
       state.tasks.filter((t) => t.status === status).sort((a, b) => a.position - b.position),
-    counts: (state) => ({
-      not_started: state.tasks.filter((t) => t.status === 'not_started').length,
-      in_progress: state.tasks.filter((t) => t.status === 'in_progress').length,
-      done: state.tasks.filter((t) => t.status === 'done').length,
-      total: state.tasks.length
-    })
+    statusById: (state) => (id) => state.statuses.find((s) => s.id === id) || null,
+    /** First status id — the default a brand-new task starts in. */
+    defaultStatusId: (state) => state.statuses[0]?.id || 'not_started',
+    /** Statuses grouped by their lifecycle group, in group order. */
+    statusesByGroup: (state) => (group) => state.statuses.filter((s) => s.group === group),
+    counts: (state) => {
+      const activeIds = new Set(state.statuses.filter((s) => s.group === 'active').map((s) => s.id))
+      const done = state.tasks.filter((t) => isDoneStatus(t.status, state.statuses)).length
+      const in_progress = state.tasks.filter((t) => activeIds.has(t.status)).length
+      const total = state.tasks.length
+      return { not_started: Math.max(total - done - in_progress, 0), in_progress, done, total }
+    }
   },
 
   actions: {
@@ -36,13 +50,42 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       this.scope = { subjectId }
       try {
-        this.tasks = await taskService.list({ subjectId, ownerId: auth.user?.id })
+        const [tasks, set, templates] = await Promise.all([
+          taskService.list({ subjectId, ownerId: auth.user?.id }),
+          taskStatusService.getStatusSet({ subjectId, ownerId: auth.user?.id }),
+          taskStatusService.listTemplates(auth.user?.id).catch(() => [])
+        ])
+        this.tasks = tasks
+        this.statuses = set.statuses
+        this.statusTemplateKey = set.templateKey
+        this.statusTemplates = templates
       } finally {
         this.loading = false
       }
       // (Re)subscribe to live changes for this scope.
       this._unsub?.()
       this._unsub = taskService.subscribe({ subjectId, ownerId: auth.user?.id }, () => this.refresh())
+    },
+
+    /** Persist a new status set for this board and adopt it locally. */
+    async saveStatuses(statuses, templateKey = null) {
+      const auth = useAuthStore()
+      this.statuses = statuses
+      this.statusTemplateKey = templateKey
+      await taskStatusService.saveStatusSet({ subjectId: this.scope.subjectId, ownerId: auth.user?.id, statuses, templateKey })
+      // Any task whose status was removed falls back to the first status.
+      const valid = new Set(statuses.map((s) => s.id))
+      for (const task of this.tasks) {
+        if (!valid.has(task.status)) this.update(task.id, { status: this.defaultStatusId })
+      }
+    },
+
+    /** Save the current status set as a reusable named template. */
+    async saveStatusTemplate(name) {
+      const auth = useAuthStore()
+      const row = await taskStatusService.saveTemplate({ ownerId: auth.user?.id, name, statuses: this.statuses })
+      this.statusTemplates.push(row)
+      return row
     },
 
     async refresh() {
@@ -59,6 +102,7 @@ export const useTaskStore = defineStore('tasks', {
         subjectId: this.scope.subjectId,
         ownerId: auth.user?.id,
         assigneeName: auth.user?.full_name || null,
+        status: this.defaultStatusId,
         position,
         ...patch
       })

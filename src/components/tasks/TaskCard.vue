@@ -6,13 +6,14 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TaskChip from './TaskChip.vue'
+import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 
 const props = defineProps({ task: { type: Object, required: true } })
 const emit = defineEmits(['open', 'dragstart'])
 const { t } = useI18n()
 
 const overdue = computed(() => {
-  if (!props.task.due_date || props.task.status === 'done') return false
+  if (!props.task.due_date || isDoneStatus(props.task.status)) return false
   return new Date(props.task.due_date) < new Date(new Date().toDateString())
 })
 function initials(name) {

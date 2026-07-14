@@ -6,6 +6,7 @@
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '../../stores/taskStore.js'
+import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 
 const { t } = useI18n()
 const tasks = useTaskStore()
@@ -15,12 +16,9 @@ onMounted(() => { if (!tasks.tasks.length && !tasks.loading) tasks.load({ subjec
 
 const counts = computed(() => tasks.counts)
 const pct = computed(() => (counts.value.total ? Math.round((counts.value.done / counts.value.total) * 100) : 0))
-// Open tasks (not done), in-progress first.
+// Open (not finished) tasks — group-aware so custom done statuses count too.
 const open = computed(() =>
-  tasks.tasks
-    .filter((tk) => tk.status !== 'done')
-    .sort((a, b) => (a.status === 'in_progress' ? -1 : 0) - (b.status === 'in_progress' ? -1 : 0))
-    .slice(0, 4)
+  tasks.tasks.filter((tk) => !isDoneStatus(tk.status, tasks.statuses)).slice(0, 4)
 )
 </script>
 

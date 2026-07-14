@@ -14,6 +14,7 @@ import { assignmentService } from '../services/assignmentService.js'
 import { useAuthStore } from './authStore.js'
 import { useClassStore } from './classStore.js'
 import { useContentStore } from './contentStore.js'
+import { isDoneStatus } from '../utils/taskStatusTemplates.js'
 
 /** Local YYYY-MM-DD for a Date or an ISO/date string (avoids UTC shifting). */
 function isoDate(value) {
@@ -74,7 +75,7 @@ export const useScheduleStore = defineStore('schedule', {
             time: '',
             subject: subj?.code || '',
             color: subj?.color || 'grad-blue',
-            done: t.status === 'done',
+            done: isDoneStatus(t.status),
             priority: t.priority || 'medium',
             to: t.subject_id
               ? { name: 'subject-workspace', params: { id: t.subject_id } }

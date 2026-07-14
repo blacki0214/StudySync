@@ -7,13 +7,16 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppSelect from '../common/AppSelect.vue'
-import { STATUSES, PRIORITIES, TYPES, toOptions } from '../../utils/taskMeta.js'
+import StatusPicker from './StatusPicker.vue'
+import { PRIORITIES, TYPES, toOptions } from '../../utils/taskMeta.js'
 
-const props = defineProps({ task: { type: Object, default: null } })
+const props = defineProps({
+  task: { type: Object, default: null },
+  statuses: { type: Array, default: () => [] }
+})
 const emit = defineEmits(['update', 'delete', 'close'])
 const { t } = useI18n()
 
-const statusOptions = computed(() => toOptions(STATUSES, t))
 const priorityOptions = computed(() => toOptions(PRIORITIES, t))
 const typeOptions = computed(() => toOptions(TYPES, t))
 
@@ -41,7 +44,7 @@ function set(patch) { if (props.task) emit('update', props.task.id, patch) }
       <div class="task-field-grid">
         <label class="task-field">
           <span class="task-field-label">{{ t('tasks.col.status') }}</span>
-          <AppSelect :model-value="task.status" :options="statusOptions" @update:model-value="(v) => set({ status: v })" />
+          <StatusPicker :model-value="task.status" :statuses="statuses" @update:model-value="(v) => set({ status: v })" />
         </label>
         <label class="task-field">
           <span class="task-field-label">{{ t('tasks.col.priority') }}</span>

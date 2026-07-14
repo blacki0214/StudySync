@@ -7,24 +7,43 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '../../stores/taskStore.js'
+import { useDialogStore } from '../../stores/dialogStore.js'
 import AppSelect from '../common/AppSelect.vue'
+import TaskList from './TaskList.vue'
 import TaskTable from './TaskTable.vue'
 import TaskBoard from './TaskBoard.vue'
 import TaskEditor from './TaskEditor.vue'
-import { STATUSES, PRIORITIES, toOptions } from '../../utils/taskMeta.js'
+import TaskStatusEditor from './TaskStatusEditor.vue'
+import { PRIORITIES, toOptions } from '../../utils/taskMeta.js'
 
 const props = defineProps({ subjectId: { type: String, default: null } })
 const { t } = useI18n()
 const store = useTaskStore()
+const dialog = useDialogStore()
 
-const viewMode = ref('table') // 'table' | 'board'
+const viewMode = ref('list') // 'list' | 'board' | 'table'
 const search = ref('')
 const filterStatus = ref('all')
 const filterPriority = ref('all')
 const editingId = ref(null)
+const showStatusEditor = ref(false)
 
-const statusFilterOptions = computed(() => [{ value: 'all', label: t('tasks.allStatuses') }, ...toOptions(STATUSES, t)])
+// Status filter options come from the board's live custom statuses.
+const statusFilterOptions = computed(() => [
+  { value: 'all', label: t('tasks.allStatuses') },
+  ...store.statuses.map((s) => ({ value: s.id, label: s.name }))
+])
 const priorityFilterOptions = computed(() => [{ value: 'all', label: t('tasks.allPriorities') }, ...toOptions(PRIORITIES, t)])
+
+async function applyStatuses({ statuses, templateKey }) {
+  await store.saveStatuses(statuses, templateKey)
+  showStatusEditor.value = false
+  dialog.toast(t('tasks.statusesUpdated'), 'success')
+}
+async function saveStatusTemplate({ name }) {
+  await store.saveStatusTemplate(name)
+  dialog.toast(t('tasks.templateSaved'), 'success')
+}
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -60,11 +79,14 @@ async function deleteTask(id) {
     <!-- Toolbar -->
     <div class="task-toolbar">
       <div class="task-view-switch">
-        <button class="tvs-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'">
-          <i class="bi bi-table"></i>{{ t('tasks.table') }}
+        <button class="tvs-btn" :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">
+          <i class="bi bi-list-ul"></i>{{ t('tasks.list') }}
         </button>
         <button class="tvs-btn" :class="{ active: viewMode === 'board' }" @click="viewMode = 'board'">
           <i class="bi bi-kanban"></i>{{ t('tasks.board') }}
+        </button>
+        <button class="tvs-btn" :class="{ active: viewMode === 'table' }" @click="viewMode = 'table'">
+          <i class="bi bi-table"></i>{{ t('tasks.table') }}
         </button>
       </div>
 
@@ -76,6 +98,7 @@ async function deleteTask(id) {
       </div>
       <AppSelect class="task-filter" :model-value="filterStatus" :options="statusFilterOptions" @update:model-value="(v) => filterStatus = v" />
       <AppSelect class="task-filter" :model-value="filterPriority" :options="priorityFilterOptions" @update:model-value="(v) => filterPriority = v" />
+      <button class="btn btn-outline-soft" :title="t('tasks.editStatuses')" @click="showStatusEditor = true"><i class="bi bi-sliders"></i>{{ t('tasks.statuses') }}</button>
       <button class="btn btn-brand" @click="createTask()"><i class="bi bi-plus-lg"></i>{{ t('tasks.newTask') }}</button>
     </div>
 
@@ -88,20 +111,31 @@ async function deleteTask(id) {
 
     <!-- Views -->
     <template v-else>
-      <TaskTable
-        v-if="viewMode === 'table'"
+      <TaskList
+        v-if="viewMode === 'list'"
         :tasks="filtered"
+        :statuses="store.statuses"
+        @update="updateTask"
+        @open="editingId = $event.id"
+        @delete="deleteTask"
+        @create="createTask($event)"
+      />
+      <TaskBoard
+        v-else-if="viewMode === 'board'"
+        :tasks="filtered"
+        :statuses="store.statuses"
+        @update="updateTask"
+        @open="editingId = $event.id"
+        @create="createTask($event)"
+      />
+      <TaskTable
+        v-else
+        :tasks="filtered"
+        :statuses="store.statuses"
         @update="updateTask"
         @open="editingId = $event.id"
         @delete="deleteTask"
         @create="createTask()"
-      />
-      <TaskBoard
-        v-else
-        :tasks="filtered"
-        @update="updateTask"
-        @open="editingId = $event.id"
-        @create="createTask($event)"
       />
     </template>
 
@@ -116,9 +150,21 @@ async function deleteTask(id) {
     <!-- Editor drawer -->
     <TaskEditor
       :task="editingTask"
+      :statuses="store.statuses"
       @update="updateTask"
       @delete="deleteTask"
       @close="editingId = null"
+    />
+
+    <!-- Customize statuses modal -->
+    <TaskStatusEditor
+      v-if="showStatusEditor"
+      :statuses="store.statuses"
+      :template-key="store.statusTemplateKey"
+      :templates="store.statusTemplates"
+      @apply="applyStatuses"
+      @save-template="saveStatusTemplate"
+      @close="showStatusEditor = false"
     />
   </div>
 </template>

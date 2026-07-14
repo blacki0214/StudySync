@@ -8,9 +8,11 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TaskCard from './TaskCard.vue'
-import { STATUSES } from '../../utils/taskMeta.js'
 
-const props = defineProps({ tasks: { type: Array, default: () => [] } })
+const props = defineProps({
+  tasks: { type: Array, default: () => [] },
+  statuses: { type: Array, default: () => [] }
+})
 const emit = defineEmits(['update', 'open', 'create'])
 const { t } = useI18n()
 
@@ -18,9 +20,9 @@ const dragId = ref(null)
 const dragOver = ref(null)
 
 const columns = computed(() =>
-  STATUSES.map((s) => ({
+  props.statuses.map((s) => ({
     ...s,
-    items: props.tasks.filter((task) => task.status === s.value).sort((a, b) => a.position - b.position)
+    items: props.tasks.filter((task) => task.status === s.id).sort((a, b) => a.position - b.position)
   }))
 )
 
@@ -39,15 +41,15 @@ function onDrop(status) {
   <div class="task-board">
     <section
       v-for="col in columns"
-      :key="col.value"
+      :key="col.id"
       class="task-col"
-      :class="{ 'drag-over': dragOver === col.value }"
-      @dragover.prevent="dragOver = col.value"
-      @dragleave="dragOver = (dragOver === col.value ? null : dragOver)"
-      @drop="onDrop(col.value)"
+      :class="{ 'drag-over': dragOver === col.id }"
+      @dragover.prevent="dragOver = col.id"
+      @dragleave="dragOver = (dragOver === col.id ? null : dragOver)"
+      @drop="onDrop(col.id)"
     >
       <header class="task-col-head">
-        <span class="task-chip" :class="col.cls"><span class="task-chip-dot"></span>{{ t(col.i18n) }}</span>
+        <span class="task-chip" :style="{ background: col.color + '22', color: col.color }"><span class="task-chip-dot" :style="{ background: col.color }"></span>{{ col.name }}</span>
         <span class="task-col-count">{{ col.items.length }}</span>
       </header>
 
@@ -61,7 +63,7 @@ function onDrop(status) {
         />
       </div>
 
-      <button class="task-col-add" @click="emit('create', { status: col.value })">
+      <button class="task-col-add" @click="emit('create', { status: col.id })">
         <i class="bi bi-plus-lg"></i>{{ t('tasks.add') }}
       </button>
     </section>
