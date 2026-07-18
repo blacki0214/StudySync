@@ -19,8 +19,9 @@ const dialog = useDialogStore()
 
 onMounted(() => content.ensureLoaded())
 
-// Personal rooms only — class-owned rooms live in their class workspace.
-const personalRooms = computed(() => content.rooms.filter((r) => !r.class_id))
+// All the user's rooms — their personal rooms plus rooms from classes they're
+// in (class rooms are tagged in the card).
+const rooms = computed(() => content.rooms)
 
 function subjectCode(id) {
   return content.subjectById(id)?.code || 'General'
@@ -95,7 +96,7 @@ async function submitCreate() {
     </header>
 
     <!-- Empty state -->
-    <div v-if="!personalRooms.length" class="rooms-empty">
+    <div v-if="!rooms.length" class="rooms-empty">
       <i class="bi bi-people"></i>
       <h3>{{ t('rooms.emptyTitle') }}</h3>
       <p>{{ t('rooms.emptySub') }}</p>
@@ -103,10 +104,11 @@ async function submitCreate() {
     </div>
 
     <div v-else class="row g-4">
-      <div v-for="room in personalRooms" :key="room.id" class="col-12 col-md-6 col-xl-4">
+      <div v-for="room in rooms" :key="room.id" class="col-12 col-md-6 col-xl-4">
         <div class="room-card">
           <div class="rc-top">
-            <span class="badge-soft">{{ subjectCode(room.subject_id) }}</span>
+            <span v-if="room.class_id" class="badge-soft room-class-tag"><i class="bi bi-mortarboard"></i> {{ t('rooms.classTag') }}</span>
+            <span v-else class="badge-soft">{{ subjectCode(room.subject_id) }}</span>
             <span v-if="room.live" class="live-tag"><span class="live-dot"></span>{{ t('nav.live').toUpperCase() }}</span>
           </div>
           <div class="rc-name">{{ room.name }}</div>

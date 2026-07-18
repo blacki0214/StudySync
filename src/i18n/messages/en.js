@@ -477,6 +477,7 @@ export default {
     joinByLinkInvalid: 'That doesn’t look like a valid room link.',
     notFound: 'This room doesn’t exist or the invite link is no longer valid.',
     nameLabel: 'Room name',
+    classTag: 'Class',
     namePlaceholder: 'e.g. Vue Project Standup',
     descLabel: 'Description',
     descPlaceholder: 'What will you study or discuss here?',

@@ -68,15 +68,14 @@ const demoRooms = [
 
 export const studyRoomService = {
   /**
-   * List the rooms a user can see: the ones they OWN plus the ones they've
-   * JOINED via an invite link (room_members). The tables are public-read at the
-   * RLS level, so without this scoping a new account would list every room.
+   * All rooms a user can see: their OWN + ones they JOINED via invite +
+   * rooms belonging to any class they're in (owner or enrolled). Class rooms
+   * carry a class_id so the UI can tag them.
    */
   async listRoomsForUser(userId) {
     if (!isSupabaseConfigured) {
-      // Persisted personal rooms (not class-scoped) + the bundled samples.
-      const persisted = readRooms().filter((r) => !r.class_id)
-      return [...persisted, ...demoRooms].map(withSubject)
+      // Every persisted room (personal + class) + the bundled samples.
+      return [...readRooms(), ...demoRooms].map(withSubject)
     }
     if (!userId) return []
 
@@ -85,17 +84,25 @@ export const studyRoomService = {
       .from('room_members').select('room_id').eq('user_id', userId)
     const joinedIds = (mem || []).map((m) => m.room_id)
 
-    let query = supabase
+    // Class ids the user belongs to (owns or is enrolled in) → their class rooms.
+    const [ownedC, enrolledC] = await Promise.all([
+      supabase.from('classes').select('id').eq('owner_id', userId),
+      supabase.from('class_members').select('class_id').eq('user_id', userId)
+    ])
+    const classIds = [
+      ...((ownedC.data || []).map((c) => c.id)),
+      ...((enrolledC.data || []).map((m) => m.class_id))
+    ]
+
+    const ors = [`owner_id.eq.${userId}`]
+    if (joinedIds.length) ors.push(`id.in.(${joinedIds.join(',')})`)
+    if (classIds.length) ors.push(`class_id.in.(${classIds.join(',')})`)
+
+    const { data, error } = await supabase
       .from('study_rooms')
       .select('*, subject:subjects(*)')
-      // Class-owned rooms live in their class workspace, not the personal list.
-      .is('class_id', null)
+      .or(ors.join(','))
       .order('created_at', { ascending: false })
-    query = joinedIds.length
-      ? query.or(`owner_id.eq.${userId},id.in.(${joinedIds.join(',')})`)
-      : query.eq('owner_id', userId)
-
-    const { data, error } = await query
     if (error) throw error
     return data
   },

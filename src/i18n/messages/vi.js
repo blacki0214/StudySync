@@ -476,6 +476,7 @@ export default {
     joinByLinkInvalid: 'Liên kết phòng không hợp lệ.',
     notFound: 'Phòng này không tồn tại hoặc liên kết mời đã hết hiệu lực.',
     nameLabel: 'Tên phòng',
+    classTag: 'Lớp học',
     namePlaceholder: 'vd. Nhóm dự án Vue',
     descLabel: 'Mô tả',
     descPlaceholder: 'Bạn sẽ học hoặc thảo luận gì ở đây?',
