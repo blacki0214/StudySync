@@ -95,7 +95,8 @@ export default {
     image: 'Image',
     shape: 'Shape',
     textPlaceholder: 'Type here',
-    exit: 'Exit'
+    exit: 'Exit',
+    createFailed: 'Could not create the deck. If you use a live database, run migration_slides.sql.'
   },
 
   // Class quizzes (author + take).

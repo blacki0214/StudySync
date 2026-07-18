@@ -95,7 +95,8 @@ export default {
     image: 'Hình ảnh',
     shape: 'Hình khối',
     textPlaceholder: 'Nhập tại đây',
-    exit: 'Thoát'
+    exit: 'Thoát',
+    createFailed: 'Không thể tạo bộ slide. Nếu dùng cơ sở dữ liệu trực tuyến, hãy chạy migration_slides.sql.'
   },
 
   // Class quizzes (author + take).

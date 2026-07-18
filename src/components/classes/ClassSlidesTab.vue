@@ -32,6 +32,9 @@ async function create() {
   try {
     const deck = await slideService.createDeck({ classId: props.classId, title: title.trim(), ownerId: auth.user?.id })
     router.push({ name: 'slide-editor', params: { deckId: deck.id } })
+  } catch (e) {
+    // Most likely the slide_decks table doesn't exist yet (run the migration).
+    dialog.toast(e.message || t('slides.createFailed'), 'error')
   } finally { creating.value = false }
 }
 async function remove(deck) {
