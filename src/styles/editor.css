@@ -727,3 +727,38 @@
   text-decoration: line-through; border-radius: 3px; padding: 0 1px;
 }
 @media (max-width: 720px) { .vh-body { grid-template-columns: 1fr; } .vh-timeline { max-height: 160px; } }
+
+/* ----------------------------------------------------------------------------
+   Phones: the editor stops looking like the desktop app squeezed down. The big
+   wrapping formatting toolbar becomes ONE horizontally-scrollable row (standard
+   mobile rich-text pattern), the document gets comfortable padding, and the
+   header actions wrap tidily. (The grid already stacks via responsive.css.) */
+@media (max-width: 768px) {
+  .editor-header { gap: var(--space-2); margin-bottom: var(--space-3); }
+  .editor-header .eh-title { font-size: 1.3rem; }
+  .editor-header .eh-actions { flex-wrap: wrap; }
+  .editor-header .eh-title-gen { opacity: 1; } /* no hover on touch → always visible */
+
+  .editor-toolbar2 {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
+    padding: var(--space-1) var(--space-2);
+    /* Tuck under the sticky mobile app header instead of overlapping it. */
+    top: calc(var(--m-header-h, 54px) + env(safe-area-inset-top, 0px));
+  }
+  .editor-toolbar2::-webkit-scrollbar { display: none; }
+  /* Keep every tool at its natural size so the row scrolls rather than squashes. */
+  .editor-toolbar2 .tb-group,
+  .editor-toolbar2 .tb-sep,
+  .editor-toolbar2 .tb-style,
+  .editor-toolbar2 .tb-size { flex-shrink: 0; }
+  .editor-toolbar2 .tb-font2 { display: none; } /* font family: rarely changed on phones */
+  .editor-toolbar2 .tb-style { width: 116px; }
+
+  .editor-grid { gap: var(--space-4); }
+  .doc-surface { padding: var(--space-4); min-height: 340px; }
+}
