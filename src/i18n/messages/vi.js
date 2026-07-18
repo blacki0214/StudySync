@@ -779,6 +779,7 @@ export default {
     rooms: 'Phòng',
     slides: 'Slide',
     quizzes: 'Kiểm tra',
+    assignments: 'Bài tập',
     discussions: 'Thảo luận',
     attendance: 'Điểm danh',
     analytics: 'Phân tích',

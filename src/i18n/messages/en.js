@@ -781,6 +781,7 @@ export default {
     rooms: 'Rooms',
     slides: 'Slides',
     quizzes: 'Quizzes',
+    assignments: 'Assignments',
     discussions: 'Discussions',
     attendance: 'Attendance',
     analytics: 'Analytics',

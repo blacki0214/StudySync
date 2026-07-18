@@ -111,3 +111,48 @@
 .gradebook td.gb-student { font-weight: 600; }
 .gradebook .roster-avatar { width: 28px; height: 28px; font-size: 0.68rem; }
 .gradebook .gb-cell { font-variant-numeric: tabular-nums; }
+
+/* ---- Class workspace tab strip (icon + label, scrollable) ----
+   The class has many tabs; a clean single scrollable row with icons reads far
+   better than a wrapping text list, and the count sits in an inline pill. */
+.class-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--c-border);
+  margin-bottom: var(--space-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.class-tabs::-webkit-scrollbar { display: none; }
+.class-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--c-text-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s var(--ease-fluid);
+}
+.class-tab i { font-size: 0.95rem; opacity: 0.75; }
+.class-tab:hover { color: var(--c-text); }
+.class-tab.active { color: var(--c-primary); border-bottom-color: var(--c-primary); }
+.class-tab.active i { opacity: 1; }
+.class-tab-count {
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.05rem 0.4rem;
+  min-width: 18px;
+  text-align: center;
+}
+.class-tab.active .class-tab-count { background: var(--c-primary-light); color: var(--c-primary-dark); }

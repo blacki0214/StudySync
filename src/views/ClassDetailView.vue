@@ -48,6 +48,30 @@ const isOwner = computed(() => cls.value && cls.value.owner_id === auth.user?.id
 const myRole = computed(() => roster.value.find((m) => m.user_id === auth.user?.id)?.role)
 const canManage = computed(() => isOwner.value || myRole.value === 'ta')
 
+// Icon + label for each class-workspace tab. Teacher/TA-only tabs are appended.
+const tabs = computed(() => {
+  const base = [
+    { id: 'announcements', label: 'classes.announcements', icon: 'bi-megaphone' },
+    { id: 'subjects', label: 'classes.subjects', icon: 'bi-journal-bookmark' },
+    { id: 'notes', label: 'classes.notes', icon: 'bi-file-earmark-text' },
+    { id: 'rooms', label: 'classes.rooms', icon: 'bi-camera-video' },
+    { id: 'slides', label: 'classes.slides', icon: 'bi-easel' },
+    { id: 'documents', label: 'classes.documents', icon: 'bi-folder2' },
+    { id: 'assignments', label: 'classes.assignments', icon: 'bi-card-checklist' },
+    { id: 'quizzes', label: 'classes.quizzes', icon: 'bi-patch-question' },
+    { id: 'discussions', label: 'classes.discussions', icon: 'bi-chat-square-text' },
+    { id: 'roster', label: 'classes.roster', icon: 'bi-people', count: roster.value.length }
+  ]
+  if (canManage.value) {
+    base.push(
+      { id: 'attendance', label: 'classes.attendance', icon: 'bi-calendar-check' },
+      { id: 'analytics', label: 'classes.analytics', icon: 'bi-graph-up' },
+      { id: 'gradebook', label: 'classes.gradebook', icon: 'bi-table' }
+    )
+  }
+  return base
+})
+
 onMounted(async () => {
   cls.value = await classService.getClass(props.id)
   if (cls.value) {
@@ -127,21 +151,19 @@ async function destroy() {
       </div>
     </header>
 
-    <div class="text-tabs">
-      <button class="text-tab" :class="{ active: tab==='announcements' }" @click="tab='announcements'">{{ t('classes.announcements') }}</button>
-      <button class="text-tab" :class="{ active: tab==='subjects' }" @click="tab='subjects'">{{ t('classes.subjects') }}</button>
-      <button class="text-tab" :class="{ active: tab==='notes' }" @click="tab='notes'">{{ t('classes.notes') }}</button>
-      <button class="text-tab" :class="{ active: tab==='rooms' }" @click="tab='rooms'">{{ t('classes.rooms') }}</button>
-      <button class="text-tab" :class="{ active: tab==='slides' }" @click="tab='slides'">{{ t('classes.slides') }}</button>
-      <button class="text-tab" :class="{ active: tab==='documents' }" @click="tab='documents'">{{ t('classes.documents') }}</button>
-      <button class="text-tab" :class="{ active: tab==='assignments' }" @click="tab='assignments'">{{ t('classes.assignments') }}</button>
-      <button class="text-tab" :class="{ active: tab==='quizzes' }" @click="tab='quizzes'">{{ t('classes.quizzes') }}</button>
-      <button class="text-tab" :class="{ active: tab==='discussions' }" @click="tab='discussions'">{{ t('classes.discussions') }}</button>
-      <button class="text-tab" :class="{ active: tab==='roster' }" @click="tab='roster'">{{ t('classes.roster') }} <span class="seg-count">{{ roster.length }}</span></button>
-      <button v-if="canManage" class="text-tab" :class="{ active: tab==='attendance' }" @click="tab='attendance'">{{ t('classes.attendance') }}</button>
-      <button v-if="canManage" class="text-tab" :class="{ active: tab==='analytics' }" @click="tab='analytics'">{{ t('classes.analytics') }}</button>
-      <button v-if="canManage" class="text-tab" :class="{ active: tab==='gradebook' }" @click="tab='gradebook'">{{ t('classes.gradebook') }}</button>
-    </div>
+    <nav class="class-tabs">
+      <button
+        v-for="tb in tabs"
+        :key="tb.id"
+        class="class-tab"
+        :class="{ active: tab === tb.id }"
+        @click="tab = tb.id"
+      >
+        <i class="bi" :class="tb.icon"></i>
+        <span>{{ t(tb.label) }}</span>
+        <span v-if="tb.count != null" class="class-tab-count">{{ tb.count }}</span>
+      </button>
+    </nav>
 
     <!-- Announcements -->
     <div v-if="tab==='announcements'" class="row g-4">
