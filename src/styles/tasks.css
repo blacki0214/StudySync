@@ -325,9 +325,53 @@
 .tse-foot { display: flex; align-items: center; gap: 0.5rem; }
 .tse-foot-spacer { flex: 1; }
 
-@media (max-width: 860px) {
+/* Small tablets: drop the priority column but keep the compact table. */
+@media (max-width: 860px) and (min-width: 769px) {
   .tl-colhead, .tl-row { grid-template-columns: 1fr 70px 70px; }
   .tl-c-priority, .tl-colhead .tl-c-priority { display: none; }
+}
+
+/* Phones: the grouped list stops being a table and becomes stacked CARDS —
+   each task shows its title on top and a wrapped meta row (due · priority ·
+   assignee · actions) below. No horizontal squeezing, big tap targets. */
+@media (max-width: 768px) {
+  .task-list { gap: var(--space-5); }
+  .tl-colhead { display: none; }
+  .tl-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+    margin-bottom: var(--space-2);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    background: var(--c-surface);
+  }
+  .tl-row:hover { background: var(--c-surface); }
+  /* Title row spans the full card width. */
+  .tl-c-name { flex: 1 1 100%; order: 1; }
+  .tl-title-input { font-size: 0.95rem; padding: 0.1rem 0; }
+  /* Meta row. */
+  .tl-c-due { order: 2; }
+  .tl-c-priority { display: flex; order: 3; } /* re-shown on phones */
+  .tl-c-priority .app-select-trigger { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+  .tl-c-assignee { order: 4; margin-left: auto; }
+  .tl-c-actions { order: 5; gap: 0.1rem; }
+  .tl-icon { padding: 0.4rem; font-size: 1rem; }
+  .tl-date { font-size: 0.85rem; }
+  /* Roomier inline add-task target. */
+  .tl-add { padding: 0.7rem 0.5rem; }
+
+  /* Toolbar: stack into tidy full-width rows instead of an awkward wrap. */
+  .task-toolbar { gap: var(--space-2); }
+  .task-toolbar-spacer { display: none; }
+  .task-view-switch { width: 100%; }
+  .task-view-switch .tvs-btn { flex: 1; justify-content: center; }
+  .task-search { flex: 1 1 100%; }
+  .task-search input { flex: 1; width: auto; }
+  .task-filter { flex: 1 1 calc(50% - var(--space-2)); min-width: 0; }
+  .task-toolbar > .btn-brand { flex: 1; justify-content: center; }
 }
 
 /* ---- Task scope switcher (General + subjects) ---- */
