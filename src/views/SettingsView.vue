@@ -170,7 +170,7 @@ async function signOut() {
             <div class="settings-field"><label>{{ t('profile.location') }}</label><input v-model="form.location" class="form-control" :placeholder="t('profile.locationPlaceholder')" /></div>
           </div>
           <div class="settings-field"><label>{{ t('profile.about') }}</label><textarea v-model="form.bio" class="form-control" rows="3" :placeholder="t('profile.bioPlaceholder')"></textarea></div>
-          <div class="settings-field"><label>{{ t('settings.email') }}</label><input class="form-control" :value="user.email || '—'" disabled /></div>
+          <div class="settings-field"><label>{{ t('settings.email') }}</label><input class="form-control" :value="user.email || '—'" readonly /></div>
 
           <div class="settings-actions">
             <button class="btn btn-brand" :disabled="saving || !form.full_name.trim()" @click="saveAccount">
@@ -221,7 +221,7 @@ async function signOut() {
 
         <div class="settings-block">
           <div class="sb-title">{{ t('settings.email') }}</div>
-          <div class="settings-field"><input class="form-control" :value="user.email || '—'" disabled /></div>
+          <div class="settings-field"><input class="form-control" :value="user.email || '—'" readonly /></div>
         </div>
 
         <div class="settings-block">

@@ -72,6 +72,17 @@
   border-radius: var(--radius-sm);
 }
 .form-control::placeholder { color: var(--c-text-faint); }
+/* Read-only / disabled fields (e.g. the account email). The app forces
+   color-scheme:light, so the browser's native disabled styling renders a pale
+   box with dimmed, hard-to-read text — restore on-theme, legible colours. */
+.form-control[readonly],
+.form-control:disabled {
+  background-color: var(--c-surface-2);
+  color: var(--c-text);
+  -webkit-text-fill-color: var(--c-text);
+  opacity: 1;
+  cursor: default;
+}
 .form-control:focus,
 .form-select:focus {
   background-color: var(--c-surface);
