@@ -25,16 +25,16 @@ const firstName = computed(() => (auth.user?.full_name || '').split(' ')[0] || t
 const owned = computed(() => classStore.owned)
 
 const baseActions = [
-  { key: 'teach.actNewClass', icon: 'bi-plus-lg', grad: 'grad-fuchsia', run: newClass },
-  { key: 'teach.actClasses', icon: 'bi-easel2', grad: 'grad-blue', to: '/classes' },
-  { key: 'teach.actSchedule', icon: 'bi-calendar-week', grad: 'grad-green', to: '/schedule' },
-  { key: 'teach.actRooms', icon: 'bi-people', grad: 'grad-orange', to: '/rooms' }
+  { key: 'teach.actNewClass', icon: 'bi-plus-lg', color: '#6366f1', run: newClass },
+  { key: 'teach.actClasses', icon: 'bi-mortarboard-fill', color: '#3b82f6', to: '/classes' },
+  { key: 'teach.actSchedule', icon: 'bi-calendar-week', color: '#10b981', to: '/schedule' },
+  { key: 'teach.actRooms', icon: 'bi-people-fill', color: '#8b5cf6', to: '/rooms' }
 ]
 // Offer "Join a school" until the teacher belongs to one.
 const actions = computed(() =>
   school.hasSchool
     ? baseActions
-    : [{ key: 'teach.actJoinSchool', icon: 'bi-building-add', grad: 'grad-blue', run: joinSchool }, ...baseActions]
+    : [{ key: 'teach.actJoinSchool', icon: 'bi-building-add', color: '#06b6d4', run: joinSchool }, ...baseActions]
 )
 
 onMounted(() => {
@@ -96,7 +96,7 @@ function runAction(a) {
     <!-- Quick actions -->
     <div class="teach-actions">
       <button v-for="a in actions" :key="a.key" class="teach-action" @click="runAction(a)">
-        <span class="icon-tile" :class="a.grad"><i class="bi" :class="a.icon"></i></span>
+        <span class="ta-ic" :style="{ color: a.color, background: a.color + '22' }"><i class="bi" :class="a.icon"></i></span>
         <span class="ta-label">{{ t(a.key) }}</span>
       </button>
     </div>
@@ -152,6 +152,7 @@ function runAction(a) {
   transition: border-color 0.15s, background 0.15s;
 }
 .teach-action:hover { border-color: var(--c-primary); background: var(--c-hover); }
+.teach-action .ta-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; }
 .teach-action .ta-label { font-weight: 600; font-size: 0.92rem; color: var(--c-text); }
 .link-muted { color: var(--c-text-muted); font-size: 0.88rem; font-weight: 600; }
 .link-muted:hover { color: var(--c-primary); text-decoration: none; }
