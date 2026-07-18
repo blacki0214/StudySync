@@ -222,7 +222,7 @@ onMounted(async () => {
           <div v-for="d in content.decks" :key="d.id" class="col-12 col-md-6 col-xl-4">
             <div class="deck-card" role="button" @click="deck = d; idx = 0; flipped = false; tab='study'">
               <div class="dk-head">
-                <span class="icon-tile dk-icon" :class="d.color">{{ d.subject.slice(0,3) }}</span>
+                <span class="icon-tile dk-icon" :class="d.color">{{ (d.subject || d.name || '?').slice(0, 3) }}</span>
                 <div>
                   <div class="dk-name">{{ d.name }}</div>
                   <router-link
@@ -231,7 +231,7 @@ onMounted(async () => {
                     class="dk-sub dk-sub-link"
                     @click.stop
                   >{{ d.subject }}</router-link>
-                  <div v-else class="dk-sub">{{ d.subject }}</div>
+                  <div v-else-if="d.subject" class="dk-sub">{{ d.subject }}</div>
                 </div>
               </div>
               <div class="dk-foot">
