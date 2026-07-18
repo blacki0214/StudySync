@@ -46,6 +46,9 @@ const activeText = ref('')
 const stageVoice = ref(null) // voice channel whose stage is shown in main, or null (= chat)
 const draft = ref('')
 const scroller = ref(null)
+// Mobile: which side panel is open as a slide-in drawer ('channels' | 'members'
+// | null). On desktop the rail + member list are always-visible columns.
+const mobilePanel = ref(null)
 
 const isSpeaking = (id) => speakingIds.value.includes(id)
 const stageChannelName = computed(() => voiceChannels.value.find((c) => c.id === stageVoice.value)?.name || '')
@@ -109,6 +112,7 @@ function send() {
 // already in it). Leaving is only via the red disconnect button.
 async function selectVoice(c) {
   stageVoice.value = c.id
+  mobilePanel.value = null // close the mobile channel drawer on pick
   if (myVoice.value === c.id) return
   if (myVoice.value) leaveVoiceAudio()
   rooms.setVoice(c.id)
@@ -119,6 +123,7 @@ async function selectVoice(c) {
 function selectText(c) {
   activeText.value = c.id
   stageVoice.value = null
+  mobilePanel.value = null // close the mobile channel drawer on pick
 }
 function disconnectVoice() {
   rooms.setVoice(null)
@@ -163,8 +168,8 @@ function clock(isoStr) {
 
 <template>
   <div v-if="room" class="dc-room">
-    <!-- Channel rail -->
-    <aside class="dc-rail">
+    <!-- Channel rail (a slide-in drawer on mobile) -->
+    <aside class="dc-rail" :class="{ 'dc-open': mobilePanel === 'channels' }">
       <div class="dc-rail-head">
         <router-link to="/rooms" class="dc-back" :title="t('rooms.leave')"><i class="bi bi-chevron-left"></i></router-link>
         <div class="dc-room-name">{{ room.name }}</div>
@@ -220,10 +225,14 @@ function clock(isoStr) {
     <!-- Main: voice stage or the active text channel -->
     <main class="dc-main">
       <header class="dc-main-head">
+        <!-- Mobile-only: open the channel rail drawer. -->
+        <button class="dc-m-btn" :aria-label="t('rooms.channels')" @click="mobilePanel = 'channels'"><i class="bi bi-list"></i></button>
         <div class="dc-ch-title"><i class="bi" :class="stageVoice ? 'bi-volume-up' : 'bi-hash'"></i>{{ stageVoice ? stageChannelName : activeChannelName }}</div>
         <div class="dc-head-actions">
           <button class="btn btn-brand btn-sm" @click="showInvite = true"><i class="bi bi-person-plus"></i>{{ t('rooms.invite') }}</button>
           <button class="btn btn-outline-soft btn-sm dc-leave" @click="leaveRoom"><i class="bi bi-box-arrow-right"></i>{{ t('rooms.leave') }}</button>
+          <!-- Mobile-only: open the member-list drawer. -->
+          <button class="dc-m-btn" :aria-label="t('rooms.members', { n: online.length })" @click="mobilePanel = 'members'"><i class="bi bi-people"></i></button>
         </div>
       </header>
 
@@ -268,8 +277,8 @@ function clock(isoStr) {
       </template>
     </main>
 
-    <!-- Members -->
-    <aside class="dc-members">
+    <!-- Members (a slide-in drawer on mobile) -->
+    <aside class="dc-members" :class="{ 'dc-open': mobilePanel === 'members' }">
       <div class="dc-section"><span>{{ t('rooms.members', { n: online.length }) }}</span></div>
       <div v-for="m in online" :key="m.id" class="dc-member">
         <span class="dc-mem-av">{{ initials(m.full_name) }}<span class="dc-presence"></span></span>
@@ -277,6 +286,9 @@ function clock(isoStr) {
         <i v-if="m.id === meId ? myVoice : m.voice" class="bi bi-volume-up-fill dc-mem-voice" :title="t('rooms.voiceChannels')"></i>
       </div>
     </aside>
+
+    <!-- Mobile drawer scrim (behind the open rail / member list). -->
+    <div v-if="mobilePanel" class="dc-scrim" @click="mobilePanel = null"></div>
 
     <!-- Invite modal: share this link so others can join the room -->
     <div v-if="showInvite" class="room-modal-backdrop" @click.self="showInvite = false">

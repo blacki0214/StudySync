@@ -374,6 +374,7 @@ export default {
     emptySub: 'Tạo một phòng để học, trò chuyện và giao lưu với bạn học theo thời gian thực.',
     textChannels: 'Kênh chat',
     voiceChannels: 'Kênh thoại',
+    channels: 'Kênh',
     members: 'Thành viên — {n}',
     voiceConnected: 'Đã kết nối thoại',
     disconnect: 'Ngắt kết nối',

@@ -375,6 +375,7 @@ export default {
     emptySub: 'Create a room to study, chat and hang out with classmates in real time.',
     textChannels: 'Text channels',
     voiceChannels: 'Voice channels',
+    channels: 'Channels',
     members: 'Members — {n}',
     voiceConnected: 'Voice connected',
     disconnect: 'Disconnect',

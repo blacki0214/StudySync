@@ -334,6 +334,14 @@
 .dc-ch-title { font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
 .dc-ch-title i { color: var(--c-text-faint); }
 .dc-head-actions { display: flex; align-items: center; gap: var(--space-2); }
+/* Mobile-only drawer toggles (channels / members); hidden on desktop. */
+.dc-m-btn {
+  display: none;
+  border: none; background: none; color: var(--c-text-muted);
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  place-items: center; font-size: 1.2rem; cursor: pointer; flex-shrink: 0;
+}
+.dc-m-btn:hover { background: var(--c-surface-2); color: var(--c-text); }
 .rm-invite-desc { color: var(--c-text-muted); font-size: 0.9rem; margin: 0 0 var(--space-2); line-height: 1.5; }
 .rm-invite-row { display: flex; gap: var(--space-2); align-items: stretch; }
 .rm-invite-row .rm-input { flex: 1; font-family: var(--font-mono, monospace); font-size: 0.85rem; }
@@ -397,13 +405,57 @@
 .dc-mem-name { font-size: 0.85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dc-mem-voice { margin-left: auto; font-size: 0.78rem; color: var(--c-live, #22c55e); }
 
-@media (max-width: 991px) {
+/* Small tablets (still on the desktop shell): rail + chat, members hidden. */
+@media (max-width: 991px) and (min-width: 769px) {
   .dc-room { grid-template-columns: 200px 1fr; height: calc(100vh - 2 * var(--space-4)); }
   .dc-members { display: none; }
 }
-@media (max-width: 640px) {
-  .dc-room { grid-template-columns: 1fr; }
-  .dc-rail { display: none; }
+
+/* Phones: a single-column chat that fills the space between the app header and
+   the bottom tab bar; the channel rail + member list open as slide-in drawers. */
+@media (max-width: 768px) {
+  /* Let the room own the whole area — this page drops the app-content padding. */
+  .app-content:has(.dc-room) { padding: 0; }
+  .dc-room {
+    grid-template-columns: 1fr;
+    height: calc(100dvh - var(--m-header-h) - var(--m-safe-t) - var(--m-tabbar-h) - var(--m-safe-b));
+    min-height: 0;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+  .dc-m-btn { display: grid; }
+  .dc-main-head .dc-ch-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Back on the app header already leaves the room (onUnmounted), so the head's
+     Leave button is redundant here — hide it to save width. */
+  .dc-main-head .dc-leave { display: none; }
+
+  /* Rail + member list become fixed slide-in drawers. */
+  .dc-rail, .dc-members {
+    display: flex;
+    position: fixed;
+    top: calc(var(--m-header-h) + var(--m-safe-t));
+    bottom: calc(var(--m-tabbar-h) + var(--m-safe-b));
+    width: 80%;
+    max-width: 300px;
+    z-index: 1045;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transition: transform 0.25s var(--ease-fluid);
+  }
+  .dc-rail {
+    left: 0;
+    transform: translateX(-100%);
+    border-right: 1px solid var(--c-border);
+  }
+  .dc-rail.dc-open { transform: translateX(0); }
+  .dc-members {
+    right: 0;
+    transform: translateX(100%);
+    border-left: 1px solid var(--c-border);
+  }
+  .dc-members.dc-open { transform: translateX(0); }
+  .dc-scrim { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 1042; }
 }
 
 .resource-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; }
