@@ -142,6 +142,11 @@ watch(query, () => (activeIndex.value = 0))
           <i class="bi bi-search"></i>
           <input ref="inputRef" v-model="query" :placeholder="t('palette.placeholder')" />
           <span class="kbd">Esc</span>
+          <!-- Phones have no Esc key: a tappable close button instead (CSS shows
+               it only on mobile, where the palette goes full-screen). -->
+          <button class="palette-close" :aria-label="t('common.cancel')" @click="palette.hide()">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
 
         <div class="palette-results">
