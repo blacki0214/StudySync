@@ -42,7 +42,7 @@
 .flip-face .ff-hint { color: var(--c-text-faint); font-size: 0.82rem; margin-top: var(--space-4); }
 
 .srs-row { display: flex; align-items: center; justify-content: center; gap: var(--space-3); margin-top: var(--space-4); }
-.srs-btn { border-radius: var(--radius-sm); font-weight: 600; padding: 0.5rem 1.4rem; background: var(--c-surface); }
+.srs-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; white-space: nowrap; border-radius: var(--radius-sm); font-weight: 600; padding: 0.5rem 1.4rem; background: var(--c-surface); }
 .srs-btn.again { border: 1px solid #fecaca; color: var(--c-red); }
 .srs-btn.hard { border: 1px solid #fed7aa; color: var(--c-orange); }
 .srs-btn.easy { border: 1px solid #bbf7d0; color: var(--c-green); }
@@ -61,6 +61,17 @@
 .reviewed-stat .rs-key { color: var(--c-text-muted); font-size: 0.85rem; }
 .reviewed-stat .rs-val { font-weight: 700; }
 .reviewed-stat .rs-val.ok { color: var(--c-green); }
+
+/* ----------------------------------------------------------------------------
+   Phones: the three rating buttons share the row equally with their icon + label
+   inline (they were squishing so the ✕/✓ wrapped above the label), and the prev/
+   next arrows stay compact. */
+@media (max-width: 768px) {
+  .srs-row { gap: var(--space-2); }
+  .srs-btn { flex: 1; padding: 0.6rem 0.4rem; font-size: 0.9rem; }
+  .srs-nav { width: 36px; height: 36px; flex-shrink: 0; }
+  .flip-face .ff-text { font-size: 1.2rem; }
+}
 
 .decks-title { font-size: 1.15rem; margin: var(--space-5) 0 var(--space-4); }
 .note-select { max-width: 360px; }
