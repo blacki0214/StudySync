@@ -16,6 +16,13 @@ import { timeAgo } from '../utils/formatDate.js'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
 import ClassNotesTab from '../components/classes/ClassNotesTab.vue'
+import ClassSubjectsTab from '../components/classes/ClassSubjectsTab.vue'
+import ClassRoomsTab from '../components/classes/ClassRoomsTab.vue'
+import ClassSlidesTab from '../components/classes/ClassSlidesTab.vue'
+import ClassQuizzesTab from '../components/classes/ClassQuizzesTab.vue'
+import ClassDiscussionsTab from '../components/classes/ClassDiscussionsTab.vue'
+import ClassAttendanceTab from '../components/classes/ClassAttendanceTab.vue'
+import ClassAnalyticsTab from '../components/classes/ClassAnalyticsTab.vue'
 import ClassDocumentsTab from '../components/classes/ClassDocumentsTab.vue'
 import ClassAssignmentsTab from '../components/classes/ClassAssignmentsTab.vue'
 import ClassGradebookTab from '../components/classes/ClassGradebookTab.vue'
@@ -37,6 +44,9 @@ const posting = ref(false)
 const copied = ref(false)
 
 const isOwner = computed(() => cls.value && cls.value.owner_id === auth.user?.id)
+// Teaching Assistants can manage class content too (not just the owner).
+const myRole = computed(() => roster.value.find((m) => m.user_id === auth.user?.id)?.role)
+const canManage = computed(() => isOwner.value || myRole.value === 'ta')
 
 onMounted(async () => {
   cls.value = await classService.getClass(props.id)
@@ -119,11 +129,18 @@ async function destroy() {
 
     <div class="text-tabs">
       <button class="text-tab" :class="{ active: tab==='announcements' }" @click="tab='announcements'">{{ t('classes.announcements') }}</button>
+      <button class="text-tab" :class="{ active: tab==='subjects' }" @click="tab='subjects'">{{ t('classes.subjects') }}</button>
       <button class="text-tab" :class="{ active: tab==='notes' }" @click="tab='notes'">{{ t('classes.notes') }}</button>
+      <button class="text-tab" :class="{ active: tab==='rooms' }" @click="tab='rooms'">{{ t('classes.rooms') }}</button>
+      <button class="text-tab" :class="{ active: tab==='slides' }" @click="tab='slides'">{{ t('classes.slides') }}</button>
       <button class="text-tab" :class="{ active: tab==='documents' }" @click="tab='documents'">{{ t('classes.documents') }}</button>
       <button class="text-tab" :class="{ active: tab==='assignments' }" @click="tab='assignments'">{{ t('classes.assignments') }}</button>
+      <button class="text-tab" :class="{ active: tab==='quizzes' }" @click="tab='quizzes'">{{ t('classes.quizzes') }}</button>
+      <button class="text-tab" :class="{ active: tab==='discussions' }" @click="tab='discussions'">{{ t('classes.discussions') }}</button>
       <button class="text-tab" :class="{ active: tab==='roster' }" @click="tab='roster'">{{ t('classes.roster') }} <span class="seg-count">{{ roster.length }}</span></button>
-      <button v-if="isOwner" class="text-tab" :class="{ active: tab==='gradebook' }" @click="tab='gradebook'">{{ t('classes.gradebook') }}</button>
+      <button v-if="canManage" class="text-tab" :class="{ active: tab==='attendance' }" @click="tab='attendance'">{{ t('classes.attendance') }}</button>
+      <button v-if="canManage" class="text-tab" :class="{ active: tab==='analytics' }" @click="tab='analytics'">{{ t('classes.analytics') }}</button>
+      <button v-if="canManage" class="text-tab" :class="{ active: tab==='gradebook' }" @click="tab='gradebook'">{{ t('classes.gradebook') }}</button>
     </div>
 
     <!-- Announcements -->
@@ -154,11 +171,18 @@ async function destroy() {
       </div>
     </div>
 
-    <!-- Notes / Documents / Assignments / Gradebook -->
+    <!-- Subjects / Notes / Rooms / Documents / Assignments / Gradebook -->
+    <ClassSubjectsTab v-else-if="tab==='subjects'" :class-id="props.id" :can-manage="canManage" />
     <ClassNotesTab v-else-if="tab==='notes'" :class-id="props.id" />
+    <ClassRoomsTab v-else-if="tab==='rooms'" :class-id="props.id" />
+    <ClassSlidesTab v-else-if="tab==='slides'" :class-id="props.id" :can-manage="canManage" />
     <ClassDocumentsTab v-else-if="tab==='documents'" :class-id="props.id" />
     <ClassAssignmentsTab v-else-if="tab==='assignments'" :class-id="props.id" :is-owner="isOwner" />
-    <ClassGradebookTab v-else-if="tab==='gradebook' && isOwner" :class-id="props.id" />
+    <ClassQuizzesTab v-else-if="tab==='quizzes'" :class-id="props.id" :can-manage="canManage" />
+    <ClassDiscussionsTab v-else-if="tab==='discussions'" :class-id="props.id" />
+    <ClassAttendanceTab v-else-if="tab==='attendance' && canManage" :class-id="props.id" :roster="roster" />
+    <ClassAnalyticsTab v-else-if="tab==='analytics' && canManage" :class-id="props.id" :roster="roster" />
+    <ClassGradebookTab v-else-if="tab==='gradebook' && canManage" :class-id="props.id" />
 
     <!-- Roster -->
     <div v-else-if="tab==='roster'">

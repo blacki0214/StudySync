@@ -19,6 +19,9 @@ const dialog = useDialogStore()
 
 onMounted(() => content.ensureLoaded())
 
+// Personal rooms only — class-owned rooms live in their class workspace.
+const personalRooms = computed(() => content.rooms.filter((r) => !r.class_id))
+
 function subjectCode(id) {
   return content.subjectById(id)?.code || 'General'
 }
@@ -92,7 +95,7 @@ async function submitCreate() {
     </header>
 
     <!-- Empty state -->
-    <div v-if="!content.rooms.length" class="rooms-empty">
+    <div v-if="!personalRooms.length" class="rooms-empty">
       <i class="bi bi-people"></i>
       <h3>{{ t('rooms.emptyTitle') }}</h3>
       <p>{{ t('rooms.emptySub') }}</p>
@@ -100,7 +103,7 @@ async function submitCreate() {
     </div>
 
     <div v-else class="row g-4">
-      <div v-for="room in content.rooms" :key="room.id" class="col-12 col-md-6 col-xl-4">
+      <div v-for="room in personalRooms" :key="room.id" class="col-12 col-md-6 col-xl-4">
         <div class="room-card">
           <div class="rc-top">
             <span class="badge-soft">{{ subjectCode(room.subject_id) }}</span>

@@ -76,6 +76,76 @@ export default {
     joined: 'Đã tham gia {name}'
   },
 
+  // Native slide editor (class slide decks).
+  slides: {
+    loading: 'Đang mở bộ slide…',
+    deckTitle: 'Tiêu đề bộ slide',
+    deckPlaceholder: 'vd. Tuần 1 — Giới thiệu',
+    newDeck: 'Bộ slide mới',
+    noDecks: 'Chưa có bộ slide nào',
+    noDecksMsg: 'Tạo một bộ slide để trình chiếu cho lớp.',
+    slideCount: '{n} slide',
+    deleteDeck: 'Xóa bộ slide',
+    deleteDeckConfirm: 'Xóa bộ slide “{name}”?',
+    saved: 'Đã lưu',
+    present: 'Trình chiếu',
+    addSlide: 'Thêm slide',
+    deleteSlide: 'Xóa slide',
+    text: 'Văn bản',
+    image: 'Hình ảnh',
+    shape: 'Hình khối',
+    textPlaceholder: 'Nhập tại đây',
+    exit: 'Thoát'
+  },
+
+  // Class quizzes (author + take).
+  quizzes: {
+    newQuiz: 'Bài kiểm tra mới',
+    none: 'Chưa có bài kiểm tra nào',
+    noneMsg: 'Tạo bài kiểm tra để đánh giá lớp.',
+    questionCount: '{n} câu hỏi',
+    take: 'Làm bài',
+    retake: 'Làm lại',
+    delete: 'Xóa bài kiểm tra',
+    deleteConfirm: 'Xóa bài kiểm tra “{name}”?',
+    needContent: 'Thêm tiêu đề và ít nhất một câu hỏi.',
+    titlePlaceholder: 'Tiêu đề bài kiểm tra',
+    questionPlaceholder: 'Câu hỏi',
+    optionPlaceholder: 'Lựa chọn {n}',
+    addQuestion: 'Thêm câu hỏi',
+    save: 'Lưu bài kiểm tra',
+    submit: 'Nộp bài',
+    resultMsg: 'Bạn đạt {pct}%.',
+    done: 'Xong'
+  },
+
+  // Class discussions (Q&A), attendance and analytics (Phase 5).
+  discuss: {
+    newThread: 'Câu hỏi mới',
+    titlePlaceholder: 'Đặt câu hỏi…',
+    bodyPlaceholder: 'Thêm chi tiết (không bắt buộc)',
+    post: 'Đăng',
+    none: 'Chưa có thảo luận nào',
+    noneMsg: 'Bắt đầu một câu hỏi cho lớp.',
+    replyCount: '{n} phản hồi',
+    replyPlaceholder: 'Viết phản hồi…',
+    reply: 'Trả lời'
+  },
+  attend: {
+    date: 'Ngày',
+    present: 'Có mặt',
+    absent: 'Vắng',
+    presentCount: '{n}/{total} có mặt',
+    noStudents: 'Chưa có học sinh để điểm danh.'
+  },
+  analytics: {
+    students: 'Học sinh',
+    quizzes: 'Bài kiểm tra',
+    avgScore: 'Điểm TB',
+    decks: 'Bộ slide',
+    discussions: 'Thảo luận'
+  },
+
   // Strings specific to the mobile app shell (bottom tab bar + More sheet).
   mobile: {
     more: 'Thêm',
@@ -704,6 +774,19 @@ export default {
     noteTitlePlaceholder: 'Tiêu đề ghi chú',
     noNotes: 'Chưa có ghi chú lớp nào',
     noDocuments: 'Chưa có tài liệu chia sẻ nào',
+    // Class workspace — subjects & rooms
+    subjects: 'Môn học',
+    rooms: 'Phòng',
+    slides: 'Slide',
+    quizzes: 'Kiểm tra',
+    discussions: 'Thảo luận',
+    attendance: 'Điểm danh',
+    analytics: 'Phân tích',
+    newSubject: 'Môn học mới',
+    noSubjects: 'Chưa có môn học lớp nào',
+    newRoom: 'Phòng mới',
+    noRooms: 'Chưa có phòng lớp nào',
+    noRoomsMsg: 'Tạo phòng cho buổi học trực tiếp hoặc làm việc nhóm.',
     newAssignment: 'Bài tập mới',
     noAssignments: 'Chưa có bài tập nào',
     typeText: 'Tự luận',

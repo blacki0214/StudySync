@@ -86,6 +86,19 @@
   color: var(--c-text);
 }
 
+/* Segmented text-tab bars (class workspace has many tabs) scroll sideways on
+   phones instead of wrapping. */
+@media (max-width: 768px) {
+  .text-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: var(--space-4);
+    scrollbar-width: none;
+  }
+  .text-tabs::-webkit-scrollbar { display: none; }
+  .text-tabs .text-tab { white-space: nowrap; flex-shrink: 0; }
+}
+
 /* ---------------- Bottom tab bar ---------------- */
 .m-tabbar {
   position: fixed;

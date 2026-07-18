@@ -50,14 +50,27 @@ export const subjectService = {
    */
   async listAll({ userId } = {}) {
     if (!isSupabaseConfigured) {
-      return [...readDemo(), ...sampleSubjects]
+      // Class-scoped subjects live inside a class workspace, not the personal
+      // catalog — keep them out of the personal list.
+      return [...readDemo().filter((s) => !s.class_id), ...sampleSubjects]
     }
-    let query = supabase.from('subjects').select('*').order('code', { ascending: true })
+    let query = supabase.from('subjects').select('*').is('class_id', null).order('code', { ascending: true })
     // Public/seed (owner_id null or visibility public) + the user's own subjects.
     query = userId
       ? query.or(`owner_id.is.null,visibility.eq.public,owner_id.eq.${userId}`)
       : query.or('owner_id.is.null,visibility.eq.public')
     const { data, error } = await query
+    if (error) throw error
+    return data
+  },
+
+  /** Subjects that belong to a class workspace. */
+  async listByClass(classId) {
+    if (!isSupabaseConfigured) {
+      return readDemo().filter((s) => s.class_id === classId)
+    }
+    const { data, error } = await supabase
+      .from('subjects').select('*').eq('class_id', classId).order('created_at', { ascending: false })
     if (error) throw error
     return data
   },
@@ -68,7 +81,7 @@ export const subjectService = {
    * @param {string} [input.icon]    bi-icon name or uploaded image data-URL
    * @param {boolean} [input.shared] true = visible in the public/community catalog
    */
-  async createSubject({ name, description = '', category = 'Personal', color = 'grad-blue', icon = null, shared = false, ownerId }) {
+  async createSubject({ name, description = '', category = 'Personal', color = 'grad-blue', icon = null, shared = false, ownerId, classId = null }) {
     const trimmed = (name || '').trim()
     const base = {
       code: codeFrom(trimmed),
@@ -83,7 +96,8 @@ export const subjectService = {
       students: 1,
       progress: 0,
       owner_id: ownerId,
-      owner_type: 'personal',
+      owner_type: classId ? 'class' : 'personal',
+      class_id: classId || null,
       visibility: shared ? 'public' : 'private'
     }
 

@@ -82,6 +82,8 @@ export const studyRoomService = {
     let query = supabase
       .from('study_rooms')
       .select('*, subject:subjects(*)')
+      // Class-owned rooms live in their class workspace, not the personal list.
+      .is('class_id', null)
       .order('created_at', { ascending: false })
     query = joinedIds.length
       ? query.or(`owner_id.eq.${userId},id.in.(${joinedIds.join(',')})`)
@@ -115,7 +117,7 @@ export const studyRoomService = {
    * Create a study room. Returns it in the shape contentStore.rooms expects
    * ({ id, subject_id, code, name, description, live, active_users }).
    */
-  async createRoom({ name, description = '', subjectId = null, ownerId = null }) {
+  async createRoom({ name, description = '', subjectId = null, ownerId = null, classId = null }) {
     const cleanName = String(name || '').trim() || 'Study Room'
     if (!isSupabaseConfigured) {
       const subject = sampleSubjects.find((s) => s.id === subjectId) || null
@@ -123,6 +125,7 @@ export const studyRoomService = {
         id: localId('room'),
         owner_id: ownerId,
         subject_id: subjectId,
+        class_id: classId || null,
         code: subject?.code || 'General',
         name: cleanName,
         description: String(description || '').trim(),
@@ -133,7 +136,7 @@ export const studyRoomService = {
     }
     const { data, error } = await supabase
       .from('study_rooms')
-      .insert({ subject_id: subjectId, owner_id: ownerId, name: cleanName, description: String(description || '').trim(), live: true, active_users: 1 })
+      .insert({ subject_id: subjectId, owner_id: ownerId, class_id: classId, name: cleanName, description: String(description || '').trim(), live: true, active_users: 1 })
       .select()
       .single()
     if (error) throw error

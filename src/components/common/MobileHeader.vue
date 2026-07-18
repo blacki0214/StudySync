@@ -33,6 +33,7 @@ const TITLES = {
   'study-room': 'nav.studyRooms',
   flashcards: 'nav.flashcards',
   'flashcards-note': 'nav.flashcards',
+  'slide-editor': 'classes.slides',
   community: 'nav.community',
   classes: 'nav.classes',
   'class-detail': 'nav.classes',
@@ -43,7 +44,7 @@ const TITLES = {
 // Detail / nested screens get a back chevron so navigation feels app-native.
 const DETAIL = new Set([
   'subject-hub', 'subject-workspace', 'note-detail', 'note-share',
-  'study-room', 'flashcards-note', 'class-detail', 'join-class'
+  'study-room', 'flashcards-note', 'class-detail', 'join-class', 'slide-editor'
 ])
 
 const title = computed(() => t(TITLES[route.name] || 'nav.hub'))

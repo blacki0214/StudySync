@@ -76,6 +76,76 @@ export default {
     joined: 'Joined {name}'
   },
 
+  // Native slide editor (class slide decks).
+  slides: {
+    loading: 'Opening deck…',
+    deckTitle: 'Deck title',
+    deckPlaceholder: 'e.g. Week 1 — Introduction',
+    newDeck: 'New deck',
+    noDecks: 'No slide decks yet',
+    noDecksMsg: 'Create a deck to present to your class.',
+    slideCount: '{n} slides',
+    deleteDeck: 'Delete deck',
+    deleteDeckConfirm: 'Delete the “{name}” deck?',
+    saved: 'Saved',
+    present: 'Present',
+    addSlide: 'Add slide',
+    deleteSlide: 'Delete slide',
+    text: 'Text',
+    image: 'Image',
+    shape: 'Shape',
+    textPlaceholder: 'Type here',
+    exit: 'Exit'
+  },
+
+  // Class quizzes (author + take).
+  quizzes: {
+    newQuiz: 'New quiz',
+    none: 'No quizzes yet',
+    noneMsg: 'Create a quiz to assess your class.',
+    questionCount: '{n} questions',
+    take: 'Take',
+    retake: 'Retake',
+    delete: 'Delete quiz',
+    deleteConfirm: 'Delete the “{name}” quiz?',
+    needContent: 'Add a title and at least one question.',
+    titlePlaceholder: 'Quiz title',
+    questionPlaceholder: 'Question',
+    optionPlaceholder: 'Option {n}',
+    addQuestion: 'Add question',
+    save: 'Save quiz',
+    submit: 'Submit',
+    resultMsg: 'You scored {pct}%.',
+    done: 'Done'
+  },
+
+  // Class discussions (Q&A), attendance and analytics (Phase 5).
+  discuss: {
+    newThread: 'New question',
+    titlePlaceholder: 'Ask a question…',
+    bodyPlaceholder: 'Add details (optional)',
+    post: 'Post',
+    none: 'No discussions yet',
+    noneMsg: 'Start a question for your class.',
+    replyCount: '{n} replies',
+    replyPlaceholder: 'Write a reply…',
+    reply: 'Reply'
+  },
+  attend: {
+    date: 'Date',
+    present: 'Present',
+    absent: 'Absent',
+    presentCount: '{n}/{total} present',
+    noStudents: 'No students to mark yet.'
+  },
+  analytics: {
+    students: 'Students',
+    quizzes: 'Quizzes',
+    avgScore: 'Avg score',
+    decks: 'Slide decks',
+    discussions: 'Discussions'
+  },
+
   // Strings specific to the mobile app shell (bottom tab bar + More sheet).
   mobile: {
     more: 'More',
@@ -706,6 +776,19 @@ export default {
     noteTitlePlaceholder: 'Note title',
     noNotes: 'No class notes yet',
     noDocuments: 'No shared documents yet',
+    // Class workspace — subjects & rooms
+    subjects: 'Subjects',
+    rooms: 'Rooms',
+    slides: 'Slides',
+    quizzes: 'Quizzes',
+    discussions: 'Discussions',
+    attendance: 'Attendance',
+    analytics: 'Analytics',
+    newSubject: 'New subject',
+    noSubjects: 'No class subjects yet',
+    newRoom: 'New room',
+    noRooms: 'No class rooms yet',
+    noRoomsMsg: 'Start a room for a live session or group work.',
     newAssignment: 'New assignment',
     noAssignments: 'No assignments yet',
     typeText: 'Written',
