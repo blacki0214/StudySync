@@ -57,16 +57,27 @@ function goBack() {
 
 <template>
   <header class="m-header">
-    <button v-if="showBack" class="m-header-btn" :aria-label="t('mobile.back')" @click="goBack">
-      <i class="bi bi-chevron-left"></i>
-    </button>
-    <h1 class="m-header-title">{{ title }}</h1>
-
-    <div class="m-header-actions">
-      <button class="m-header-btn" :aria-label="t('nav.search')" @click="palette.show()">
-        <i class="bi bi-search"></i>
+    <div class="m-header-top">
+      <button v-if="showBack" class="m-header-btn" :aria-label="t('mobile.back')" @click="goBack">
+        <i class="bi bi-chevron-left"></i>
       </button>
-      <NotificationBell placement="down" />
+      <h1 class="m-header-title">{{ title }}</h1>
+
+      <div class="m-header-actions">
+        <!-- Detail pages keep a compact icon (their row has no search pill). -->
+        <button v-if="showBack" class="m-header-btn" :aria-label="t('nav.search')" @click="palette.show()">
+          <i class="bi bi-search"></i>
+        </button>
+        <NotificationBell placement="down" />
+      </div>
+    </div>
+
+    <!-- Instagram-style search pill: always visible on top-level pages. -->
+    <div v-if="!showBack" class="m-header-search">
+      <button class="m-search-pill" @click="palette.show()">
+        <i class="bi bi-search"></i>
+        <span>{{ t('nav.search') }}</span>
+      </button>
     </div>
   </header>
 </template>
