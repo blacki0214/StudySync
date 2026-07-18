@@ -12,7 +12,9 @@
 /* ---------------- Sidebar ---------------- */
 .app-sidebar {
   width: var(--sidebar-width);
-  background: var(--c-surface);
+  /* Same background as the content so the rail blends in seamlessly (Instagram
+     style) — no seam, no divider between sidebar and page. */
+  background: var(--c-bg);
   position: fixed;
   inset: 0 auto 0 0;
   display: flex;
@@ -113,13 +115,14 @@
   color: var(--c-text);
   text-decoration: none;
 }
-/* Notion-style active: neutral grey fill + strong text, not a coloured chip. */
+/* Instagram-style active: no boxed background — the icon lights up (outline
+   swaps to its filled twin) and the label goes bold. */
 .sidebar-link.router-link-active {
-  background: var(--c-surface-2);
+  background: transparent;
   color: var(--c-text);
   font-weight: 600;
 }
-.sidebar-link.router-link-active i { color: var(--c-primary); }
+.sidebar-link.router-link-active i { color: var(--c-text); }
 .sidebar-link i {
   font-size: 1.02rem;
   width: 20px;
@@ -127,6 +130,11 @@
   color: var(--c-text-faint);
 }
 .sidebar-link:hover i { color: var(--c-text-muted); }
+
+/* Show the outline icon by default; swap to the filled one when active. */
+.sidebar-link .link-icon-fill { display: none; }
+.sidebar-link.router-link-active .link-icon-outline { display: none; }
+.sidebar-link.router-link-active .link-icon-fill { display: inline-block; }
 .sidebar-link .link-badge {
   margin-left: auto;
   font-size: 0.62rem;

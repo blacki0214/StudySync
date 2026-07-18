@@ -25,18 +25,19 @@ const palette = usePaletteStore()
 const router = useRouter()
 const { t, locale } = useI18n()
 
-// Light (non-fill) icons for the calm Notion look.
+// Instagram-style nav: an outline icon by default, its filled twin when active
+// (the icon "lights up" instead of the item getting a boxed background).
 const links = [
-  { to: '/hub', icon: 'bi-house', key: 'nav.hub' },
-  { to: '/my-subjects', icon: 'bi-folder', key: 'nav.mySubjects' },
-  { to: '/subjects', icon: 'bi-journal-bookmark', key: 'nav.subjects' },
-  { to: '/notes', icon: 'bi-file-earmark-text', key: 'nav.collabNotes' },
-  { to: '/tasks', icon: 'bi-check2-square', key: 'nav.tasks' },
-  { to: '/schedule', icon: 'bi-calendar-week', key: 'nav.schedule' },
-  { to: '/rooms', icon: 'bi-people', key: 'nav.studyRooms' },
-  { to: '/flashcards', icon: 'bi-stars', key: 'nav.flashcards' },
-  { to: '/community', icon: 'bi-chat-square-text', key: 'nav.community' },
-  { to: '/classes', icon: 'bi-easel2', key: 'nav.classes' }
+  { to: '/hub', icon: 'bi-house', activeIcon: 'bi-house-fill', key: 'nav.hub' },
+  { to: '/my-subjects', icon: 'bi-folder', activeIcon: 'bi-folder-fill', key: 'nav.mySubjects' },
+  { to: '/subjects', icon: 'bi-journal-bookmark', activeIcon: 'bi-journal-bookmark-fill', key: 'nav.subjects' },
+  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
+  { to: '/tasks', icon: 'bi-check2-square', activeIcon: 'bi-check-square-fill', key: 'nav.tasks' },
+  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule' },
+  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms' },
+  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
+  { to: '/classes', icon: 'bi-easel2', activeIcon: 'bi-easel2-fill', key: 'nav.classes' }
 ]
 
 const user = computed(() => auth.user || {})
@@ -79,7 +80,8 @@ async function logout() {
         class="sidebar-link"
         @click="ui.closeSidebar()"
       >
-        <i class="bi" :class="link.icon"></i>
+        <i class="bi link-icon link-icon-outline" :class="link.icon"></i>
+        <i class="bi link-icon link-icon-fill" :class="link.activeIcon"></i>
         <span>{{ t(link.key) }}</span>
         <span v-if="link.badge" class="link-badge" :class="link.badgeType">
           {{ link.badgeType === 'live' ? t('nav.live') : link.badge }}
