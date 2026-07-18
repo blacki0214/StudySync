@@ -246,7 +246,10 @@
 }
 .dc-channel i { font-size: 0.95rem; opacity: 0.7; }
 .dc-channel:hover { background: var(--c-hover, var(--c-surface)); color: var(--c-text); }
-.dc-channel.active { background: var(--c-primary-light); color: var(--c-primary-dark); }
+/* Selected channel: a soft brand-tinted row with full-strength text and an
+   indigo hash — cohesive with the dark rail, not a loud solid block. */
+.dc-channel.active { background: rgba(99, 102, 241, 0.16); color: var(--c-text); }
+.dc-channel.active i { opacity: 1; color: var(--c-primary); }
 .dc-vcount {
   margin-left: auto; font-size: 0.7rem; font-weight: 700;
   background: var(--c-live, #22c55e); color: #fff; border-radius: var(--radius-pill); padding: 0 0.4rem;
@@ -430,9 +433,13 @@
      Leave button is redundant here — hide it to save width. */
   .dc-main-head .dc-leave { display: none; }
 
-  /* Rail + member list become fixed slide-in drawers. */
+  /* Rail + member list become fixed slide-in drawers. They share the chat's
+     surface colour so an open drawer reads as the same room, not a lighter panel. */
   .dc-rail, .dc-members {
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--c-surface);
     position: fixed;
     top: calc(var(--m-header-h) + var(--m-safe-t));
     bottom: calc(var(--m-tabbar-h) + var(--m-safe-b));
