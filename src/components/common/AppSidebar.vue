@@ -87,6 +87,31 @@ async function logout() {
       </router-link>
     </nav>
 
+    <!-- Footer controls: theme · language · notifications -->
+    <div class="sidebar-controls">
+      <button class="sidebar-ctl" :aria-label="ui.isDark ? t('nav.lightMode') : t('nav.darkMode')" :title="ui.isDark ? t('nav.lightMode') : t('nav.darkMode')" @click="ui.toggleTheme()">
+        <i class="bi" :class="ui.isDark ? 'bi-sun' : 'bi-moon'"></i>
+      </button>
+
+      <div class="dropdown dropup">
+        <button class="sidebar-ctl" :aria-label="t('nav.language')" :title="t('nav.language')" data-bs-toggle="dropdown">
+          <i class="bi bi-translate"></i><span class="ctl-lang">{{ locale.toUpperCase() }}</span>
+        </button>
+        <ul class="dropdown-menu lang-menu">
+          <li class="lang-menu-head">{{ t('nav.language') }}</li>
+          <li v-for="l in SUPPORTED" :key="l.code">
+            <button class="lang-option" :class="{ 'is-active': locale === l.code }" @click="setLocale(l.code)">
+              <span class="lang-opt-short">{{ l.short }}</span>
+              <span class="lang-opt-label">{{ l.label }}</span>
+              <i v-if="locale === l.code" class="bi bi-check2 lang-opt-check"></i>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <NotificationBell />
+    </div>
+
     <!-- Account -->
     <div class="dropdown dropup sidebar-account">
       <button class="sidebar-user" data-bs-toggle="dropdown" :aria-label="auth.displayName">
