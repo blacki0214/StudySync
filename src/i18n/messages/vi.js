@@ -33,6 +33,16 @@ export default {
     logout: 'Đăng xuất'
   },
 
+  // Strings specific to the mobile app shell (bottom tab bar + More sheet).
+  mobile: {
+    more: 'Thêm',
+    tabSubjects: 'Môn học',
+    allSubjects: 'Xem tất cả môn học',
+    explore: 'Khám phá',
+    preferences: 'Tùy chọn',
+    back: 'Quay lại'
+  },
+
   common: {
     loading: 'Đang tải...',
     openingEditor: 'Đang mở trình soạn thảo cộng tác...',

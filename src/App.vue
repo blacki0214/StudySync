@@ -11,19 +11,19 @@
  */
 import { onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { useUiStore } from './stores/uiStore.js'
 import { usePaletteStore } from './stores/paletteStore.js'
 import AppSidebar from './components/common/AppSidebar.vue'
+import MobileHeader from './components/common/MobileHeader.vue'
+import MobileTabBar from './components/common/MobileTabBar.vue'
+import MobileMoreSheet from './components/common/MobileMoreSheet.vue'
 import CommandPalette from './components/common/CommandPalette.vue'
 import AppDialogs from './components/common/AppDialogs.vue'
 import { SpeedInsights } from '@vercel/speed-insights/vue'
-import logoMark from './assets/images/logo_2.png'
 
 const route = useRoute()
 const ui = useUiStore()
 const palette = usePaletteStore()
-const { t } = useI18n()
 
 // Global ⌘K / Ctrl+K opens the command palette. Bound here (the always-mounted
 // shell) so the listener has a single, clean add/remove lifecycle.
@@ -36,9 +36,13 @@ function onKeydown(e) {
 
 onMounted(() => {
   ui.initTheme()
+  ui.initViewport()
   window.addEventListener('keydown', onKeydown)
 })
-onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+onUnmounted(() => {
+  ui.teardownViewport()
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
@@ -50,27 +54,18 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     <SpeedInsights />
   </div>
 
-  <div v-else class="app-shell" :class="{ 'sidebar-mini': ui.sidebarMode === 'mini' }">
-    <AppSidebar />
+  <div v-else class="app-shell" :class="{ 'sidebar-mini': ui.sidebarMode === 'mini', 'is-mobile': ui.isMobile }">
+    <!-- Desktop chrome: the fixed sidebar. Hidden entirely on phones, which use
+         the dedicated app shell (top header + bottom tab bar) instead. -->
+    <template v-if="!ui.isMobile">
+      <AppSidebar />
+      <div v-if="ui.sidebarOpen" class="sidebar-scrim" @click="ui.closeSidebar()"></div>
+    </template>
 
-    <!-- Mobile drawer scrim -->
-    <div v-if="ui.sidebarOpen" class="sidebar-scrim" @click="ui.closeSidebar()"></div>
+    <!-- Mobile chrome: app-style contextual top header. -->
+    <MobileHeader v-if="ui.isMobile" />
 
     <div class="app-main">
-      <!-- Mobile-only top strip with the menu toggle (no desktop navbar). -->
-      <div class="mobile-bar">
-        <button class="mobile-menu-btn" :aria-label="t('nav.allFeatures')" @click="ui.toggleSidebar()">
-          <i class="bi bi-list"></i>
-        </button>
-        <router-link to="/hub" class="mobile-brand">
-          <img :src="logoMark" alt="StudySync" />
-          <span>StudySync</span>
-        </router-link>
-        <button class="mobile-menu-btn" :aria-label="t('nav.searchPlaceholder')" @click="palette.show()">
-          <i class="bi bi-search"></i>
-        </button>
-      </div>
-
       <main class="app-content">
         <router-view v-slot="{ Component }">
           <transition name="page-fade" mode="out-in"><component :is="Component" /></transition>
@@ -78,8 +73,14 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       </main>
     </div>
 
-    <!-- Floating AI + help buttons (bottom-right in every mockup). -->
-    <div class="floating-actions">
+    <!-- Mobile chrome: fixed bottom tab bar + slide-up More sheet. -->
+    <template v-if="ui.isMobile">
+      <MobileTabBar />
+      <MobileMoreSheet />
+    </template>
+
+    <!-- Floating AI + help buttons (desktop only; mobile uses the tab bar). -->
+    <div v-if="!ui.isMobile" class="floating-actions">
       <button class="fab-help" aria-label="Help">?</button>
       <button class="fab-ai" aria-label="AI assistant" @click="palette.show()"><i class="bi bi-stars"></i></button>
     </div>

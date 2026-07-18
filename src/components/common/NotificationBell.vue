@@ -10,6 +10,10 @@ import { useRouter } from 'vue-router'
 import { useNotificationStore } from '../../stores/notificationStore.js'
 import { useContentStore } from '../../stores/contentStore.js'
 
+// `placement` controls which way the popover opens: 'up' anchors it above the
+// bell (the sidebar footer), 'down' anchors it below (the mobile top header).
+const props = defineProps({ placement: { type: String, default: 'up' } })
+
 const { t } = useI18n()
 const router = useRouter()
 const notif = useNotificationStore()
@@ -25,12 +29,23 @@ function onBell() {
   if (!notif.open) {
     const r = root.value?.getBoundingClientRect()
     if (r) {
-      panelStyle.value = {
-        position: 'fixed',
-        left: `${Math.max(12, r.left)}px`,
-        bottom: `${Math.max(12, window.innerHeight - r.top + 8)}px`,
-        right: 'auto'
-      }
+      panelStyle.value = props.placement === 'down'
+        // Header bell: hang the panel below the bell, right-aligned so it can't
+        // run off the right edge of the screen.
+        ? {
+            position: 'fixed',
+            top: `${r.bottom + 8}px`,
+            right: `${Math.max(12, window.innerWidth - r.right)}px`,
+            left: 'auto',
+            bottom: 'auto'
+          }
+        // Sidebar bell: float the panel above the bell.
+        : {
+            position: 'fixed',
+            left: `${Math.max(12, r.left)}px`,
+            bottom: `${Math.max(12, window.innerHeight - r.top + 8)}px`,
+            right: 'auto'
+          }
     }
   }
   notif.toggle()

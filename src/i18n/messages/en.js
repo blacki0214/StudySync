@@ -33,6 +33,16 @@ export default {
     logout: 'Log out'
   },
 
+  // Strings specific to the mobile app shell (bottom tab bar + More sheet).
+  mobile: {
+    more: 'More',
+    tabSubjects: 'Subjects',
+    allSubjects: 'Browse all subjects',
+    explore: 'Explore',
+    preferences: 'Preferences',
+    back: 'Back'
+  },
+
   common: {
     loading: 'Loading...',
     openingEditor: 'Opening collaborative editor...',

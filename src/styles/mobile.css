@@ -1,0 +1,331 @@
+/* mobile.css
+   ----------------------------------------------------------------------------
+   The dedicated PHONE app shell — deliberately a different layout from the
+   desktop sidebar, not a scaled-down copy of it. Active only when App.vue adds
+   `.is-mobile` to the shell (uiStore.isMobile, matching the 768px breakpoint):
+     • a contextual top header (MobileHeader.vue)
+     • a fixed bottom tab bar (MobileTabBar.vue)
+     • a slide-up "More" sheet for overflow nav + preferences (MobileMoreSheet.vue)
+   All colours come from variables.css so light/dark just work; safe-area insets
+   keep the chrome clear of the notch and home indicator. */
+
+:root {
+  --m-header-h: 54px;
+  --m-tabbar-h: 58px;
+  --m-safe-b: env(safe-area-inset-bottom, 0px);
+  --m-safe-t: env(safe-area-inset-top, 0px);
+}
+
+/* ---------------- Shell ---------------- */
+.app-shell.is-mobile {
+  display: block; /* stop being the desktop flex row */
+}
+.app-shell.is-mobile .app-main {
+  margin-left: 0;
+}
+.app-shell.is-mobile .app-content {
+  padding: var(--space-4);
+  /* clear the fixed bottom tab bar (+ the home indicator). */
+  padding-bottom: calc(var(--m-tabbar-h) + var(--m-safe-b) + var(--space-5));
+  max-width: 100%;
+  margin: 0;
+}
+
+/* ---------------- Top header ---------------- */
+.m-header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: calc(var(--m-header-h) + var(--m-safe-t));
+  padding: var(--m-safe-t) var(--space-3) 0;
+  background: var(--c-bg);
+  border-bottom: 1px solid var(--c-border);
+}
+.m-header-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: var(--space-1);
+}
+.m-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.m-header-btn {
+  border: none;
+  background: none;
+  color: var(--c-text);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.m-header-btn:active { background: var(--c-hover); }
+/* The reused NotificationBell renders a .sidebar-ctl — size it like a header icon. */
+.m-header-actions .sidebar-ctl {
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  color: var(--c-text);
+}
+
+/* ---------------- Bottom tab bar ---------------- */
+.m-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1030;
+  display: flex;
+  align-items: stretch;
+  height: calc(var(--m-tabbar-h) + var(--m-safe-b));
+  padding-bottom: var(--m-safe-b);
+  background: var(--c-bg);
+  border-top: 1px solid var(--c-border);
+}
+.m-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding-top: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--c-text-faint);
+  font-size: 0.66rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-tab:hover { text-decoration: none; color: var(--c-text-faint); }
+.m-tab-icon { font-size: 1.35rem; line-height: 1; }
+.m-tab-label { line-height: 1; }
+/* Instagram-style active: outline icon swaps to its filled twin + full ink. */
+.m-tab .m-tab-icon-fill { display: none; }
+.m-tab.is-active { color: var(--c-text); }
+.m-tab.is-active .m-tab-icon-outline { display: none; }
+.m-tab.is-active .m-tab-icon-fill { display: inline-block; }
+
+/* ---------------- More sheet ---------------- */
+.m-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+}
+.m-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+.m-sheet-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--c-surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-3) var(--space-4) calc(var(--space-5) + var(--m-safe-b));
+  box-shadow: var(--shadow-lg);
+}
+.m-sheet-grab {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--c-border-strong);
+  margin: 0 auto var(--space-3);
+}
+
+.m-sheet-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: inherit;
+  text-decoration: none;
+  margin-bottom: var(--space-3);
+}
+.m-sheet-account:active { background: var(--c-hover); text-decoration: none; color: inherit; }
+.m-sheet-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.m-sheet-avatar img,
+.m-sheet-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.m-sheet-avatar .avatar-img {
+  display: grid;
+  place-items: center;
+  background: var(--grad-brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.m-sheet-account-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.m-sheet-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-sheet-sub {
+  font-size: 0.78rem;
+  color: var(--c-text-faint);
+}
+.m-sheet-account-gear {
+  color: var(--c-text-faint);
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.m-sheet-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.m-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+.m-sheet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 76px;
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  text-decoration: none;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.m-sheet-item:active { background: var(--c-hover); text-decoration: none; color: var(--c-text); }
+.m-sheet-item i {
+  font-size: 1.35rem;
+  color: var(--c-text-muted);
+}
+.m-sheet-item.router-link-active i { color: var(--c-primary); }
+.m-sheet-item.router-link-active { color: var(--c-primary); }
+
+.m-sheet-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.m-pref-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.m-pref-row:active { background: var(--c-hover); }
+.m-pref-row > i {
+  font-size: 1.1rem;
+  width: 22px;
+  text-align: center;
+  color: var(--c-text-muted);
+  flex-shrink: 0;
+}
+.m-pref-lang { cursor: default; }
+.m-lang-pills {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.m-lang-pill {
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface);
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+.m-lang-pill.is-active {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #fff;
+}
+
+.m-sheet-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  color: var(--c-danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.m-sheet-logout:active { background: var(--c-hover); }
+
+/* Slide-up + fade transition for the sheet. */
+.m-sheet-enter-active,
+.m-sheet-leave-active { transition: opacity 0.25s var(--ease-fluid); }
+.m-sheet-enter-active .m-sheet-panel,
+.m-sheet-leave-active .m-sheet-panel { transition: transform 0.3s var(--ease-fluid); }
+.m-sheet-enter-from,
+.m-sheet-leave-to { opacity: 0; }
+.m-sheet-enter-from .m-sheet-panel,
+.m-sheet-leave-to .m-sheet-panel { transform: translateY(100%); }
