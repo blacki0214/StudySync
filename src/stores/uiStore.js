@@ -17,7 +17,7 @@ export const useUiStore = defineStore('ui', {
     theme: 'light',
     sidebarOpen: false, // mobile off-canvas drawer
     // Desktop sidebar size: 'full' (labels) | 'mini' (icons only)
-    sidebarMode: MODES.includes(localStorage.getItem(MODE_KEY)) ? localStorage.getItem(MODE_KEY) : 'full'
+    sidebarMode: MODES.includes(localStorage.getItem(MODE_KEY)) ? localStorage.getItem(MODE_KEY) : 'mini'
   }),
 
   getters: {
