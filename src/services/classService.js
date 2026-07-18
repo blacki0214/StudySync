@@ -8,6 +8,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabaseClient.js'
 import { generateJoinCode } from '../utils/joinCode.js'
+import { schoolService } from './schoolService.js'
 
 const K_CLASSES = 'studysync_demo_classes'
 const K_MEMBERS = 'studysync_demo_class_members'
@@ -59,15 +60,15 @@ export const classService = {
     return data
   },
 
-  /** Create a class with a unique join code. */
-  async createClass({ ownerId, name, description = '', color = 'grad-blue' }) {
+  /** Create a class with a unique join code. `schoolId` links it to a school. */
+  async createClass({ ownerId, name, description = '', color = 'grad-blue', schoolId = null }) {
     if (!isSupabaseConfigured) {
       const existing = new Set(read(K_CLASSES).map((c) => c.code))
       let code = generateJoinCode()
       while (existing.has(code)) code = generateJoinCode()
       const row = {
         id: nextId('class'), owner_id: ownerId, name: name.trim(), description,
-        code, color, archived: false, created_at: new Date().toISOString()
+        code, color, school_id: schoolId || null, archived: false, created_at: new Date().toISOString()
       }
       const list = read(K_CLASSES); list.unshift(row); write(K_CLASSES, list)
       return row
@@ -77,7 +78,7 @@ export const classService = {
       const code = generateJoinCode()
       const { data, error } = await supabase
         .from('classes')
-        .insert({ owner_id: ownerId, name: name.trim(), description, color, code })
+        .insert({ owner_id: ownerId, name: name.trim(), description, color, code, school_id: schoolId })
         .select().single()
       if (!error) return data
       if (!/duplicate|unique/i.test(error.message)) throw error
@@ -108,6 +109,9 @@ export const classService = {
       }
       members.unshift({ id: nextId('mem'), class_id: cls.id, user_id: userId, full_name: userName, role: 'member', joined_at: new Date().toISOString() })
       write(K_MEMBERS, members)
+      // Implicit school membership: joining a school-owned class enrols you as a
+      // student of that school.
+      if (cls.school_id) await schoolService.ensureMembership({ schoolId: cls.school_id, userId, userName, role: 'student' })
       return cls
     }
 
@@ -116,6 +120,7 @@ export const classService = {
       if (/duplicate|unique/i.test(error.message)) { const e = new Error('You have already joined this class.'); e.code = 'already_member'; throw e }
       throw error
     }
+    if (cls.school_id) await schoolService.ensureMembership({ schoolId: cls.school_id, userId, userName, role: 'student' })
     return cls
   },
 

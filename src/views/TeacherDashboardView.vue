@@ -10,6 +10,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { useClassStore } from '../stores/classStore.js'
+import { useSchoolStore } from '../stores/schoolStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import EmptyState from '../components/common/EmptyState.vue'
 
@@ -17,19 +18,44 @@ const router = useRouter()
 const { t } = useI18n()
 const auth = useAuthStore()
 const classStore = useClassStore()
+const school = useSchoolStore()
 const dialog = useDialogStore()
 
 const firstName = computed(() => (auth.user?.full_name || '').split(' ')[0] || t('editor.someone'))
 const owned = computed(() => classStore.owned)
 
-const actions = [
+const baseActions = [
   { key: 'teach.actNewClass', icon: 'bi-plus-lg', grad: 'grad-fuchsia', run: newClass },
   { key: 'teach.actClasses', icon: 'bi-easel2', grad: 'grad-blue', to: '/classes' },
   { key: 'teach.actSchedule', icon: 'bi-calendar-week', grad: 'grad-green', to: '/schedule' },
   { key: 'teach.actRooms', icon: 'bi-people', grad: 'grad-orange', to: '/rooms' }
 ]
+// Offer "Join a school" until the teacher belongs to one.
+const actions = computed(() =>
+  school.hasSchool
+    ? baseActions
+    : [{ key: 'teach.actJoinSchool', icon: 'bi-building-add', grad: 'grad-blue', run: joinSchool }, ...baseActions]
+)
 
-onMounted(() => { if (!classStore.owned.length) classStore.fetchOwned() })
+onMounted(() => {
+  if (!classStore.owned.length) classStore.fetchOwned()
+  if (!school.loaded) school.loadSchool()
+})
+
+async function joinSchool() {
+  const code = await dialog.promptText({
+    title: t('school.joinTitle'),
+    label: t('school.joinLabel'),
+    placeholder: t('school.joinPlaceholder')
+  })
+  if (!code || !code.trim()) return
+  try {
+    const s = await school.joinByCode(code.trim(), 'teacher')
+    dialog.toast(t('school.joined', { name: s.name }), 'success')
+  } catch (e) {
+    dialog.toast(e.code === 'not_found' ? t('school.joinFailed') : t('classes.createFailed'), 'error')
+  }
+}
 
 function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
@@ -60,6 +86,7 @@ function runAction(a) {
       <div>
         <h1 class="ph-title">{{ t('teach.welcome', { name: firstName }) }}</h1>
         <p class="ph-sub">{{ t('teach.sub') }}</p>
+        <span v-if="school.hasSchool" class="badge-soft teach-school-chip"><i class="bi bi-building"></i> {{ school.school.name }}</span>
       </div>
       <div class="action-row">
         <button class="btn btn-brand" @click="newClass"><i class="bi bi-plus-lg"></i>{{ t('classes.new') }}</button>
@@ -128,6 +155,7 @@ function runAction(a) {
 .teach-action .ta-label { font-weight: 600; font-size: 0.92rem; color: var(--c-text); }
 .link-muted { color: var(--c-text-muted); font-size: 0.88rem; font-weight: 600; }
 .link-muted:hover { color: var(--c-primary); text-decoration: none; }
+.teach-school-chip { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: var(--space-2); }
 @media (max-width: 860px) {
   .teach-actions { grid-template-columns: repeat(2, 1fr); }
 }

@@ -71,7 +71,8 @@ watch([dobDay, dobMonth, dobYear], () => {
 
 const roles = [
   { value: 'student', icon: 'bi-mortarboard-fill', grad: 'grad-blue', title: 'auth.roleStudent', desc: 'auth.roleStudentDesc' },
-  { value: 'teacher', icon: 'bi-easel2-fill', grad: 'grad-green', title: 'auth.roleTeacher', desc: 'auth.roleTeacherDesc' }
+  { value: 'teacher', icon: 'bi-easel2-fill', grad: 'grad-green', title: 'auth.roleTeacher', desc: 'auth.roleTeacherDesc' },
+  { value: 'admin', icon: 'bi-building-fill', grad: 'grad-fuchsia', title: 'auth.roleAdmin', desc: 'auth.roleAdminDesc' }
 ]
 const purposes = [
   { value: 'personal', icon: 'bi-person-fill', grad: 'grad-fuchsia', title: 'auth.purposePersonal', desc: 'auth.purposePersonalDesc' },

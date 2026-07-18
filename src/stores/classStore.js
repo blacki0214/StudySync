@@ -9,6 +9,7 @@
 import { defineStore } from 'pinia'
 import { classService } from '../services/classService.js'
 import { useAuthStore } from './authStore.js'
+import { useSchoolStore } from './schoolStore.js'
 
 export const useClassStore = defineStore('classes', {
   state: () => ({
@@ -37,7 +38,11 @@ export const useClassStore = defineStore('classes', {
 
     async createClass(payload) {
       const auth = useAuthStore()
-      const row = await classService.createClass({ ...payload, ownerId: auth.user?.id })
+      const school = useSchoolStore()
+      // Link the class to the teacher's school (if they belong to one) so it
+      // appears in the school's class directory.
+      const schoolId = payload.schoolId ?? school.school?.id ?? null
+      const row = await classService.createClass({ ...payload, ownerId: auth.user?.id, schoolId })
       this.owned.unshift(row)
       return row
     },
