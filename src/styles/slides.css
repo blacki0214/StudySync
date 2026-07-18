@@ -1,71 +1,81 @@
 /* slides.css
    ----------------------------------------------------------------------------
-   The native slide editor (Phase 3): top bar, filmstrip, editing stage with a
-   16:9 canvas of draggable blocks, and a fullscreen presenter. Slides render on
-   a white surface in both themes (a deck is a document), while the chrome uses
-   the app tokens. */
+   Class slide decks (upload + present). A grid of deck cards with a 16:9 file
+   thumbnail, and a fullscreen presenter that renders PDF pages via pdf.js. */
 
-:root { --slide-ink: #1e2024; }
+/* Toolbar hint */
+.slides-hint { color: var(--c-text-faint); font-size: 0.82rem; margin-left: var(--space-2); }
 
-.slide-editor { display: flex; flex-direction: column; height: calc(100vh - 2 * var(--space-6)); min-height: 520px; }
-
-/* Top bar */
-.se-topbar { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
-.se-back { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
-.se-back:hover { background: var(--c-surface-2); }
-.se-title { flex: 1; min-width: 0; border: 1px solid transparent; background: none; font-size: 1.15rem; font-weight: 800; color: var(--c-text); padding: 0.3rem 0.5rem; border-radius: var(--radius-sm); }
-.se-title:hover { border-color: var(--c-border); }
-.se-title:focus { outline: none; border-color: var(--c-primary); background: var(--c-surface); }
-.se-actions { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
-.se-saved { color: var(--c-text-faint); font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem; }
-
-.se-body { flex: 1; display: grid; grid-template-columns: 168px 1fr; gap: var(--space-4); min-height: 0; }
-
-/* Filmstrip */
-.se-filmstrip { display: flex; flex-direction: column; gap: var(--space-2); overflow-y: auto; padding-right: 2px; }
-.se-thumb { position: relative; border: 2px solid var(--c-border); border-radius: 8px; background: #fff; cursor: pointer; padding: 0; overflow: hidden; }
-.se-thumb.active { border-color: var(--c-primary); }
-.se-thumb-num { position: absolute; top: 2px; left: 4px; z-index: 2; font-size: 0.6rem; font-weight: 700; color: #94a3b8; }
-.se-thumb-canvas { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; }
-.se-thumb-block { position: absolute; overflow: hidden; font-size: 4px; color: #1e2024; line-height: 1.1; }
-.se-thumb-block.shape { border-radius: 2px; }
-.se-thumb-block img { width: 100%; height: 100%; object-fit: cover; }
-.se-thumb-del { position: absolute; top: 2px; right: 2px; z-index: 3; width: 16px; height: 16px; border-radius: 4px; background: rgba(0,0,0,.5); color: #fff; display: none; place-items: center; font-size: 0.7rem; }
-.se-thumb:hover .se-thumb-del { display: grid; }
-.se-add-slide { display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem; border: 1px dashed var(--c-border-strong); background: none; border-radius: 8px; color: var(--c-text-muted); font-size: 0.82rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
-.se-add-slide:hover { border-color: var(--c-primary); color: var(--c-primary); }
-
-/* Stage */
-.se-stage { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.se-toolbar { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
-.se-tool { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-text); border-radius: var(--radius-sm); padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
-.se-tool:hover { background: var(--c-surface-2); border-color: var(--c-primary); }
-
-.se-canvas-wrap { flex: 1; display: grid; place-items: center; min-height: 0; background: var(--c-surface-2); border: 1px solid var(--c-border); border-radius: var(--radius); padding: var(--space-4); overflow: auto; }
-.se-canvas { position: relative; width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #fff; border-radius: 8px; box-shadow: var(--shadow-lg); overflow: hidden; }
-
-/* Blocks */
-.se-block { position: absolute; }
-.se-block.selected { outline: 2px solid var(--c-primary); outline-offset: 1px; }
-.se-handle { position: absolute; top: -12px; left: -12px; width: 22px; height: 22px; border-radius: 6px; background: var(--c-primary); color: #fff; display: none; place-items: center; cursor: grab; font-size: 0.7rem; z-index: 4; }
-.se-block.selected .se-handle { display: grid; }
-.se-block-del { position: absolute; top: -12px; right: -12px; width: 22px; height: 22px; border-radius: 6px; border: none; background: var(--c-danger); color: #fff; display: grid; place-items: center; cursor: pointer; font-size: 0.7rem; z-index: 4; }
-.se-text { width: 100%; height: 100%; outline: none; color: var(--slide-ink); font-weight: 600; line-height: 1.25; overflow: hidden; }
-.se-img { width: 100%; height: 100%; object-fit: contain; }
-.se-shape { width: 100%; height: 100%; border-radius: 8px; }
-
-/* Presenter */
-.se-present { position: fixed; inset: 0; z-index: 2000; background: #0b0b0f; display: grid; place-items: center; cursor: pointer; }
-.se-present-canvas { position: relative; width: min(96vw, 170vh); aspect-ratio: 16 / 9; background: #fff; border-radius: 6px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
-.se-present-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-3); background: rgba(20,20,26,.85); color: #fff; padding: 0.5rem 0.9rem; border-radius: var(--radius-pill); font-size: 0.85rem; }
-.se-present-bar button { background: none; border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 1rem; padding: 0.2rem 0.4rem; border-radius: 6px; }
-.se-present-bar button:hover { background: rgba(255,255,255,.12); }
-.se-present-exit { font-size: 0.85rem !important; }
-
-@media (max-width: 768px) {
-  .slide-editor { height: calc(100dvh - var(--m-header-h) - var(--m-safe-t) - var(--m-tabbar-h) - var(--m-safe-b)); min-height: 0; }
-  .se-body { grid-template-columns: 1fr; }
-  .se-filmstrip { flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: 84px; }
-  .se-thumb { width: 120px; flex-shrink: 0; }
-  .se-add-slide { width: 96px; flex-shrink: 0; }
+/* ---- Deck grid ---- */
+.slides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
 }
+.slide-card {
+  position: relative;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.slide-thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-size: 2.4rem;
+}
+.slide-thumb.is-pdf { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+.slide-thumb.is-ppt { background: linear-gradient(135deg, #f97316, #c2410c); }
+.slide-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transition: opacity 0.15s var(--ease-fluid);
+  font-size: 2rem;
+}
+.slide-thumb:hover .slide-play { opacity: 1; }
+.slide-info { padding: var(--space-3) var(--space-4); }
+.slide-title { font-weight: 700; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slide-type { font-size: 0.74rem; color: var(--c-text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+.slide-del {
+  position: absolute; top: var(--space-2); right: var(--space-2);
+  width: 30px; height: 30px; border-radius: 8px; border: none;
+  background: rgba(0, 0, 0, 0.45); color: #fff; cursor: pointer;
+  display: grid; place-items: center; opacity: 0; transition: opacity 0.15s;
+}
+.slide-card:hover .slide-del { opacity: 1; }
+.slide-del:hover { background: var(--c-danger); }
+
+/* ---- Fullscreen presenter ---- */
+.sp-overlay { position: fixed; inset: 0; z-index: 2000; background: #0b0b0f; display: flex; flex-direction: column; }
+.sp-stage { flex: 1; display: grid; place-items: center; min-height: 0; padding: var(--space-4); position: relative; }
+.sp-canvas { max-width: 94vw; max-height: 82vh; border-radius: 4px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); cursor: pointer; }
+.sp-msg { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
+.sp-fallback { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.sp-fallback i { font-size: 3rem; color: #f97316; }
+.sp-fallback p { color: rgba(255, 255, 255, 0.75); max-width: 34ch; margin: 0; }
+
+.sp-bar {
+  display: flex; align-items: center; justify-content: center; gap: var(--space-3);
+  padding: 0.6rem; background: rgba(20, 20, 26, 0.92);
+  padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  color: #fff;
+}
+.sp-bar button, .sp-bar .sp-dl {
+  background: none; border: none; color: #fff; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 1rem; padding: 0.35rem 0.6rem; border-radius: 8px; text-decoration: none;
+}
+.sp-bar button:hover, .sp-bar .sp-dl:hover { background: rgba(255, 255, 255, 0.14); }
+.sp-count { font-variant-numeric: tabular-nums; min-width: 64px; text-align: center; font-size: 0.9rem; }
+.sp-exit { font-size: 0.9rem !important; }

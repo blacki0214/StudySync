@@ -38,7 +38,6 @@ const routes = [
   { path: '/share/:id', name: 'note-share', component: () => import('../views/NoteDetailView.vue'), props: true },
   { path: '/rooms', name: 'rooms', component: () => import('../views/StudyRoomsView.vue') },
   { path: '/rooms/:id', name: 'study-room', component: () => import('../views/StudyRoomView.vue'), props: true },
-  { path: '/slides/:deckId', name: 'slide-editor', component: () => import('../views/SlideEditorView.vue'), props: true },
   { path: '/flashcards', name: 'flashcards', component: () => import('../views/FlashcardsView.vue') },
   { path: '/flashcards/:noteId', name: 'flashcards-note', component: () => import('../views/FlashcardsView.vue'), props: true },
   { path: '/community', name: 'community', component: () => import('../views/CommunityView.vue') },

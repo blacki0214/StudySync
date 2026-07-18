@@ -76,27 +76,24 @@ export default {
     joined: 'Đã tham gia {name}'
   },
 
-  // Native slide editor (class slide decks).
+  // Class slide decks (upload PDF/PowerPoint + present).
   slides: {
-    loading: 'Đang mở bộ slide…',
-    deckTitle: 'Tiêu đề bộ slide',
-    deckPlaceholder: 'vd. Tuần 1 — Giới thiệu',
-    newDeck: 'Bộ slide mới',
+    upload: 'Tải slide lên',
+    uploadHint: 'PDF hoặc PowerPoint',
+    uploaded: 'Đã tải slide lên',
+    badType: 'Vui lòng chọn tệp PDF hoặc PowerPoint.',
+    tooLarge: 'Tệp quá lớn (tối đa 25 MB).',
     noDecks: 'Chưa có bộ slide nào',
-    noDecksMsg: 'Tạo một bộ slide để trình chiếu cho lớp.',
-    slideCount: '{n} slide',
+    noDecksMsg: 'Tải lên PDF hoặc PowerPoint để trình chiếu cho lớp.',
     deleteDeck: 'Xóa bộ slide',
     deleteDeckConfirm: 'Xóa bộ slide “{name}”?',
-    saved: 'Đã lưu',
-    present: 'Trình chiếu',
-    addSlide: 'Thêm slide',
-    deleteSlide: 'Xóa slide',
-    text: 'Văn bản',
-    image: 'Hình ảnh',
-    shape: 'Hình khối',
-    textPlaceholder: 'Nhập tại đây',
+    createFailed: 'Không thể tải lên. Nếu dùng cơ sở dữ liệu trực tuyến, hãy chạy migration_slides.sql.',
+    prev: 'Trước',
+    next: 'Sau',
     exit: 'Thoát',
-    createFailed: 'Không thể tạo bộ slide. Nếu dùng cơ sở dữ liệu trực tuyến, hãy chạy migration_slides.sql.'
+    download: 'Tải xuống',
+    pptxNote: 'Không thể xem trước tệp PowerPoint trong ứng dụng — hãy tải xuống để xem. Mẹo: xuất sang PDF để trình chiếu tại đây.',
+    presentError: 'Không thể mở tệp này.'
   },
 
   // Class quizzes (author + take).

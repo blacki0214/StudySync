@@ -76,27 +76,24 @@ export default {
     joined: 'Joined {name}'
   },
 
-  // Native slide editor (class slide decks).
+  // Class slide decks (upload PDF/PowerPoint + present).
   slides: {
-    loading: 'Opening deck…',
-    deckTitle: 'Deck title',
-    deckPlaceholder: 'e.g. Week 1 — Introduction',
-    newDeck: 'New deck',
+    upload: 'Upload slides',
+    uploadHint: 'PDF or PowerPoint',
+    uploaded: 'Slides uploaded',
+    badType: 'Please choose a PDF or PowerPoint file.',
+    tooLarge: 'File is too large (max 25 MB).',
     noDecks: 'No slide decks yet',
-    noDecksMsg: 'Create a deck to present to your class.',
-    slideCount: '{n} slides',
+    noDecksMsg: 'Upload a PDF or PowerPoint to present to your class.',
     deleteDeck: 'Delete deck',
     deleteDeckConfirm: 'Delete the “{name}” deck?',
-    saved: 'Saved',
-    present: 'Present',
-    addSlide: 'Add slide',
-    deleteSlide: 'Delete slide',
-    text: 'Text',
-    image: 'Image',
-    shape: 'Shape',
-    textPlaceholder: 'Type here',
+    createFailed: 'Could not upload. If you use a live database, run migration_slides.sql.',
+    prev: 'Previous',
+    next: 'Next',
     exit: 'Exit',
-    createFailed: 'Could not create the deck. If you use a live database, run migration_slides.sql.'
+    download: 'Download',
+    pptxNote: "PowerPoint files can't be previewed in-app — download to view. Tip: export to PDF to present here.",
+    presentError: 'Could not open this file.'
   },
 
   // Class quizzes (author + take).
