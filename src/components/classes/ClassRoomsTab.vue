@@ -1,27 +1,28 @@
 <script setup>
 /**
  * ClassRoomsTab — study rooms that belong to a class (Phase 2). Any member can
- * spin one up for a live session or group work; it opens the Discord-style room.
- * Class rooms are tagged with class_id, so they never show in the personal
- * Study Rooms list.
+ * spin one up for a live session; it opens the Discord-style room. Class rooms
+ * are loaded via listRoomsForClass (they're intentionally kept OUT of the
+ * personal Study Rooms list, which only shows non-class rooms).
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-import { useContentStore } from '../../stores/contentStore.js'
+import { useAuthStore } from '../../stores/authStore.js'
 import { useDialogStore } from '../../stores/dialogStore.js'
+import { studyRoomService } from '../../services/studyRoomService.js'
 import EmptyState from '../common/EmptyState.vue'
 
 const props = defineProps({ classId: { type: String, required: true } })
 const { t } = useI18n()
 const router = useRouter()
-const content = useContentStore()
+const auth = useAuthStore()
 const dialog = useDialogStore()
 
+const rooms = ref([])
 const creating = ref(false)
-const rooms = computed(() => content.rooms.filter((r) => r.class_id === props.classId))
 
-onMounted(() => content.ensureLoaded())
+onMounted(async () => { rooms.value = await studyRoomService.listRoomsForClass(props.classId) })
 
 async function create() {
   const name = await dialog.promptText({
@@ -32,9 +33,11 @@ async function create() {
   if (!name || !name.trim()) return
   creating.value = true
   try {
-    const room = await content.createRoom({ name: name.trim(), classId: props.classId })
+    const room = await studyRoomService.createRoom({ name: name.trim(), classId: props.classId, ownerId: auth.user?.id })
+    rooms.value.unshift(room)
     router.push(`/rooms/${room.id}`)
   } catch (e) {
+    // Likely study_rooms.class_id column is missing (run the migration).
     dialog.toast(e.message || t('rooms.createFailed'), 'error')
   } finally {
     creating.value = false
@@ -45,7 +48,10 @@ async function create() {
 <template>
   <div>
     <div class="tab-toolbar">
-      <button class="btn btn-brand btn-sm" :disabled="creating" @click="create"><i class="bi bi-plus-lg"></i>{{ t('classes.newRoom') }}</button>
+      <button class="btn btn-brand btn-sm" :disabled="creating" @click="create">
+        <span v-if="creating" class="spinner-border spinner-border-sm"></span>
+        <i v-else class="bi bi-plus-lg"></i>{{ t('classes.newRoom') }}
+      </button>
     </div>
 
     <EmptyState v-if="!rooms.length" icon="bi-people" :title="t('classes.noRooms')" :message="t('classes.noRoomsMsg')" />

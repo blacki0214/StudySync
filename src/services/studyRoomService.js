@@ -32,6 +32,13 @@ const K_MEMBERS = 'studysync_demo_room_members'
 const readMembers = () => { try { return JSON.parse(localStorage.getItem(K_MEMBERS) || '[]') } catch { return [] } }
 const writeMembers = (v) => { try { localStorage.setItem(K_MEMBERS, JSON.stringify(v)) } catch { /* ignore */ } }
 
+// Demo-mode created rooms (persisted so they survive a reload, unlike the
+// bundled sample rooms which are read-only).
+const K_ROOMS = 'studysync_demo_rooms'
+const readRooms = () => { try { return JSON.parse(localStorage.getItem(K_ROOMS) || '[]') } catch { return [] } }
+const writeRooms = (v) => { try { localStorage.setItem(K_ROOMS, JSON.stringify(v)) } catch { /* ignore */ } }
+const withSubject = (r) => ({ ...r, subject: sampleSubjects.find((s) => s.id === r.subject_id) || null })
+
 const demoRooms = [
   {
     id: 'room-1',
@@ -67,10 +74,9 @@ export const studyRoomService = {
    */
   async listRoomsForUser(userId) {
     if (!isSupabaseConfigured) {
-      return demoRooms.map((r) => ({
-        ...r,
-        subject: sampleSubjects.find((s) => s.id === r.subject_id) || null
-      }))
+      // Persisted personal rooms (not class-scoped) + the bundled samples.
+      const persisted = readRooms().filter((r) => !r.class_id)
+      return [...persisted, ...demoRooms].map(withSubject)
     }
     if (!userId) return []
 
@@ -90,6 +96,18 @@ export const studyRoomService = {
       : query.eq('owner_id', userId)
 
     const { data, error } = await query
+    if (error) throw error
+    return data
+  },
+
+  /** Rooms that belong to a class workspace. */
+  async listRoomsForClass(classId) {
+    if (!isSupabaseConfigured) {
+      return readRooms().filter((r) => r.class_id === classId).map(withSubject)
+    }
+    const { data, error } = await supabase
+      .from('study_rooms').select('*, subject:subjects(*)').eq('class_id', classId)
+      .order('created_at', { ascending: false })
     if (error) throw error
     return data
   },
@@ -121,7 +139,7 @@ export const studyRoomService = {
     const cleanName = String(name || '').trim() || 'Study Room'
     if (!isSupabaseConfigured) {
       const subject = sampleSubjects.find((s) => s.id === subjectId) || null
-      return {
+      const room = {
         id: localId('room'),
         owner_id: ownerId,
         subject_id: subjectId,
@@ -133,6 +151,8 @@ export const studyRoomService = {
         active_users: 1,
         created_at: new Date().toISOString()
       }
+      const list = readRooms(); list.unshift(room); writeRooms(list) // persist so it survives a reload
+      return room
     }
     const { data, error } = await supabase
       .from('study_rooms')
@@ -146,10 +166,9 @@ export const studyRoomService = {
   /** Fetch one room. */
   async getRoom(id) {
     if (!isSupabaseConfigured) {
-      const room = demoRooms.find((r) => r.id === id)
-      return room
-        ? { ...room, subject: sampleSubjects.find((s) => s.id === room.subject_id) }
-        : null
+      // Check persisted (created) rooms first, then the bundled samples.
+      const room = readRooms().find((r) => r.id === id) || demoRooms.find((r) => r.id === id)
+      return room ? withSubject(room) : null
     }
     const { data, error } = await supabase
       .from('study_rooms')
