@@ -23,7 +23,7 @@
   /* Visible overflow so footer dropdowns (account/language) can fly out of the
      rail; the nav list below scrolls on its own instead. */
   overflow: visible;
-  transition: transform 0.25s var(--ease-fluid), width 0.22s var(--ease-fluid);
+  transition: transform 0.25s var(--ease-fluid);
 }
 
 .sidebar-head {
@@ -43,6 +43,7 @@
   min-width: 0;
 }
 .sidebar-brand:hover { text-decoration: none; color: inherit; }
+.sidebar-brand-text { display: none; }
 .sidebar-head-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .sidebar-collapse-btn {
   flex-shrink: 0; border: none; background: none; color: var(--c-text-faint);
@@ -318,7 +319,6 @@
   /* Hide every text element, keep the icons. */
   .app-shell.sidebar-mini .sidebar-brand-text,
   .app-shell.sidebar-mini .sidebar-section-label,
-  .app-shell.sidebar-mini .sidebar-link > span,
   .app-shell.sidebar-mini .sidebar-search > span,
   .app-shell.sidebar-mini .sidebar-search .kbd,
   .app-shell.sidebar-mini .xp-card,
@@ -332,6 +332,7 @@
   .app-shell.sidebar-mini .sidebar-head-actions { justify-content: center; }
   .app-shell.sidebar-mini .sidebar-link {
     justify-content: center; width: 40px; height: 40px; padding: 0; margin: 0 auto;
+    position: relative;
   }
   /* Search: drop the bordered box — it becomes a plain icon button like the rest. */
   .app-shell.sidebar-mini .sidebar-search {
@@ -340,6 +341,32 @@
   }
   .app-shell.sidebar-mini .sidebar-search:hover { background: var(--c-hover); color: var(--c-text); }
   .app-shell.sidebar-mini .sidebar-search:focus { outline: none; box-shadow: none; }
+
+  /* Per-item floating label on hover (Instagram-style). */
+  .app-shell.sidebar-mini .sidebar-link > span:not(.link-badge) {
+    display: block;
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(-6px);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: 0.3rem 0.7rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--c-text);
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 1060;
+  }
+  .app-shell.sidebar-mini .sidebar-link:hover > span:not(.link-badge) {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
   .app-shell.sidebar-mini .sidebar-controls { flex-direction: column; align-items: center; gap: var(--space-1); }
   /* Account: drop the bordered pill — show just the avatar, centred. */
   .app-shell.sidebar-mini .sidebar-account { display: flex; justify-content: center; }
@@ -349,41 +376,6 @@
   .app-shell.sidebar-mini .sidebar-user:hover { background: none; }
   .app-shell.sidebar-mini .sidebar-user .su-avatar { width: 34px; height: 34px; }
 
-  /* Instagram-style hover-expand: overlay the full sidebar on mouse-over. */
-  .app-shell.sidebar-mini .app-sidebar:hover {
-    width: var(--sidebar-width);
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
-  }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-brand-text { display: flex; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-section-label { display: block; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-link > span { display: inline; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-search > span { display: inline; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-search .kbd { display: inline; }
-  .app-shell.sidebar-mini .app-sidebar:hover .ctl-lang { display: inline; }
-  .app-shell.sidebar-mini .app-sidebar:hover .su-meta { display: block; }
-  .app-shell.sidebar-mini .app-sidebar:hover .su-caret { display: inline; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-head { flex-direction: row; gap: var(--space-2); }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-brand { padding: 0 0 0 var(--space-2); justify-content: flex-start; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-head-actions { justify-content: flex-end; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-link {
-    justify-content: flex-start; width: 100%; height: auto; padding: 0.5rem 0.6rem; margin: 0;
-  }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-search {
-    justify-content: flex-start; width: 100%; height: auto;
-    padding: 0.5rem 0.7rem; margin: 0 auto var(--space-2);
-    border: 1px solid var(--c-border-strong); background: var(--c-surface);
-    color: var(--c-text-faint); box-shadow: none;
-  }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-controls { flex-direction: row; align-items: center; gap: var(--space-1); }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-account { display: block; }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-user {
-    justify-content: flex-start; width: 100%; padding: 0.45rem 0.5rem;
-    border: 1px solid var(--c-border); background: var(--c-surface);
-  }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-user:hover { background: var(--c-hover); }
-  .app-shell.sidebar-mini .app-sidebar:hover .sidebar-user .su-avatar { width: 38px; height: 38px; }
 }
 
 .sidebar-user .su-name,
