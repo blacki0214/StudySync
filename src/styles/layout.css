@@ -13,7 +13,6 @@
 .app-sidebar {
   width: var(--sidebar-width);
   background: var(--c-surface);
-  border-right: 1px solid var(--c-border);
   position: fixed;
   inset: 0 auto 0 0;
   display: flex;
