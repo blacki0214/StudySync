@@ -155,3 +155,18 @@
 .cnode-action:hover { color: var(--c-primary); }
 .cnode-composer { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
 .reply-composer.top { margin: 0 0 var(--space-3); }
+
+/* ----------------------------------------------------------------------------
+   Phones: tighten the composer + cards so they don't feel oversized, and give
+   the composer input room for its two-line placeholder. */
+@media (max-width: 768px) {
+  .composer { padding: var(--space-3); }
+  .composer .composer-input,
+  .composer input { min-height: 58px; }
+  .post-card { padding: var(--space-4); gap: var(--space-3); }
+  .post-title { font-size: 1.02rem; }
+  .post-foot { gap: var(--space-4); flex-wrap: wrap; }
+  .vote-btn { width: 32px; height: 32px; }
+  /* Keep the deep reply threads from marching off the right edge. */
+  .cnode-children { margin-left: 8px; padding-left: var(--space-2); }
+}
