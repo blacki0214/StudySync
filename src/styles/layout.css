@@ -224,7 +224,7 @@
 /* Footer controls row: theme · language · notifications. */
 .sidebar-controls {
   display: flex; align-items: center; gap: var(--space-1);
-  padding: var(--space-2) 0; border-top: 1px solid var(--c-border); margin-top: var(--space-3);
+  padding: var(--space-2) 0; margin-top: var(--space-3);
 }
 .sidebar-ctl {
   position: relative; display: inline-flex; align-items: center; gap: 0.3rem;
