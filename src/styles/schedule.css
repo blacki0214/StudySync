@@ -51,6 +51,9 @@
 }
 .cal-cell {
   min-height: 92px;
+  /* Let the 1fr tracks shrink below their content's intrinsic width; without
+     this the no-wrap chip text forces each column wide and overflows the grid. */
+  min-width: 0;
   border: 1px solid var(--c-border);
   border-radius: var(--radius-sm);
   background: var(--c-surface);
@@ -71,7 +74,7 @@
 }
 .cal-cell.today .cc-day { background: var(--grad-button); color: #fff; }
 
-.cc-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cc-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; min-width: 0; }
 .cc-chip {
   font-size: 0.66rem; font-weight: 600; color: #fff;
   border-radius: 4px; padding: 1px 5px;
@@ -119,6 +122,40 @@
 
 @media (max-width: 991px) {
   .schedule-layout { grid-template-columns: 1fr; }
+}
+
+/* Phones: a compact month grid where events collapse to coloured DOTS (text
+   chips can't fit a ~45px cell). The full detail for the tapped day lives in the
+   agenda panel below — the standard mobile-calendar pattern. */
+@media (max-width: 768px) {
+  .cal-card { padding: var(--space-3); }
+  .cal-month { font-size: 1rem; }
+  .cal-weekdays { gap: 2px; }
+  .cal-weekdays span { font-size: 0.6rem; padding: 0.15rem 0; }
+  .cal-grid { gap: 2px; }
+  .cal-cell {
+    min-height: 52px;
+    padding: 0.25rem 0.15rem;
+    gap: 0.2rem;
+    align-items: center;
+  }
+  .cal-cell .cc-day { font-size: 0.75rem; width: 22px; height: 22px; }
+
+  /* Events → a centred row of dots. */
+  .cc-events { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 3px; }
+  .cc-chip {
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 0; /* hide the label text; the dot is the indicator */
+    overflow: hidden;
+  }
+  /* Status events carry an inline translucent bg + solid left border; as a dot
+     use their solid status colour (the inline `color`) and drop the border. */
+  .cc-chip[style] { background: currentColor !important; border-left: none !important; }
+  .cc-more { font-size: 0.58rem; line-height: 6px; padding: 0; }
 }
 
 /* Status visualisation on schedule events */
