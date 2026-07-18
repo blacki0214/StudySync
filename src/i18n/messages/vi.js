@@ -30,7 +30,33 @@ export default {
     darkMode: 'Chuyển sang giao diện tối',
     notifications: 'Thông báo',
     language: 'Ngôn ngữ',
+    teach: 'Giảng dạy',
+    school: 'Trường học',
     logout: 'Đăng xuất'
+  },
+
+  // Teacher home (/teach) + school admin home (/school).
+  teach: {
+    welcome: 'Chào mừng trở lại, {name}',
+    sub: 'Các lớp và công cụ giảng dạy của bạn ở cùng một nơi.',
+    actNewClass: 'Lớp mới',
+    actClasses: 'Tất cả lớp',
+    actSchedule: 'Lịch',
+    actRooms: 'Phòng học',
+    yourClasses: 'Lớp của bạn',
+    manageAll: 'Quản lý tất cả'
+  },
+  school: {
+    welcome: 'Chào mừng, {name}',
+    sub: 'Quản lý trường của bạn — giáo viên, học sinh và lớp học.',
+    setupTitle: 'Thiết lập trường của bạn',
+    setupMsg: 'Tạo trường của bạn, sau đó mời giáo viên và học sinh. Quản lý trường đầy đủ sẽ có trong bản cập nhật tiếp theo.',
+    soon: 'Sắp ra mắt',
+    willManage: 'Những gì bạn sẽ quản lý ở đây',
+    featTeachers: 'Giáo viên',
+    featStudents: 'Học sinh',
+    featClasses: 'Lớp học',
+    featAnalytics: 'Phân tích trường học'
   },
 
   // Strings specific to the mobile app shell (bottom tab bar + More sheet).
@@ -617,6 +643,7 @@ export default {
     enrolled: 'Đã tham gia',
     noTeaching: 'Bạn chưa dạy lớp nào',
     noTeachingMsg: 'Tạo một lớp và chia sẻ mã tham gia cho học sinh.',
+    createFailed: 'Không thể tạo lớp. Vui lòng thử lại.',
     noEnrolled: 'Bạn chưa tham gia lớp nào',
     noEnrolledMsg: 'Xin mã tham gia từ giáo viên rồi nhập để vào lớp.',
     noDesc: 'Không có mô tả',

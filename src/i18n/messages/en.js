@@ -30,7 +30,33 @@ export default {
     darkMode: 'Switch to dark mode',
     notifications: 'Notifications',
     language: 'Language',
+    teach: 'Teaching',
+    school: 'School',
     logout: 'Log out'
+  },
+
+  // Teacher home (/teach) + school admin home (/school).
+  teach: {
+    welcome: 'Welcome back, {name}',
+    sub: 'Your classes and teaching tools in one place.',
+    actNewClass: 'New class',
+    actClasses: 'All classes',
+    actSchedule: 'Schedule',
+    actRooms: 'Study rooms',
+    yourClasses: 'Your classes',
+    manageAll: 'Manage all'
+  },
+  school: {
+    welcome: 'Welcome, {name}',
+    sub: 'Manage your institution — teachers, students and classes.',
+    setupTitle: 'Set up your school',
+    setupMsg: 'Create your institution, then invite teachers and students. Full school management arrives in the next update.',
+    soon: 'Coming soon',
+    willManage: "What you'll manage here",
+    featTeachers: 'Teachers',
+    featStudents: 'Students',
+    featClasses: 'Classes',
+    featAnalytics: 'School analytics'
   },
 
   // Strings specific to the mobile app shell (bottom tab bar + More sheet).
@@ -618,6 +644,7 @@ export default {
     enrolled: "Enrolled",
     noTeaching: "You don't teach any classes yet",
     noTeachingMsg: 'Create a class and share its join code with your students.',
+    createFailed: 'Could not create the class. Please try again.',
     noEnrolled: "You haven't joined any classes",
     noEnrolledMsg: 'Ask your teacher for a join code, then enter it to join.',
     noDesc: 'No description',

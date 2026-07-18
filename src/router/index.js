@@ -10,9 +10,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore.js'
 
 const routes = [
-  // The marketing landing page is removed — go straight to the app (the guard
-  // sends logged-out visitors to /login and logged-in users to the hub).
-  { path: '/', redirect: '/hub' },
+  // The marketing landing page is removed — go straight to the app. Logged-out
+  // visitors are sent to /login by the guard; logged-in users land on their
+  // role's home (admin → /school, teacher → /teach, student → /hub). Uses
+  // beforeEnter (not a record redirect) so it runs AFTER the global guard has
+  // restored the session — otherwise homePath would read a not-yet-loaded user.
+  { path: '/', component: { render: () => null }, beforeEnter: () => useAuthStore().homePath },
   { path: '/login', name: 'login', component: () => import('../views/LoginView.vue'), meta: { public: true, layout: 'blank' } },
   { path: '/register', name: 'register', component: () => import('../views/RegisterView.vue'), meta: { public: true, layout: 'blank' } },
   { path: '/forgot-password', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue'), meta: { public: true, layout: 'blank' } },
@@ -41,6 +44,11 @@ const routes = [
   { path: '/classes', name: 'classes', component: () => import('../views/ClassesView.vue') },
   { path: '/classes/:id', name: 'class-detail', component: () => import('../views/ClassDetailView.vue'), props: true },
   { path: '/join', name: 'join-class', component: () => import('../views/JoinClassView.vue') },
+
+  // Teacher home — the teaching dashboard (classes overview + quick actions).
+  { path: '/teach', name: 'teach', component: () => import('../views/TeacherDashboardView.vue'), meta: { requireRole: 'teacher' } },
+  // School admin home — the institution dashboard.
+  { path: '/school', name: 'school', component: () => import('../views/SchoolDashboardView.vue'), meta: { requireRole: 'admin' } },
   { path: '/settings', name: 'settings', component: () => import('../views/SettingsView.vue') },
   { path: '/profile', redirect: '/settings' }, // profile became settings
 
@@ -63,13 +71,15 @@ router.beforeEach(async (to) => {
   if (!to.meta.public && !auth.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
-  // Prevent logged-in users from seeing login/register.
+  // Prevent logged-in users from seeing login/register — send them to their
+  // role's home instead.
   if ((to.name === 'login' || to.name === 'register') && auth.isAuthenticated) {
-    return { name: 'hub' }
+    return auth.homePath
   }
-  // Role-gated routes (e.g. teacher-only Classes area). Bounce to the hub.
+  // Role-gated routes (teacher-only /teach, admin-only /school). Bounce a user
+  // of the wrong role to their own home.
   if (to.meta.requireRole && auth.role !== to.meta.requireRole) {
-    return { name: 'hub' }
+    return auth.homePath
   }
   return true
 })

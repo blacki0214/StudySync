@@ -40,7 +40,16 @@ export const useAuthStore = defineStore('auth', {
     // Role drives navigation + route guards. Defaults to 'student' when unset.
     role: (state) => state.user?.role || 'student',
     isTeacher: (state) => state.user?.role === 'teacher',
-    isStudent: (state) => (state.user?.role || 'student') === 'student'
+    isStudent: (state) => (state.user?.role || 'student') === 'student',
+    isAdmin: (state) => state.user?.role === 'admin',
+    // The default landing page per role: admins run a school, teachers teach,
+    // students study. Used by the router redirect + post-login navigation.
+    homePath: (state) => {
+      const r = state.user?.role
+      if (r === 'admin') return '/school'
+      if (r === 'teacher') return '/teach'
+      return '/hub'
+    }
   },
 
   actions: {

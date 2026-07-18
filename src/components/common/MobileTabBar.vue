@@ -5,20 +5,36 @@
  * in the More sheet. Active icons light up (outline → filled twin) like the
  * desktop sidebar. Sits above the home indicator via safe-area padding (CSS).
  */
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '../../stores/uiStore.js'
+import { useAuthStore } from '../../stores/authStore.js'
 
 const route = useRoute()
 const ui = useUiStore()
+const auth = useAuthStore()
 const { t } = useI18n()
 
-const tabs = [
+// Primary tabs adapt to the role; the rest live in the More sheet.
+const studentTabs = [
   { to: '/hub', icon: 'bi-house', activeIcon: 'bi-house-fill', key: 'nav.hub' },
   { to: '/my-subjects', icon: 'bi-grid', activeIcon: 'bi-grid-fill', key: 'mobile.tabSubjects' },
   { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
   { to: '/tasks', icon: 'bi-check2-square', activeIcon: 'bi-check-square-fill', key: 'nav.tasks' }
 ]
+const teacherTabs = [
+  { to: '/teach', icon: 'bi-easel', activeIcon: 'bi-easel-fill', key: 'nav.teach' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
+  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
+  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule' }
+]
+const adminTabs = [
+  { to: '/school', icon: 'bi-building', activeIcon: 'bi-building-fill', key: 'nav.school' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' }
+]
+const tabs = computed(() => (auth.isAdmin ? adminTabs : auth.isTeacher ? teacherTabs : studentTabs))
 </script>
 
 <template>

@@ -33,7 +33,8 @@ onMounted(async () => {
         <p>{{ t('auth.welcomeDoneConfirmed') }}</p>
         <p>{{ t('auth.welcomeDoneMessage') }}</p>
         <div class="as-actions">
-          <router-link to="/hub" class="btn btn-brand">{{ t('auth.goToApp') }}</router-link>
+          <!-- "/" resolves to the role's home (admin → /school, teacher → /teach, student → /hub). -->
+          <router-link to="/" class="btn btn-brand">{{ t('auth.goToApp') }}</router-link>
         </div>
       </div>
     </div>

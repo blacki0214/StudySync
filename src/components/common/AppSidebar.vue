@@ -27,7 +27,10 @@ const { t, locale } = useI18n()
 
 // Instagram-style nav: an outline icon by default, its filled twin when active
 // (the icon "lights up" instead of the item getting a boxed background).
-const links = [
+// The nav adapts to the signed-in role: students study, teachers teach, admins
+// run a school. Teachers/admins still reach personal features via the account
+// menu + direct routes — this is just the primary rail.
+const studentLinks = [
   { to: '/hub', icon: 'bi-house', activeIcon: 'bi-house-fill', key: 'nav.hub' },
   { to: '/my-subjects', icon: 'bi-folder', activeIcon: 'bi-folder-fill', key: 'nav.mySubjects' },
   { to: '/subjects', icon: 'bi-journal-bookmark', activeIcon: 'bi-journal-bookmark-fill', key: 'nav.subjects' },
@@ -39,6 +42,22 @@ const links = [
   { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
   { to: '/classes', icon: 'bi-easel2', activeIcon: 'bi-easel2-fill', key: 'nav.classes' }
 ]
+const teacherLinks = [
+  { to: '/teach', icon: 'bi-easel', activeIcon: 'bi-easel-fill', key: 'nav.teach' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
+  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
+  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule' },
+  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
+  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards' }
+]
+const adminLinks = [
+  { to: '/school', icon: 'bi-building', activeIcon: 'bi-building-fill', key: 'nav.school' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
+  { to: '/settings', icon: 'bi-gear', activeIcon: 'bi-gear-fill', key: 'nav.settings' }
+]
+const links = computed(() => (auth.isAdmin ? adminLinks : auth.isTeacher ? teacherLinks : studentLinks))
 
 const user = computed(() => auth.user || {})
 

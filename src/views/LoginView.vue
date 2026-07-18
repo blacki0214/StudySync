@@ -27,7 +27,8 @@ async function submit() {
 
   try {
     await auth.login({ email: email.value, password: password.value })
-    router.push(route.query.redirect || '/hub')
+    // Land on the requested page, or the user's role home (admin/teacher/student).
+    router.push(route.query.redirect || auth.homePath)
   } catch (e) {
     error.value = auth.error || 'Login failed.'
   }
