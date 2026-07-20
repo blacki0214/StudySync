@@ -279,21 +279,26 @@
 .tl-colhead {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
   color: var(--c-text-muted); border-bottom: 1px solid var(--c-border);
-  padding-bottom: 0.4rem; margin-bottom: 0.15rem;
+  padding-bottom: 0.4rem; margin-bottom: 0.5rem;
 }
+/* Rows are spaced chips rather than flush table rows: the gap is what separates
+   them, so there is no divider line (a hairline would float in the gap). */
 .tl-row {
-  border-radius: var(--radius-sm); padding: 0.45rem 0.5rem;
+  border-radius: var(--radius-sm); padding: 0.5rem;
+  margin-bottom: 5px;
+  background: var(--c-surface-2);
   /* Left rail is transparent until selected, so rows never shift on select. */
   box-shadow: inset 2px 0 0 transparent;
   transition: background 0.15s var(--ease-fluid), box-shadow 0.15s var(--ease-fluid);
 }
-.tl-row + .tl-row { border-top: 1px solid var(--c-border); }
-.tl-row:hover { background: var(--c-hover); }
+/* Mixing the ink colour into the row surface darkens on light and lightens on
+   dark, so one rule gives a correct hover in both themes. */
+.tl-row:hover { background: color-mix(in srgb, var(--c-text) 8%, var(--c-surface-2)); }
 .tl-row.selected {
-  background: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface-2));
   box-shadow: inset 2px 0 0 var(--c-primary);
 }
-.tl-row.selected:hover { background: color-mix(in srgb, var(--c-primary) 15%, transparent); }
+.tl-row.selected:hover { background: color-mix(in srgb, var(--c-primary) 22%, var(--c-surface-2)); }
 .tl-c-name { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
 .tl-title-input {
   flex: 1; min-width: 0; background: transparent; border: none; color: var(--c-text);
