@@ -14,6 +14,7 @@ import TaskTable from './TaskTable.vue'
 import TaskBoard from './TaskBoard.vue'
 import TaskEditor from './TaskEditor.vue'
 import TaskStatusEditor from './TaskStatusEditor.vue'
+import TaskImport from './TaskImport.vue'
 import { PRIORITIES, toOptions } from '../../utils/taskMeta.js'
 
 const props = defineProps({ subjectId: { type: String, default: null } })
@@ -27,6 +28,7 @@ const filterStatus = ref('all')
 const filterPriority = ref('all')
 const editingId = ref(null)
 const showStatusEditor = ref(false)
+const showImport = ref(false)
 
 // Status filter options come from the board's live custom statuses.
 const statusFilterOptions = computed(() => [
@@ -72,6 +74,11 @@ async function deleteTask(id) {
   await store.remove(id)
   if (editingId.value === id) editingId.value = null
 }
+async function importTasks(patches) {
+  const n = await store.importTasks(patches)
+  showImport.value = false
+  dialog.toast(t('tasks.importDone', { n }), n ? 'success' : 'warning')
+}
 </script>
 
 <template>
@@ -99,6 +106,7 @@ async function deleteTask(id) {
       <AppSelect class="task-filter" :model-value="filterStatus" :options="statusFilterOptions" @update:model-value="(v) => filterStatus = v" />
       <AppSelect class="task-filter" :model-value="filterPriority" :options="priorityFilterOptions" @update:model-value="(v) => filterPriority = v" />
       <button class="btn btn-outline-soft" :title="t('tasks.editStatuses')" @click="showStatusEditor = true"><i class="bi bi-sliders"></i>{{ t('tasks.statuses') }}</button>
+      <button class="btn btn-outline-soft" :title="t('tasks.importTitle')" @click="showImport = true"><i class="bi bi-upload"></i>{{ t('tasks.import') }}</button>
       <button class="btn btn-brand" @click="createTask()"><i class="bi bi-plus-lg"></i>{{ t('tasks.newTask') }}</button>
     </div>
 
@@ -165,6 +173,15 @@ async function deleteTask(id) {
       @apply="applyStatuses"
       @save-template="saveStatusTemplate"
       @close="showStatusEditor = false"
+    />
+
+    <!-- Import tasks modal -->
+    <TaskImport
+      v-if="showImport"
+      :statuses="store.statuses"
+      :fallback-id="store.defaultStatusId"
+      @import="importTasks"
+      @close="showImport = false"
     />
   </div>
 </template>

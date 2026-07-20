@@ -110,6 +110,35 @@ export const useTaskStore = defineStore('tasks', {
       return row
     },
 
+    /**
+     * Bulk-create tasks from parsed import patches (see utils/taskImport.js).
+     * Positions continue after the current list so imported tasks land at the
+     * bottom in order. Returns the number actually created.
+     */
+    async importTasks(patches = []) {
+      const auth = useAuthStore()
+      let position = this.tasks.length
+      let created = 0
+      for (const p of patches) {
+        try {
+          const row = await taskService.create({
+            subjectId: this.scope.subjectId,
+            ownerId: auth.user?.id,
+            assigneeName: auth.user?.full_name || null,
+            status: p.status || this.defaultStatusId,
+            priority: p.priority || 'medium',
+            type: p.type || 'general',
+            dueDate: p.dueDate || null,
+            description: p.description || '',
+            title: p.title,
+            position: position++
+          })
+          if (row) { this.tasks.push(row); created++ }
+        } catch { /* skip the failed row, keep importing the rest */ }
+      }
+      return created
+    },
+
     async update(id, patch) {
       // Optimistic: apply locally first, then persist.
       const row = this.tasks.find((t) => t.id === id)
