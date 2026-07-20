@@ -134,7 +134,12 @@ export const useTaskStore = defineStore('tasks', {
             position: position++
           })
           if (row) { this.tasks.push(row); created++ }
-        } catch { /* skip the failed row, keep importing the rest */ }
+        } catch (e) {
+          // Skip the failed row and keep importing, but never fail silently —
+          // a whole import returning 0 with no reason is impossible to debug.
+          // eslint-disable-next-line no-console
+          console.error(`[tasks] import failed for "${p.title}":`, e?.message || e)
+        }
       }
       return created
     },

@@ -34,7 +34,9 @@
   border-radius: var(--radius-sm); padding: 0.35rem 0.7rem; color: var(--c-text-faint);
 }
 .task-search input { border: none; background: none; outline: none; color: var(--c-text); font-size: 0.86rem; width: 160px; }
-.task-filter { min-width: 140px; }
+/* AppSelect is width:100% by default (it's built for forms), which would push
+   each filter onto its own toolbar row. Pin them to their content instead. */
+.task-filter { flex: 0 0 auto; width: auto; min-width: 150px; }
 
 /* Completion footer — Notion's "Completed XX%" with a slim progress bar. */
 .task-completion {
@@ -247,12 +249,21 @@
 
 /* ---- Grouped List view ---- */
 .task-list { display: flex; flex-direction: column; gap: var(--space-4); }
-.tl-section { }
+/* Each status group is a card so rows read as a set instead of floating on the
+   page background. No `overflow` here — the status/priority popovers escape it. */
+.tl-section {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  box-shadow: var(--shadow-sm);
+}
 .tl-head {
   display: flex; align-items: center; gap: 0.6rem; cursor: pointer;
-  padding: 0.35rem 0; user-select: none;
+  padding: 0.35rem 0 0.5rem; user-select: none;
 }
-.tl-caret { color: var(--c-text-faint); font-size: 0.8rem; }
+.tl-head:hover .tl-caret { color: var(--c-text); }
+.tl-caret { color: var(--c-text-faint); font-size: 0.8rem; transition: color 0.2s var(--ease-fluid); }
 .tl-status-pill {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.15rem 0.6rem; border-radius: var(--radius-pill);
@@ -264,14 +275,25 @@
   align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem;
 }
 .tl-c-check { display: flex; align-items: center; justify-content: center; }
-.tl-c-check input { cursor: pointer; width: 15px; height: 15px; }
-.tl-row.selected { background: color-mix(in srgb, var(--c-primary) 8%, transparent); }
+.tl-c-check input { cursor: pointer; width: 15px; height: 15px; accent-color: var(--c-primary); }
 .tl-colhead {
-  font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em;
-  color: var(--c-text-faint); border-bottom: 1px solid var(--c-border);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
+  color: var(--c-text-muted); border-bottom: 1px solid var(--c-border);
+  padding-bottom: 0.4rem; margin-bottom: 0.15rem;
 }
-.tl-row { border-bottom: 1px solid var(--c-border); }
-.tl-row:hover { background: var(--c-surface-2); }
+.tl-row {
+  border-radius: var(--radius-sm); padding: 0.45rem 0.5rem;
+  /* Left rail is transparent until selected, so rows never shift on select. */
+  box-shadow: inset 2px 0 0 transparent;
+  transition: background 0.15s var(--ease-fluid), box-shadow 0.15s var(--ease-fluid);
+}
+.tl-row + .tl-row { border-top: 1px solid var(--c-border); }
+.tl-row:hover { background: var(--c-hover); }
+.tl-row.selected {
+  background: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--c-primary);
+}
+.tl-row.selected:hover { background: color-mix(in srgb, var(--c-primary) 15%, transparent); }
 .tl-c-name { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
 .tl-title-input {
   flex: 1; min-width: 0; background: transparent; border: none; color: var(--c-text);
@@ -343,6 +365,9 @@
 @media (max-width: 768px) {
   .task-list { gap: var(--space-5); }
   .tl-colhead { display: none; }
+  /* Rows become self-contained cards, so the group wrapper drops its own
+     surface to avoid a card-inside-a-card look. */
+  .tl-section { background: none; border: none; box-shadow: none; padding: 0; }
   .tl-row {
     display: flex;
     flex-wrap: wrap;

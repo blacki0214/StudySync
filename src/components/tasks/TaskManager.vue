@@ -273,21 +273,40 @@ async function importTasks(patches) {
 </template>
 
 <style scoped>
+/* Themed purely through the --c-* design tokens so it follows light/dark. */
 .task-bulkbar {
   position: sticky; bottom: 0; z-index: 20;
-  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-  margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 12px;
-  background: var(--surface-1, #fff); border: 1px solid var(--border, #e5e7eb);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  margin-top: var(--space-3); padding: 0.6rem 0.85rem; border-radius: var(--radius);
+  background: var(--c-surface); border: 1px solid var(--c-border-strong);
+  box-shadow: var(--shadow-lg);
 }
-.task-bulkbar .tb-count { font-weight: 700; font-size: 0.85rem; color: var(--brand, #4f46e5); white-space: nowrap; }
-.task-bulkbar .tb-select { min-width: 130px; }
+.task-bulkbar .tb-count {
+  font-weight: 700; font-size: 0.85rem; color: var(--c-primary); white-space: nowrap;
+  padding-right: var(--space-2); margin-right: var(--space-1);
+  border-right: 1px solid var(--c-border);
+}
+/* Same reason as .task-filter — AppSelect defaults to width:100%. */
+.task-bulkbar .tb-select { flex: 0 0 auto; width: auto; min-width: 150px; }
 .task-bulkbar .tb-due {
-  display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border, #d1d5db); border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+  display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.6rem;
+  background: var(--c-surface); color: var(--c-text-muted);
+  border: 1px solid var(--c-border-strong); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 0.8rem;
 }
-.task-bulkbar .tb-due input[type="date"] { border: none; background: transparent; color: inherit; font-size: 0.8rem; }
+.task-bulkbar .tb-due:hover { background: var(--c-surface-2); }
+.task-bulkbar .tb-due input[type="date"] {
+  border: none; background: transparent; color: var(--c-text); font-size: 0.8rem;
+  font-family: inherit; outline: none; cursor: pointer;
+}
 .task-bulkbar .tb-spacer { flex: 1 1 auto; }
-.task-bulkbar .tb-danger { color: #dc2626; }
-.task-bulkbar .tb-danger:hover { background: rgba(220, 38, 38, 0.08); }
+.task-bulkbar .tb-danger { color: var(--c-danger); }
+.task-bulkbar .tb-danger:hover { background: rgba(220, 38, 38, 0.1); border-color: var(--c-danger); }
+
+@media (max-width: 720px) {
+  .task-bulkbar { gap: var(--space-1); padding: 0.5rem 0.6rem; }
+  .task-bulkbar .tb-count { width: 100%; border-right: none; padding-right: 0; }
+  .task-bulkbar .tb-select { flex: 1 1 calc(50% - var(--space-1)); min-width: 0; }
+  .task-bulkbar .tb-spacer { display: none; }
+}
 </style>

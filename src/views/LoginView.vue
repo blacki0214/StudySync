@@ -8,6 +8,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { isSupabaseConfigured } from '../services/supabaseClient.js'
+import { TEST_ACCOUNTS, TEST_PASSWORD, isTestLoginEnabled } from '../data/testAccounts.js'
 import { validateEmail, validatePassword, firstError } from '../utils/validation.js'
 import logoMark from '../assets/images/logo_2.png'
 
@@ -32,6 +33,13 @@ async function submit() {
   } catch (e) {
     error.value = auth.error || 'Login failed.'
   }
+}
+
+/** Dev-only: fill in a test account and sign straight in. */
+function loginAs(account) {
+  email.value = account.email
+  password.value = TEST_PASSWORD
+  submit()
 }
 </script>
 
@@ -83,9 +91,53 @@ async function submit() {
         </button>
       </form>
 
+      <div v-if="isTestLoginEnabled" class="test-logins">
+        <span class="test-logins-label">Dev quick login</span>
+        <div class="test-logins-row">
+          <button
+            v-for="a in TEST_ACCOUNTS"
+            :key="a.id"
+            type="button"
+            class="btn btn-outline-soft"
+            :disabled="auth.loading"
+            @click="loginAs(a)"
+          >
+            {{ a.role }}
+          </button>
+        </div>
+      </div>
+
       <p class="auth-foot">
         {{ t('auth.noAccount') }} <router-link to="/register">{{ t('auth.createOne') }}</router-link>
       </p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.test-logins {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--c-border);
+  text-align: center;
+}
+.test-logins-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+.test-logins-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.test-logins-row .btn {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+</style>

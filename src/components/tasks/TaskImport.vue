@@ -124,26 +124,42 @@ function doImport() {
 </template>
 
 <style scoped>
-.ti-help { color: var(--text-muted, #6b7280); font-size: 0.9rem; margin-bottom: 0.75rem; }
-.ti-actions { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-.ti-format-badge { margin-left: auto; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--surface-2, #eef2ff); color: var(--brand, #4f46e5); font-weight: 600; }
-.ti-textarea {
-  width: 100%; min-height: 160px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85rem; line-height: 1.5; padding: 0.65rem 0.75rem; border-radius: 8px;
-  border: 1px solid var(--border, #d1d5db); background: var(--surface-1, #fff); color: var(--text, inherit);
+/* Themed purely through the --c-* design tokens so it follows light/dark. */
+.ti-help { color: var(--c-text-muted); font-size: 0.9rem; margin-bottom: var(--space-3); }
+.ti-actions { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.ti-format-badge {
+  margin-left: auto; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: var(--radius-pill);
+  background: var(--c-primary-light); color: var(--c-primary-dark); font-weight: 600;
 }
-.ti-textarea:focus { outline: none; border-color: var(--brand, #4f46e5); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15); }
-.ti-syntax { font-size: 0.75rem; color: var(--text-muted, #9ca3af); margin: 0.4rem 0 0; }
-.ti-errors { margin-top: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(239, 68, 68, 0.08); color: #b91c1c; font-size: 0.8rem; }
+.ti-textarea {
+  width: 100%; min-height: 160px; resize: vertical; font-family: var(--font-mono);
+  font-size: 0.85rem; line-height: 1.5; padding: 0.65rem 0.75rem; border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border-strong); background: var(--c-surface); color: var(--c-text);
+}
+.ti-textarea::placeholder { color: var(--c-text-faint); }
+.ti-textarea:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25); }
+.ti-syntax { font-size: 0.75rem; color: var(--c-text-faint); margin: 0.4rem 0 0; }
+.ti-errors {
+  margin-top: var(--space-3); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--c-danger); font-size: 0.8rem;
+}
 .ti-errors ul { margin: 0.25rem 0 0; padding-left: 1.1rem; }
-.ti-preview { margin-top: 1rem; }
-.ti-preview-head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem; }
-.ti-count { color: var(--brand, #4f46e5); }
-.ti-preview-empty { color: var(--text-muted, #9ca3af); font-size: 0.85rem; padding: 0.75rem; text-align: center; border: 1px dashed var(--border, #d1d5db); border-radius: 8px; }
+.ti-preview { margin-top: var(--space-4); }
+.ti-preview-head { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem; color: var(--c-text); }
+.ti-count { color: var(--c-primary); }
+.ti-preview-empty {
+  color: var(--c-text-faint); font-size: 0.85rem; padding: var(--space-3); text-align: center;
+  border: 1px dashed var(--c-border-strong); border-radius: var(--radius-sm);
+}
 .ti-list { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.35rem; }
-.ti-item { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.4rem 0.55rem; border-radius: 8px; background: var(--surface-2, #f9fafb); }
-.ti-item-title { flex: 1 1 40%; font-size: 0.85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ti-chip { font-size: 0.7rem; padding: 0.08rem 0.45rem; border-radius: 999px; font-weight: 600; white-space: nowrap; }
-.st-chip { background: var(--surface-3, #e5e7eb); color: var(--text, #374151); }
-.ti-due { background: var(--surface-3, #e5e7eb); display: inline-flex; align-items: center; gap: 0.25rem; }
+.ti-item {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.4rem 0.55rem; border-radius: var(--radius-sm);
+  background: var(--c-surface-2); border: 1px solid var(--c-border);
+}
+.ti-item-title { flex: 1 1 40%; font-size: 0.85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-text); }
+.ti-chip { font-size: 0.7rem; padding: 0.08rem 0.45rem; border-radius: var(--radius-pill); font-weight: 600; white-space: nowrap; }
+.st-chip { background: var(--c-hover); color: var(--c-text-muted); }
+.ti-due { background: var(--c-hover); color: var(--c-text-muted); display: inline-flex; align-items: center; gap: 0.25rem; }
 </style>

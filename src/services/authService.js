@@ -7,10 +7,19 @@
  * localStorage so the whole flow is explorable offline.
  */
 
-import { supabase, isSupabaseConfigured } from './supabaseClient.js'
+// Auth gates on the RAW credentials, not the effective flag: a signed-in test
+// account forces local data mode, but real logins must still reach Supabase.
+import { supabase, hasSupabaseCredentials as isSupabaseConfigured, setLocalDataMode } from './supabaseClient.js'
 import { currentUser } from '../data/sampleUsers.js'
+import { findTestAccount } from '../data/testAccounts.js'
 
 const DEMO_STORAGE_KEY = 'studysync_demo_session'
+
+/** Read the locally-stored session (demo mode, or a dev test account). */
+function readLocalSession() {
+  const raw = localStorage.getItem(DEMO_STORAGE_KEY)
+  return raw ? JSON.parse(raw) : null
+}
 
 /** The post-confirmation landing page (where Supabase sends the email link). */
 function welcomeRedirect() {
@@ -104,9 +113,17 @@ export const authService = {
 
   /** Sign in with email + password. */
   async signIn({ email, password }) {
+    // Dev-only test accounts short-circuit Supabase entirely, so the three
+    // roles can be tested locally without a confirmed email.
+    const testUser = findTestAccount(email, password)
+    if (testUser) {
+      localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(testUser))
+      setLocalDataMode(true) // every service now reads/writes localStorage
+      return testUser
+    }
+
     if (!isSupabaseConfigured) {
-      const raw = localStorage.getItem(DEMO_STORAGE_KEY)
-      const base = raw ? JSON.parse(raw) : { ...currentUser }
+      const base = readLocalSession() || { ...currentUser }
       const user = { ...base, email }
       localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(user))
       return user
@@ -127,19 +144,18 @@ export const authService = {
 
   /** Sign out the current user. */
   async signOut() {
-    if (!isSupabaseConfigured) {
-      localStorage.removeItem(DEMO_STORAGE_KEY)
-      return
-    }
+    localStorage.removeItem(DEMO_STORAGE_KEY)
+    setLocalDataMode(false) // back to Supabase (no-op without credentials)
+    if (!isSupabaseConfigured) return
     await supabase.auth.signOut()
   },
 
   /** Return the currently authenticated user, or null. */
   async getCurrentUser() {
-    if (!isSupabaseConfigured) {
-      const raw = localStorage.getItem(DEMO_STORAGE_KEY)
-      return raw ? JSON.parse(raw) : null
-    }
+    const local = readLocalSession()
+    // A test-account session wins over any real Supabase session.
+    if (local?.__test) return local
+    if (!isSupabaseConfigured) return local
 
     const { data } = await supabase.auth.getUser()
     if (!data.user) return null
@@ -174,9 +190,9 @@ export const authService = {
    * Returns the merged/updated user object. Demo mode writes to localStorage.
    */
   async updateProfile(patch = {}) {
-    if (!isSupabaseConfigured) {
-      const raw = localStorage.getItem(DEMO_STORAGE_KEY)
-      const base = raw ? JSON.parse(raw) : { ...currentUser }
+    const local = readLocalSession()
+    if (!isSupabaseConfigured || local?.__test) {
+      const base = local || { ...currentUser }
       const user = { ...base, ...patch }
       localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(user))
       return user

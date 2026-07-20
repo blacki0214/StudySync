@@ -74,6 +74,9 @@ export function resolveStatus(value, statuses, fallbackId, doneHint = false) {
   return fallbackId
 }
 
+/** A leading Markdown checkbox: "[ ]", "[x]", "[X]", "[✓]" or an empty "[]". */
+const CHECKBOX_RE = /^\[\s*([xX✓])?\s*\]\s*/
+
 const DATE_RE = /\b(\d{4}-\d{2}-\d{2})\b/
 /** Return a YYYY-MM-DD string if valid, else null. */
 function cleanDate(value) {
@@ -109,8 +112,8 @@ function patchFromLine(rawLine, statuses, fallbackId) {
 
   // Leading checkbox → done hint, and strip it.
   let doneHint = false
-  const cb = line.match(/^\[( |x|X|✓)\]\s*/)
-  if (cb) { doneHint = /[xX✓]/.test(cb[1]); line = line.slice(cb[0].length) }
+  const cb = line.match(CHECKBOX_RE)
+  if (cb) { doneHint = Boolean(cb[1]); line = line.slice(cb[0].length) }
 
   let priority
   let type
@@ -143,6 +146,9 @@ function patchFromLine(rawLine, statuses, fallbackId) {
 export function detectFormat(raw) {
   const s = (raw || '').trim()
   if (!s) return 'empty'
+  // A bare Markdown checklist ("[ ] …" / "[x] …") also starts with '[', so test
+  // for it before falling back to the bracket heuristic.
+  if (CHECKBOX_RE.test(s)) return 'text'
   return (s[0] === '[' || s[0] === '{') ? 'json' : 'text'
 }
 
