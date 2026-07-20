@@ -71,13 +71,16 @@
 
 /* ---------------- Table view ---------------- */
 .task-table-wrap { overflow-x: auto; border: 1px solid var(--c-border); border-radius: var(--radius); background: var(--c-surface); }
-.task-table { min-width: 920px; }
+.task-table { min-width: 960px; }
 .task-thead, .task-trow {
   display: grid;
   grid-template-columns:
-    minmax(200px, 1.5fr) 132px 120px 140px 120px 132px minmax(180px, 1.3fr) 72px;
+    40px minmax(200px, 1.5fr) 132px 120px 140px 120px 132px minmax(180px, 1.3fr) 72px;
   align-items: center;
 }
+.tt-check { display: flex; align-items: center; justify-content: center; }
+.tt-check input { cursor: pointer; width: 15px; height: 15px; }
+.task-trow.selected { background: color-mix(in srgb, var(--c-primary) 8%, transparent); }
 .task-thead {
   border-bottom: 1px solid var(--c-border); background: var(--c-surface-2);
   font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--c-text-faint);
@@ -257,9 +260,12 @@
 }
 .tl-count { color: var(--c-text-faint); font-size: 0.8rem; }
 .tl-colhead, .tl-row {
-  display: grid; grid-template-columns: 1fr 90px 130px 130px 70px;
+  display: grid; grid-template-columns: 28px 1fr 90px 130px 130px 70px;
   align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem;
 }
+.tl-c-check { display: flex; align-items: center; justify-content: center; }
+.tl-c-check input { cursor: pointer; width: 15px; height: 15px; }
+.tl-row.selected { background: color-mix(in srgb, var(--c-primary) 8%, transparent); }
 .tl-colhead {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em;
   color: var(--c-text-faint); border-bottom: 1px solid var(--c-border);
@@ -327,7 +333,7 @@
 
 /* Small tablets: drop the priority column but keep the compact table. */
 @media (max-width: 860px) and (min-width: 769px) {
-  .tl-colhead, .tl-row { grid-template-columns: 1fr 70px 70px; }
+  .tl-colhead, .tl-row { grid-template-columns: 28px 1fr 70px 70px; }
   .tl-c-priority, .tl-colhead .tl-c-priority { display: none; }
 }
 
@@ -349,8 +355,9 @@
     background: var(--c-surface);
   }
   .tl-row:hover { background: var(--c-surface); }
-  /* Title row spans the full card width. */
-  .tl-c-name { flex: 1 1 100%; order: 1; }
+  /* Checkbox + title share the first row. */
+  .tl-c-check { order: 0; flex: 0 0 auto; }
+  .tl-c-name { flex: 1 1 auto; order: 1; }
   .tl-title-input { font-size: 0.95rem; padding: 0.1rem 0; }
   /* Meta row. */
   .tl-c-due { order: 2; }

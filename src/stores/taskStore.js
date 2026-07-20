@@ -151,6 +151,18 @@ export const useTaskStore = defineStore('tasks', {
       }
     },
 
+    /** Apply the same patch to many tasks at once (bulk edit). Returns count. */
+    async bulkUpdate(ids = [], patch = {}) {
+      await Promise.all(ids.map((id) => this.update(id, { ...patch })))
+      return ids.length
+    },
+
+    /** Delete many tasks at once. Returns count removed. */
+    async bulkRemove(ids = []) {
+      await Promise.all(ids.map((id) => this.remove(id)))
+      return ids.length
+    },
+
     async remove(id) {
       const idx = this.tasks.findIndex((t) => t.id === id)
       const removed = idx >= 0 ? this.tasks.splice(idx, 1)[0] : null

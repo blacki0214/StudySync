@@ -30,6 +30,70 @@ const editingId = ref(null)
 const showStatusEditor = ref(false)
 const showImport = ref(false)
 
+// --- Bulk selection ---------------------------------------------------------
+const selectedIds = ref([])
+const selectedSet = computed(() => new Set(selectedIds.value))
+const selectedCount = computed(() => selectedIds.value.length)
+const bulkStatusOptions = computed(() => [{ value: '', label: t('tasks.bulkSetStatus') }, ...store.statuses.map((s) => ({ value: s.id, label: s.name }))])
+const bulkPriorityOptions = computed(() => [{ value: '', label: t('tasks.bulkSetPriority') }, ...toOptions(PRIORITIES, t)])
+
+function toggleSelect(id) {
+  selectedIds.value = selectedSet.value.has(id)
+    ? selectedIds.value.filter((x) => x !== id)
+    : [...selectedIds.value, id]
+}
+// Select/deselect a batch of ids (a view's currently-visible rows).
+function toggleAll(ids) {
+  const allOn = ids.length > 0 && ids.every((id) => selectedSet.value.has(id))
+  selectedIds.value = allOn
+    ? selectedIds.value.filter((id) => !ids.includes(id))
+    : [...new Set([...selectedIds.value, ...ids])]
+}
+function clearSelection() { selectedIds.value = [] }
+
+async function bulkStatus(v) {
+  if (!v) return
+  await store.bulkUpdate(selectedIds.value, { status: v })
+  dialog.toast(t('tasks.bulkDone', { n: selectedCount.value }), 'success')
+}
+async function bulkPriority(v) {
+  if (!v) return
+  await store.bulkUpdate(selectedIds.value, { priority: v })
+  dialog.toast(t('tasks.bulkDone', { n: selectedCount.value }), 'success')
+}
+async function bulkDue(e) {
+  const value = e.target.value || null
+  const n = selectedCount.value
+  await store.bulkUpdate(selectedIds.value, { due_date: value })
+  e.target.value = '' // reset the picker so it stays an "action" control
+  dialog.toast(t('tasks.bulkDone', { n }), 'success')
+}
+async function bulkClearDue() {
+  await store.bulkUpdate(selectedIds.value, { due_date: null })
+  dialog.toast(t('tasks.bulkDone', { n: selectedCount.value }), 'success')
+}
+async function bulkAssignee() {
+  const name = await dialog.promptText({ title: t('tasks.bulkAssignee'), label: t('tasks.bulkAssigneePrompt') })
+  if (name === null) return // cancelled
+  await store.bulkUpdate(selectedIds.value, { assignee_name: name.trim() || null })
+  dialog.toast(t('tasks.bulkDone', { n: selectedCount.value }), 'success')
+}
+async function bulkDelete() {
+  const n = selectedCount.value
+  const ok = await dialog.confirm({ title: t('tasks.bulkDelete'), message: t('tasks.bulkDeleteConfirm', { n }), danger: true })
+  if (!ok) return
+  await store.bulkRemove(selectedIds.value)
+  clearSelection()
+  dialog.toast(t('tasks.bulkDeleted', { n }), 'success')
+}
+
+// Drop ids that no longer exist (deleted elsewhere) or when the scope reloads.
+watch(() => store.tasks, (list) => {
+  const live = new Set(list.map((task) => task.id))
+  const kept = selectedIds.value.filter((id) => live.has(id))
+  if (kept.length !== selectedIds.value.length) selectedIds.value = kept
+})
+
 // Status filter options come from the board's live custom statuses.
 const statusFilterOptions = computed(() => [
   { value: 'all', label: t('tasks.allStatuses') },
@@ -63,7 +127,7 @@ const completion = computed(() => counts.value.total ? Math.round((counts.value.
 onMounted(() => store.load({ subjectId: props.subjectId }))
 onBeforeUnmount(() => store.teardown())
 // Reload when the subject changes (e.g. navigating between subject workspaces).
-watch(() => props.subjectId, (id) => store.load({ subjectId: id }))
+watch(() => props.subjectId, (id) => { clearSelection(); store.load({ subjectId: id }) })
 
 async function createTask(patch = {}) {
   const row = await store.create(patch)
@@ -123,6 +187,9 @@ async function importTasks(patches) {
         v-if="viewMode === 'list'"
         :tasks="filtered"
         :statuses="store.statuses"
+        :selected-ids="selectedIds"
+        @toggle-select="toggleSelect"
+        @toggle-all="toggleAll"
         @update="updateTask"
         @open="editingId = $event.id"
         @delete="deleteTask"
@@ -140,12 +207,31 @@ async function importTasks(patches) {
         v-else
         :tasks="filtered"
         :statuses="store.statuses"
+        :selected-ids="selectedIds"
+        @toggle-select="toggleSelect"
+        @toggle-all="toggleAll"
         @update="updateTask"
         @open="editingId = $event.id"
         @delete="deleteTask"
         @create="createTask()"
       />
     </template>
+
+    <!-- Bulk action bar — sticky at the bottom while tasks are selected. -->
+    <div v-if="selectedCount" class="task-bulkbar">
+      <span class="tb-count">{{ t('tasks.selected', { n: selectedCount }) }}</span>
+      <AppSelect class="tb-select" :model-value="''" :options="bulkStatusOptions" :aria-label="t('tasks.bulkSetStatus')" @update:model-value="bulkStatus" />
+      <AppSelect class="tb-select" :model-value="''" :options="bulkPriorityOptions" :aria-label="t('tasks.bulkSetPriority')" @update:model-value="bulkPriority" />
+      <label class="tb-due" :title="t('tasks.bulkSetDue')">
+        <i class="bi bi-calendar-event"></i>
+        <input type="date" @change="bulkDue" />
+      </label>
+      <button class="btn btn-outline-soft btn-sm" @click="bulkClearDue"><i class="bi bi-calendar-x"></i>{{ t('tasks.bulkClearDue') }}</button>
+      <button class="btn btn-outline-soft btn-sm" @click="bulkAssignee"><i class="bi bi-person"></i>{{ t('tasks.bulkAssignee') }}</button>
+      <button class="btn btn-outline-soft btn-sm tb-danger" @click="bulkDelete"><i class="bi bi-trash"></i>{{ t('tasks.bulkDelete') }}</button>
+      <div class="tb-spacer"></div>
+      <button class="btn btn-soft btn-sm" @click="clearSelection"><i class="bi bi-x-lg"></i>{{ t('tasks.clearSelection') }}</button>
+    </div>
 
     <!-- Completion footer (Notion-style) -->
     <div v-if="store.tasks.length" class="task-completion">
@@ -185,3 +271,23 @@ async function importTasks(patches) {
     />
   </div>
 </template>
+
+<style scoped>
+.task-bulkbar {
+  position: sticky; bottom: 0; z-index: 20;
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  margin-top: 0.75rem; padding: 0.6rem 0.85rem; border-radius: 12px;
+  background: var(--surface-1, #fff); border: 1px solid var(--border, #e5e7eb);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+}
+.task-bulkbar .tb-count { font-weight: 700; font-size: 0.85rem; color: var(--brand, #4f46e5); white-space: nowrap; }
+.task-bulkbar .tb-select { min-width: 130px; }
+.task-bulkbar .tb-due {
+  display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border, #d1d5db); border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+}
+.task-bulkbar .tb-due input[type="date"] { border: none; background: transparent; color: inherit; font-size: 0.8rem; }
+.task-bulkbar .tb-spacer { flex: 1 1 auto; }
+.task-bulkbar .tb-danger { color: #dc2626; }
+.task-bulkbar .tb-danger:hover { background: rgba(220, 38, 38, 0.08); }
+</style>

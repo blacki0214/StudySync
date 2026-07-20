@@ -14,13 +14,16 @@ import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 
 const props = defineProps({
   tasks: { type: Array, default: () => [] },
-  statuses: { type: Array, default: () => [] }
+  statuses: { type: Array, default: () => [] },
+  selectedIds: { type: Array, default: () => [] }
 })
-const emit = defineEmits(['update', 'open', 'delete', 'create'])
+const emit = defineEmits(['update', 'open', 'delete', 'create', 'toggle-select', 'toggle-all'])
 const { t } = useI18n()
 
 const collapsed = ref(new Set())
 const priorityOptions = computed(() => toOptions(PRIORITIES, t))
+const selectedSet = computed(() => new Set(props.selectedIds))
+const allSelectedIn = (items) => items.length > 0 && items.every((task) => selectedSet.value.has(task.id))
 
 const sections = computed(() =>
   props.statuses.map((s) => ({
@@ -57,6 +60,9 @@ function initials(name) {
       <template v-if="!collapsed.has(sec.status.id)">
         <!-- Column header -->
         <div class="tl-colhead">
+          <span class="tl-c-check">
+            <input type="checkbox" :aria-label="t('tasks.selectAll')" :checked="allSelectedIn(sec.items)" @change="emit('toggle-all', sec.items.map((task) => task.id))" />
+          </span>
           <span class="tl-c-name">{{ t('tasks.col.title') }}</span>
           <span class="tl-c-assignee">{{ t('tasks.col.assignee') }}</span>
           <span class="tl-c-due">{{ t('tasks.col.due') }}</span>
@@ -64,7 +70,10 @@ function initials(name) {
           <span class="tl-c-actions"></span>
         </div>
 
-        <div v-for="task in sec.items" :key="task.id" class="tl-row">
+        <div v-for="task in sec.items" :key="task.id" class="tl-row" :class="{ selected: selectedSet.has(task.id) }">
+          <span class="tl-c-check">
+            <input type="checkbox" :aria-label="t('tasks.selectRow')" :checked="selectedSet.has(task.id)" @change="emit('toggle-select', task.id)" />
+          </span>
           <span class="tl-c-name">
             <StatusPicker
               class="tl-status"

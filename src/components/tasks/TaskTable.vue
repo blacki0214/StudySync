@@ -13,13 +13,18 @@ import { isDoneStatus } from '../../utils/taskStatusTemplates.js'
 
 const props = defineProps({
   tasks: { type: Array, default: () => [] },
-  statuses: { type: Array, default: () => [] }
+  statuses: { type: Array, default: () => [] },
+  selectedIds: { type: Array, default: () => [] }
 })
-const emit = defineEmits(['update', 'open', 'delete', 'create'])
+const emit = defineEmits(['update', 'open', 'delete', 'create', 'toggle-select', 'toggle-all'])
 const { t } = useI18n()
 
 const priorityOptions = computed(() => toOptions(PRIORITIES, t))
 const typeOptions = computed(() => toOptions(TYPES, t))
+
+const selectedSet = computed(() => new Set(props.selectedIds))
+const visibleIds = computed(() => props.tasks.map((task) => task.id))
+const allSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((id) => selectedSet.value.has(id)))
 
 function overdue(task) {
   if (!task.due_date || isDoneStatus(task.status, props.statuses)) return false
@@ -32,6 +37,9 @@ function overdue(task) {
     <div class="task-table" role="table">
       <!-- Header -->
       <div class="task-thead" role="row">
+        <span class="tt-col tt-check">
+          <input type="checkbox" :aria-label="t('tasks.selectAll')" :checked="allSelected" @change="emit('toggle-all', visibleIds)" />
+        </span>
         <span class="tt-col tt-title">{{ t('tasks.col.title') }}</span>
         <span class="tt-col tt-status">{{ t('tasks.col.status') }}</span>
         <span class="tt-col tt-assignee">{{ t('tasks.col.assignee') }}</span>
@@ -43,7 +51,10 @@ function overdue(task) {
       </div>
 
       <!-- Rows -->
-      <div v-for="task in tasks" :key="task.id" class="task-trow" role="row">
+      <div v-for="task in tasks" :key="task.id" class="task-trow" :class="{ selected: selectedSet.has(task.id) }" role="row">
+        <span class="tt-col tt-check">
+          <input type="checkbox" :aria-label="t('tasks.selectRow')" :checked="selectedSet.has(task.id)" @change="emit('toggle-select', task.id)" />
+        </span>
         <span class="tt-col tt-title">
           <input
             class="tt-title-input"
