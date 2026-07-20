@@ -281,12 +281,17 @@ export default {
     noTasks: 'No tasks yet — add one to get started.',
     allTasksDone: 'All tasks done — nice work! 🎉',
     noSubjects: 'No subjects in progress yet.',
+    noActivity: 'Nothing yet — create a note, deck or task and it will show up here.',
     activity: {
+      you: 'You',
       noteEdited: '{user} edited {title}',
       roomShared: '{user} shared a resource in {room}',
       communityAnswered: '{user} answered “{title}”',
       deckMastered: 'You mastered {n} cards in {deck}',
-      noteCreated: 'You created {title}'
+      noteCreated: 'You created {title}',
+      deckCreated: 'You created the deck {deck} ({n} cards)',
+      taskCompleted: 'You completed {title}',
+      roomCreated: 'You started the room {room}'
     }
   },
 
@@ -305,6 +310,7 @@ export default {
     topInVietnam: 'Top 4% in Vietnam',
     weeklyFocus: 'Weekly focus time',
     weeklyFocusSub: '{hours} hours this week',
+    weeklyFocusEmpty: 'No focus time recorded yet — time spent on notes, flashcards, rooms and workspaces is counted here automatically.',
     thisWeek: 'This week',
     upcomingSessions: 'Upcoming sessions',
     joining: '{n} joining',
@@ -348,6 +354,7 @@ export default {
 
   notes: {
     title: 'Notes',
+    untitled: 'Untitled note',
     sub: 'Find shared notes or create your own.',
     newNote: 'New note',
     searchPlaceholder: 'Search notes by title or content...',

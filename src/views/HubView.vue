@@ -12,6 +12,7 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore.js'
 import { useContentStore } from '../stores/contentStore.js'
+import { useFocusStore } from '../stores/focusStore.js'
 import StatCard from '../components/common/StatCard.vue'
 import LineAreaChart from '../components/charts/LineAreaChart.vue'
 import HubActivityFeed from '../components/hub/HubActivityFeed.vue'
@@ -22,19 +23,22 @@ import TasksOverview from '../components/hub/TasksOverview.vue'
 
 const auth = useAuthStore()
 const content = useContentStore()
+const focus = useFocusStore()
 const { t } = useI18n()
-onMounted(() => content.ensureLoaded())
+onMounted(() => {
+  content.ensureLoaded()
+  focus.ensureLoaded()
+})
 
 // Today's date, formatted from the device clock (no hardcoded date).
 const dateLine = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 // Vietnamese given name is the FIRST token (e.g. "Minh Nguyễn" -> "Minh").
 const firstName = computed(() => (auth.user?.full_name || '').split(' ')[0] || 'there')
 
-// Total focus hours this week, summed from the real study_stats series.
-const studyHours = computed(() => {
-  const v = content.weeklyFocus?.values || []
-  return Math.round(v.reduce((a, b) => a + b, 0) * 10) / 10
-})
+// Real focus time, measured by useFocusTracker on the study pages (see
+// focusStore). The old study_stats series was never written to by anything.
+const weeklyFocus = computed(() => focus.weeklySeries)
+const studyHours = computed(() => focus.hoursLast7)
 // Notes authored by the signed-in user, and the subjects they own.
 const myNotesCount = computed(() => content.notes.filter((n) => n.author_id === auth.user?.id).length)
 const mySubjectsCount = computed(() => content.subjects.filter((s) => s.owner_id && s.owner_id === auth.user?.id).length)
@@ -83,7 +87,8 @@ const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0)
             </div>
             <span class="badge-soft">{{ t('dashboard.thisWeek') }}</span>
           </div>
-          <LineAreaChart v-if="content.weeklyFocus" :labels="content.weeklyFocus.labels" :values="content.weeklyFocus.values" :max="content.weeklyFocus.max" :ticks="4" area :height="260" />
+          <LineAreaChart :labels="weeklyFocus.labels" :values="weeklyFocus.values" :max="weeklyFocus.max" :ticks="4" area :height="260" />
+          <p v-if="!studyHours" class="chart-hint">{{ t('dashboard.weeklyFocusEmpty') }}</p>
         </div>
       </div>
       <div class="col-12 col-xl-4">

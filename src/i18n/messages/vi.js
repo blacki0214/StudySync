@@ -281,12 +281,17 @@ export default {
     noTasks: 'Chưa có công việc — thêm một việc để bắt đầu.',
     allTasksDone: 'Đã hoàn thành tất cả — làm tốt lắm! 🎉',
     noSubjects: 'Chưa có môn học nào đang tiến hành.',
+    noActivity: 'Chưa có gì — tạo ghi chú, bộ thẻ hoặc nhiệm vụ và nó sẽ hiện ở đây.',
     activity: {
+      you: 'Bạn',
       noteEdited: '{user} đã chỉnh sửa {title}',
       roomShared: '{user} đã chia sẻ tài nguyên trong {room}',
       communityAnswered: '{user} đã trả lời “{title}”',
       deckMastered: 'Bạn đã thành thạo {n} thẻ trong {deck}',
-      noteCreated: 'Bạn đã tạo {title}'
+      noteCreated: 'Bạn đã tạo {title}',
+      deckCreated: 'Bạn đã tạo bộ thẻ {deck} ({n} thẻ)',
+      taskCompleted: 'Bạn đã hoàn thành {title}',
+      roomCreated: 'Bạn đã tạo phòng {room}'
     }
   },
 
@@ -305,6 +310,7 @@ export default {
     topInVietnam: 'Top 4% tại Việt Nam',
     weeklyFocus: 'Thời gian tập trung trong tuần',
     weeklyFocusSub: '{hours} giờ tuần này',
+    weeklyFocusEmpty: 'Chưa ghi nhận thời gian tập trung — thời gian ở ghi chú, thẻ ghi nhớ, phòng học và không gian làm việc sẽ được tính tự động.',
     thisWeek: 'Tuần này',
     upcomingSessions: 'Buổi học sắp tới',
     joining: '{n} người tham gia',
@@ -348,6 +354,7 @@ export default {
 
   notes: {
     title: 'Ghi chú',
+    untitled: 'Ghi chú chưa đặt tên',
     sub: 'Tìm ghi chú được chia sẻ hoặc tạo ghi chú của riêng bạn.',
     newNote: 'Ghi chú mới',
     searchPlaceholder: 'Tìm ghi chú theo tiêu đề hoặc nội dung...',

@@ -23,10 +23,14 @@ import StatCard from '../components/common/StatCard.vue'
 import BarChart from '../components/charts/BarChart.vue'
 import QuizGenerator from '../components/ai/QuizGenerator.vue'
 import KeywordExtractor from '../components/ai/KeywordExtractor.vue'
+import { useFocusTracker } from '../composables/useFocusTracker.js'
 
 const route = useRoute()
 const { t } = useI18n()
 const content = useContentStore()
+
+// Count time on this page toward the Hub's weekly focus chart.
+useFocusTracker('flashcards')
 const dialog = useDialogStore()
 const srs = useStudyStatsStore()
 const auth = useAuthStore()

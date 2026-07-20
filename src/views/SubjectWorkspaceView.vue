@@ -29,12 +29,16 @@ import QuizGenerator from '../components/ai/QuizGenerator.vue'
 import SubjectIcon from '../components/subjects/SubjectIcon.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import TaskManager from '../components/tasks/TaskManager.vue'
+import { useFocusTracker } from '../composables/useFocusTracker.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const documentStore = useDocumentStore()
 const content = useContentStore()
+
+// Count time on this page toward the Hub's weekly focus chart.
+useFocusTracker('workspace')
 const dialog = useDialogStore()
 const auth = useAuthStore()
 

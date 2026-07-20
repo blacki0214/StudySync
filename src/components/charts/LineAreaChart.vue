@@ -38,7 +38,8 @@ const ceiling = computed(() => props.max || Math.max(...props.values, 1))
 const plotW = computed(() => W - padL - padR)
 const plotH = computed(() => H.value - padT - padB)
 const xAt = (i) => padL + (props.values.length === 1 ? plotW.value / 2 : (i / (props.values.length - 1)) * plotW.value)
-const yAt = (v) => padT + plotH.value - (v / ceiling.value) * plotH.value
+// Plotted against the rounded-up ceiling so points line up with the gridlines.
+const yAt = (v) => padT + plotH.value - (v / niceCeiling.value) * plotH.value
 
 const points = computed(() => props.values.map((v, i) => [xAt(i), yAt(v)]))
 
@@ -72,11 +73,29 @@ const areaPath = computed(() => {
   return `${linePath.value} L ${p[p.length - 1][0]},${baseline} L ${p[0][0]},${baseline} Z`
 })
 
-// Y-axis gridline values (0 … ceiling).
+/**
+ * Y-axis gridline values (0 … ceiling).
+ * The ceiling is rounded UP to a "nice" step first, so the labels are always
+ * distinct whole numbers. Rounding each raw tick instead produced duplicates
+ * on small ranges (ceiling 1 over 4 ticks → 0, 0, 1, 1, 1).
+ */
+/** Snap a raw step up to a readable 1 / 2 / 2.5 / 3 / 5 / 10 × 10ⁿ value. */
+function niceStep(raw) {
+  if (!(raw > 0)) return 1
+  const base = Math.pow(10, Math.floor(Math.log10(raw)))
+  const m = raw / base
+  const mult = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 3 ? 3 : m <= 5 ? 5 : 10
+  return mult * base
+}
+const step = computed(() => niceStep(ceiling.value / props.ticks))
+const niceCeiling = computed(() => step.value * props.ticks)
 const yTicks = computed(() =>
   Array.from({ length: props.ticks + 1 }, (_, i) => {
-    const value = (ceiling.value / props.ticks) * i
-    return { value: Math.round(value), y: yAt(value) }
+    const value = step.value * i
+    // Round to 2dp then strip trailing zeros: keeps small steps distinct
+    // (0.05 → "0.05") without printing "3.00" for whole ones.
+    const label = String(parseFloat(value.toFixed(2)))
+    return { value, label, y: yAt(value) }
   })
 )
 
@@ -96,7 +115,7 @@ const gid = computed(() => 'area-' + props.labels.join('').replace(/\W/g, '').sl
     <!-- Horizontal gridlines + y labels -->
     <g v-for="t in yTicks" :key="t.value">
       <line :x1="padL" :y1="t.y" :x2="W - padR" :y2="t.y" class="chart-grid" />
-      <text :x="padL - 8" :y="t.y + 4" class="chart-axis" text-anchor="end">{{ t.value }}</text>
+      <text :x="padL - 8" :y="t.y + 4" class="chart-axis" text-anchor="end">{{ t.label }}</text>
     </g>
 
     <!-- Area fill -->

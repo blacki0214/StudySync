@@ -58,12 +58,16 @@ import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import AiToolsDrawer from '../components/ai/AiToolsDrawer.vue'
 import ShareDialog from '../components/notes/ShareDialog.vue'
 import VersionHistory from '../components/notes/VersionHistory.vue'
+import { useFocusTracker } from '../composables/useFocusTracker.js'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const contentStore = useContentStore()
+
+// Count time on this page toward the Hub's weekly focus chart.
+useFocusTracker('notes')
 const auth = useAuthStore()
 const dialog = useDialogStore()
 

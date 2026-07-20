@@ -13,11 +13,15 @@ import { useStudyRoomStore } from '../stores/studyRoomStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { useVoiceChat } from '../composables/useVoiceChat.js'
+import { useFocusTracker } from '../composables/useFocusTracker.js'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const content = useContentStore()
+
+// Count time on this page toward the Hub's weekly focus chart.
+useFocusTracker('room')
 const rooms = useStudyRoomStore()
 const auth = useAuthStore()
 const dialog = useDialogStore()

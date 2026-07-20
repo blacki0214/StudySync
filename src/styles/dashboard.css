@@ -58,6 +58,8 @@
 }
 .chart-card h3 { font-size: 1.05rem; margin: 0; }
 .chart-card .chart-sub { color: var(--c-text-muted); font-size: 0.82rem; }
+/* Shown under an all-zero chart to explain where the numbers come from. */
+.chart-card .chart-hint { color: var(--c-text-faint); font-size: 0.8rem; margin: var(--space-2) 0 0; text-align: center; }
 
 /* ---- Upcoming sessions ---- */
 .rail-card {
