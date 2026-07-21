@@ -762,3 +762,60 @@
   .editor-grid { gap: var(--space-4); }
   .doc-surface { padding: var(--space-4); min-height: 340px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Shared-link pages (/share/:id)
+   ---------------------------------------------------------------------------
+   These render in the BLANK layout — no sidebar, no tab bar — because anyone
+   with the link can open them without an account. The page supplies its own
+   padding and a slim public top bar. */
+.share-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-6) var(--space-8);
+}
+.share-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--c-border);
+}
+.share-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  color: var(--c-text);
+  text-decoration: none;
+}
+.share-brand i { color: var(--c-brand); }
+.share-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.share-guest-name {
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+}
+
+/* "This link is no longer available" screen. */
+.share-gate {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 18vh var(--space-5) 0;
+  text-align: center;
+}
+.share-gate-icon {
+  font-size: 2.4rem;
+  color: var(--c-text-muted);
+}
+.share-gate h1 { font-size: 1.4rem; margin: var(--space-3) 0 var(--space-2); }
+.share-gate p { color: var(--c-text-muted); margin-bottom: var(--space-4); }
+
+@media (max-width: 768px) {
+  .share-page { padding: var(--space-3) var(--space-3) var(--space-6); }
+}

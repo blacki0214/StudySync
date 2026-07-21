@@ -33,9 +33,11 @@ const routes = [
   { path: '/tasks', name: 'tasks', component: () => import('../views/TasksView.vue') },
   { path: '/schedule', name: 'schedule', component: () => import('../views/ScheduleView.vue') },
   { path: '/notes/:id', name: 'note-detail', component: () => import('../views/NoteDetailView.vue'), props: true },
-  // Shareable note link — opens inside the app; visitors must log in (the guard
-  // redirects to /login?redirect=/share/:id), then edit/view per the link's permission.
-  { path: '/share/:id', name: 'note-share', component: () => import('../views/NoteDetailView.vue'), props: true },
+  // Shareable note link — opens for ANYONE, including signed-out visitors (no
+  // account needed, like a Google Docs link). It is public and uses the blank
+  // layout so guests never see the app chrome; NoteDetailView checks the note's
+  // share_enabled flag and enforces the link's read/edit permission.
+  { path: '/share/:id', name: 'note-share', component: () => import('../views/NoteDetailView.vue'), props: true, meta: { public: true, layout: 'blank' } },
   { path: '/rooms', name: 'rooms', component: () => import('../views/StudyRoomsView.vue') },
   { path: '/rooms/:id', name: 'study-room', component: () => import('../views/StudyRoomView.vue'), props: true },
   { path: '/flashcards', name: 'flashcards', component: () => import('../views/FlashcardsView.vue') },

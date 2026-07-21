@@ -66,10 +66,17 @@ const { t } = useI18n()
 const subjectStore = useSubjectStore()
 const contentStore = useContentStore()
 
-// Count time on this page toward the Hub's weekly focus chart.
-useFocusTracker('notes')
 const auth = useAuthStore()
 const dialog = useDialogStore()
+
+// Opened through a shareable link? Those are public — a signed-out visitor can
+// land here, so everything below has to work without an account.
+const isShared = route.name === 'note-share'
+const isAnon = computed(() => !auth.isAuthenticated)
+
+// Count time on this page toward the Hub's weekly focus chart. Shared-link
+// visitors aren't studying their own material, so they don't get tracked.
+if (!isShared) useFocusTracker('notes')
 
 // Keyboard-shortcut hints shown in toolbar tooltips (Notion/Docs style).
 // Mac shows ⌘/⌥ instead of Ctrl/Alt; the actual key bindings use TipTap's
@@ -96,6 +103,25 @@ function initials(name) {
   return (name || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
 }
 
+// Signed-out visitors on a shared link still need an identity so presence and
+// remote cursors work. It is generated once per browser and kept in
+// localStorage, so a guest keeps the same name/colour across reloads instead of
+// every anonymous tab colliding on a single "guest" id.
+const GUEST_KEY = 'studysync.guest'
+function loadGuest() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(GUEST_KEY) || 'null')
+    if (saved?.id) return saved
+  } catch { /* corrupt entry → mint a new one */ }
+  const g = {
+    id: 'guest-' + Math.random().toString(36).slice(2, 10),
+    full_name: 'Guest ' + Math.floor(1000 + Math.random() * 9000)
+  }
+  try { localStorage.setItem(GUEST_KEY, JSON.stringify(g)) } catch { /* private mode */ }
+  return g
+}
+const guest = loadGuest()
+
 const ready = ref(false)
 const note = ref(null)
 const editor = shallowRef(null)
@@ -110,12 +136,19 @@ const aiBusy = ref(false)
 const titleEl = ref(null) // the contenteditable <h1>, managed manually (v-once)
 const titleBusy = ref(false)
 const shareOpen = ref(false)
+const linkUnavailable = ref(false) // shared link is off, or the note is gone
 const exportOpen = ref(false)
 const exportBusy = ref('') // '' | 'pdf' | 'docx' — drives the per-item spinner
 
-const me = computed(() => auth.user || { id: 'guest', full_name: 'Guest' })
-const isShared = computed(() => route.name === 'note-share')
-const canEdit = computed(() => (isShared.value ? note.value?.share_permission === 'edit' : true))
+const me = computed(() => auth.user || guest)
+// A shared link only grants editing while it is switched on AND set to "edit";
+// the owner turning sharing off downgrades open guests to read-only on reload.
+const canEdit = computed(() =>
+  isShared ? note.value?.share_enabled === true && note.value?.share_permission === 'edit' : true
+)
+// Commenting and version snapshots are writes that RLS limits to accounts, so
+// they stay hidden from signed-out guests.
+const canComment = computed(() => !isAnon.value)
 const subject = computed(() => subjectStore.getById(note.value?.subject_id))
 const statusLabel = computed(() => (saveStatus.value === 'saving' ? t('editor.saving') : t('editor.liveAutosaved')))
 
@@ -178,9 +211,23 @@ function scheduleSave() {
 }
 
 onMounted(async () => {
-  if (!subjectStore.subjects.length) await subjectStore.fetchSubjects()
-  note.value = await noteService.getNote(route.params.id)
-  if (!note.value) { router.replace('/notes'); return }
+  // Guests have no subjects of their own — skip the fetch and let the
+  // breadcrumb fall back to the note title.
+  if (!isAnon.value && !subjectStore.subjects.length) await subjectStore.fetchSubjects()
+
+  try {
+    note.value = await noteService.getNote(route.params.id)
+  } catch {
+    note.value = null
+  }
+  // A missing note, or a link the owner has switched off, shows the "link
+  // unavailable" screen. Guests must never be redirected to /notes — that is a
+  // private route and would bounce them to the login page.
+  if (!note.value || (isShared && !note.value.share_enabled)) {
+    if (isShared) { linkUnavailable.value = true; ready.value = true; return }
+    router.replace('/notes')
+    return
+  }
 
   // Build the shared CRDT document and (live) the realtime provider.
   ydoc = new Y.Doc()
@@ -270,12 +317,16 @@ onMounted(async () => {
     if (origin !== provider && canEdit.value) onLocalEdit()
   })
 
-  await loadComments()
-  unsubComments = commentService.subscribe(note.value.id, loadComments)
+  // Comments and version history are account-only features; guests just read or
+  // edit the document itself.
+  if (canComment.value) {
+    await loadComments()
+    unsubComments = commentService.subscribe(note.value.id, loadComments)
 
-  await refreshHistory()
-  // Keep the timeline live as collaborators snapshot their edits.
-  unsubVersions = noteService.subscribeVersions(note.value.id, refreshHistory)
+    await refreshHistory()
+    // Keep the timeline live as collaborators snapshot their edits.
+    unsubVersions = noteService.subscribeVersions(note.value.id, refreshHistory)
+  }
 
   ready.value = true
 })
@@ -315,6 +366,9 @@ function openHistory() {
   refreshHistory()
 }
 function maybeSnapshot() {
+  // note_versions.edited_by is a real profile reference — a guest has none, so
+  // their edits save to the note without adding a history entry.
+  if (!canComment.value) return
   const now = Date.now()
   if (now - lastSnapshotAt < 25000) return // at most one snapshot / 25s of typing
   lastSnapshotAt = now
@@ -354,6 +408,7 @@ async function loadComments() {
   comments.value = await commentService.list(note.value.id)
 }
 function startComment() {
+  if (!canComment.value) return // commenting requires an account
   const { from, to } = editor.value.state.selection
   if (from === to) return // need a selection
   pendingRange = { from, to }
@@ -637,7 +692,31 @@ async function runExport(kind) {
 <template>
   <LoadingSpinner v-if="!ready" :label="t('common.openingEditor')" />
 
-  <div v-else-if="note">
+  <!-- Shared link that is switched off (or points at a deleted note). -->
+  <div v-else-if="linkUnavailable" class="share-gate">
+    <i class="bi bi-link-45deg share-gate-icon"></i>
+    <h1>{{ t('share.unavailableTitle') }}</h1>
+    <p>{{ t('share.unavailableBody') }}</p>
+    <router-link class="btn btn-brand" to="/">{{ t('share.goToStudySync') }}</router-link>
+  </div>
+
+  <div v-else-if="note" :class="{ 'share-page': isShared }">
+    <!-- Public chrome for shared links: the app shell is hidden on this route,
+         so the brand + permission badge + sign-in CTA live here. -->
+    <div v-if="isShared" class="share-topbar">
+      <router-link to="/" class="share-brand"><i class="bi bi-mortarboard-fill"></i>StudySync</router-link>
+      <div class="share-topbar-actions">
+        <span class="badge-soft">
+          <i class="bi" :class="canEdit ? 'bi-pencil' : 'bi-eye'"></i>
+          {{ canEdit ? t('share.canEdit') : t('share.canView') }}
+        </span>
+        <span v-if="isAnon" class="share-guest-name">{{ me.full_name }}</span>
+        <router-link v-if="isAnon" class="btn btn-brand" :to="{ name: 'login', query: { redirect: route.fullPath } }">
+          {{ t('share.signIn') }}
+        </router-link>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="editor-header">
       <div>
@@ -728,7 +807,7 @@ async function runExport(kind) {
           <i class="bi" :class="uploadingLink ? 'bi-arrow-repeat spin' : 'bi-paperclip'"></i>
         </button>
         <input ref="linkInput" type="file" class="d-none" @change="onLinkFilePicked" />
-        <button class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="tip('editor.comment', 'Ctrl+Alt+M')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
+        <button v-if="canComment" class="tb-btn" :class="{ disabled: !hasSelection }" :disabled="!hasSelection" :title="tip('editor.comment', 'Ctrl+Alt+M')" @click="startComment"><i class="bi bi-chat-left-text"></i></button>
         <button class="tb-btn" :class="{ disabled: uploadingImage }" :disabled="uploadingImage" :title="tip('editor.image', 'Ctrl+Alt+I')" @click="setImage">
           <i class="bi" :class="uploadingImage ? 'bi-arrow-repeat spin' : 'bi-image'"></i>
         </button>
@@ -808,10 +887,13 @@ async function runExport(kind) {
       <EditorContent :editor="editor" class="doc-surface" @click="onSurfaceClick" />
 
       <div class="side-panel">
+        <!-- Guests get presence only: comments and history are account features. -->
         <div class="seg-tabs">
           <button class="seg-tab" :class="{ active: activeTab==='online' }" @click="activeTab='online'">{{ t('editor.online') }}</button>
-          <button class="seg-tab" :class="{ active: activeTab==='comments' }" @click="activeTab='comments'">{{ t('editor.comments') }}</button>
-          <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'; refreshHistory()">{{ t('editor.history') }}</button>
+          <template v-if="canComment">
+            <button class="seg-tab" :class="{ active: activeTab==='comments' }" @click="activeTab='comments'">{{ t('editor.comments') }}</button>
+            <button class="seg-tab" :class="{ active: activeTab==='history' }" @click="activeTab='history'; refreshHistory()">{{ t('editor.history') }}</button>
+          </template>
         </div>
 
         <!-- Online (real presence via Yjs awareness) -->

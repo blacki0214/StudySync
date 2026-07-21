@@ -744,7 +744,7 @@ export default {
   share: {
     title: 'Chia sẻ ghi chú',
     anyoneWithLink: 'Bất kỳ ai có liên kết',
-    onHint: 'Bất kỳ ai có liên kết đều mở được (cần đăng nhập trước).',
+    onHint: 'Bất kỳ ai có liên kết đều mở được — không cần tài khoản.',
     offHint: 'Chỉ bạn và thành viên lớp mới mở được ghi chú này.',
     permission: 'Quyền',
     canView: 'Chỉ xem',
@@ -752,7 +752,11 @@ export default {
     link: 'Liên kết',
     copy: 'Sao chép',
     done: 'Xong',
-    readOnly: 'Chỉ xem'
+    readOnly: 'Chỉ xem',
+    signIn: 'Đăng nhập',
+    goToStudySync: 'Đến StudySync',
+    unavailableTitle: 'Liên kết này không khả dụng',
+    unavailableBody: 'Chủ sở hữu đã tắt chia sẻ, hoặc ghi chú không còn tồn tại.'
   },
 
   classes: {

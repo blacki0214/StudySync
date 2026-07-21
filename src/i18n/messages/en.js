@@ -745,7 +745,7 @@ export default {
   share: {
     title: 'Share note',
     anyoneWithLink: 'Anyone with the link',
-    onHint: 'Anyone with the link can open this note (they sign in first).',
+    onHint: 'Anyone with the link can open this note — no account needed.',
     offHint: 'Only you and class members can open this note.',
     permission: 'Permission',
     canView: 'Can view',
@@ -753,7 +753,11 @@ export default {
     link: 'Link',
     copy: 'Copy',
     done: 'Done',
-    readOnly: 'View only'
+    readOnly: 'View only',
+    signIn: 'Sign in',
+    goToStudySync: 'Go to StudySync',
+    unavailableTitle: 'This link is not available',
+    unavailableBody: 'The owner has turned sharing off, or the note no longer exists.'
   },
 
   classes: {
