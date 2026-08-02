@@ -65,7 +65,7 @@ const subjectCode = (id) => subjectStore.getById(id)?.code || ''
 // A note can belong to a subject or none — offer an explicit "No subject" option.
 const subjectOptions = computed(() => [
   { value: '', label: t('notes.noSubject') },
-  ...subjectStore.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+  ...subjectStore.subjects.map((s) => ({ value: s.id, label: `${s.code} · ${s.name}` }))
 ])
 
 const filtered = computed(() => {

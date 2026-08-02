@@ -55,14 +55,14 @@ export const roomActivity = [
 
 export const roomResources = [
   { name: 'Lecture 6 slides.pdf', size: '4.2 MB', icon: 'bi-file-earmark-slides' },
-  { name: 'Answer key — set 5.pdf', size: '1.1 MB', icon: 'bi-file-earmark-text' },
+  { name: 'Answer key set 5.pdf', size: '1.1 MB', icon: 'bi-file-earmark-text' },
   { name: 'Merkle tree examples.png', size: '320 KB', icon: 'bi-file-earmark-image' }
 ]
 
 export const roomChat = [
   { id: 'user-2', name: 'Linh', time: '19:32', text: "Let's start with chapter 6 problems first", me: false },
   { id: 'user-3', name: 'Tuấn', time: '19:33', text: 'Sent the answer key in resources 📎', me: false },
-  { id: 'user-4', name: 'Hà', time: '19:35', text: 'Question 3 — anyone got a clean proof?', me: false },
+  { id: 'user-4', name: 'Hà', time: '19:35', text: 'Question 3, anyone got a clean proof?', me: false },
   { id: 'user-1', name: 'Minh', time: '19:35', text: "I'll share my screen", me: true },
   { id: 'user-6', name: 'Bảo', time: '19:36', text: 'Coffee break in 10 ☕', me: false }
 ]

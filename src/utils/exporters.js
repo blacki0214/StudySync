@@ -38,7 +38,7 @@ export function exportFlashcardsAnki(cards, name = 'flashcards') {
 
 /** Full study pack (summary + flashcards + quiz) → Markdown. */
 export function exportStudyMarkdown({ name = 'StudySync', summary = [], flashcards = [], quiz = [] }) {
-  let md = `# ${name} — study pack\n\n`
+  let md = `# ${name} study pack\n\n`
 
   if (summary.length) {
     md += `## Summary\n\n${summary.map((s) => `- ${s}`).join('\n')}\n\n`

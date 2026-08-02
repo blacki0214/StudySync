@@ -132,8 +132,8 @@ function startResize(e) {
         <button type="button" title="Align right" :class="{ on: align === 'right' }" @click="setAlign('right')"><i class="bi bi-text-right"></i></button>
         <span class="img-nv-sep"></span>
         <button type="button" title="No wrap (own line)" :class="{ on: wrap === 'none' }" @click="setWrap('none')"><i class="bi bi-distribute-vertical"></i></button>
-        <button type="button" title="Wrap text — image left" :class="{ on: wrap === 'left' }" @click="setWrap('left')"><i class="bi bi-layout-sidebar-inset"></i></button>
-        <button type="button" title="Wrap text — image right" :class="{ on: wrap === 'right' }" @click="setWrap('right')"><i class="bi bi-layout-sidebar-inset-reverse"></i></button>
+        <button type="button" title="Wrap text, image left" :class="{ on: wrap === 'left' }" @click="setWrap('left')"><i class="bi bi-layout-sidebar-inset"></i></button>
+        <button type="button" title="Wrap text, image right" :class="{ on: wrap === 'right' }" @click="setWrap('right')"><i class="bi bi-layout-sidebar-inset-reverse"></i></button>
         <span class="img-nv-sep"></span>
         <button type="button" class="img-nv-size" title="Small" @click="setSize(200)">S</button>
         <button type="button" class="img-nv-size" title="Medium" @click="setSize(380)">M</button>

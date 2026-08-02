@@ -86,7 +86,7 @@ export async function generateFlashcards(content, { max = 12 } = {}) {
     console.error('[ai] local flashcard model failed:', e.message)
     throw new Error(
       'Flashcard generation is unavailable right now. The offline model may still ' +
-      'be downloading — please try again in a moment.'
+      'be downloading. Please try again in a moment.'
     )
   }
 }

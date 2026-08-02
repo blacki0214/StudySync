@@ -49,7 +49,7 @@ export default {
   },
   school: {
     welcome: 'Welcome, {name}',
-    sub: 'Manage your institution — teachers, students and classes.',
+    sub: 'Manage your institution: teachers, students and classes.',
     featTeachers: 'Teachers',
     featStudents: 'Students',
     featClasses: 'Classes',
@@ -92,7 +92,7 @@ export default {
     next: 'Next',
     exit: 'Exit',
     download: 'Download',
-    pptxNote: "PowerPoint files can't be previewed in-app — download to view. Tip: export to PDF to present here.",
+    pptxNote: "PowerPoint files can't be previewed in-app. Download to view, or export to PDF to present here.",
     presentError: 'Could not open this file.'
   },
 
@@ -207,7 +207,7 @@ export default {
     importExample: 'Insert example',
     importPreview: 'Preview',
     importCount: '{n} tasks ready',
-    importEmpty: 'Nothing to import yet — paste text or JSON above.',
+    importEmpty: 'Nothing to import yet. Paste text or JSON above.',
     importBtn: 'Import {n}',
     importDone: 'Imported {n} tasks',
     formatText: 'Text',
@@ -232,7 +232,7 @@ export default {
     allPriorities: 'All priorities',
     summary: '{total} tasks · {active} in progress · {done} done',
     completed: 'Completed',
-    emptyTitle: 'No tasks yet — add your first one.',
+    emptyTitle: 'No tasks yet. Add your first one.',
     untitled: 'Untitled task',
     unassigned: 'Unassigned',
     addDetails: 'Add details…',
@@ -266,10 +266,10 @@ export default {
     browseSubjects: 'Browse subjects',
     recentActivity: 'Recent activity',
     recentNotes: 'Recent notes',
-    noNotes: 'No notes yet — create your first one.',
+    noNotes: 'No notes yet. Create your first one.',
     flashcardsDue: 'Flashcards to review',
-    noDecks: 'No decks yet — generate some from a note.',
-    noCardsDue: 'All caught up — nothing due 🎉',
+    noDecks: 'No decks yet. Generate some from a note.',
+    noCardsDue: 'All caught up, nothing due 🎉',
     cardsDue: '{n} due',
     deckDone: 'Done',
     upcoming: 'Upcoming',
@@ -278,10 +278,10 @@ export default {
     tomorrow: 'Tomorrow',
     tasksTitle: 'Your tasks',
     tasksDone: '{done} of {total} done',
-    noTasks: 'No tasks yet — add one to get started.',
-    allTasksDone: 'All tasks done — nice work! 🎉',
+    noTasks: 'No tasks yet. Add one to get started.',
+    allTasksDone: 'All tasks done. Nice work! 🎉',
     noSubjects: 'No subjects in progress yet.',
-    noActivity: 'Nothing yet — create a note, deck or task and it will show up here.',
+    noActivity: 'Nothing yet. Create a note, deck or task and it will show up here.',
     activity: {
       you: 'You',
       noteEdited: '{user} edited {title}',
@@ -310,7 +310,7 @@ export default {
     topInVietnam: 'Top 4% in Vietnam',
     weeklyFocus: 'Weekly focus time',
     weeklyFocusSub: '{hours} hours this week',
-    weeklyFocusEmpty: 'No focus time recorded yet — time spent on notes, flashcards, rooms and workspaces is counted here automatically.',
+    weeklyFocusEmpty: 'No focus time recorded yet. Time spent on notes, flashcards, rooms and workspaces is counted here automatically.',
     thisWeek: 'This week',
     upcomingSessions: 'Upcoming sessions',
     joining: '{n} joining',
@@ -430,7 +430,7 @@ export default {
     commentsHint: 'Select text, then click the comment button to discuss it.',
     deleteComment: 'Delete comment', addComment: 'Add comment',
     commentPlaceholder: 'Write a comment… (Ctrl+Enter to post)', postComment: 'Comment',
-    historyHint: 'Snapshots are saved as people edit — click one to see what changed.',
+    historyHint: 'Snapshots are saved as people edit. Click one to see what changed.',
     normalText: 'Normal text', style: 'Style', smaller: 'Smaller', larger: 'Larger', checklist: 'Checklist',
     openHistory: 'Open version history',
     versionHistory: 'Version history', showChanges: 'Show changes',
@@ -460,7 +460,7 @@ export default {
     titleNeedsContent: 'Write a bit more before generating a title.',
     titleFailed: 'Could not generate a title. Please try again.',
     chatTitle: 'Study tutor',
-    chatEmpty: 'Ask anything about this note — concepts, examples, or a quick explanation.',
+    chatEmpty: 'Ask anything about this note: concepts, examples, or a quick explanation.',
     chatPlaceholder: 'Ask the tutor…',
     chatError: 'Sorry, I could not respond. Please try again.',
     aiFlashcards: 'Flashcard preview',
@@ -493,7 +493,7 @@ export default {
     camera: 'Camera',
     react: 'React',
     leave: 'Leave',
-    noActivity: 'No activity yet — say hi!',
+    noActivity: 'No activity yet. Say hi!',
     noResources: 'No shared resources yet.',
     noMessages: 'No messages yet. Start the conversation.',
     create: 'Create room',
@@ -518,13 +518,13 @@ export default {
     descLabel: 'Description',
     descPlaceholder: 'What will you study or discuss here?',
     subjectLabel: 'Subject (optional)',
-    noSubject: 'General — no subject',
+    noSubject: 'General (no subject)',
     emptyTitle: 'No study rooms yet',
     emptySub: 'Create a room to study, chat and hang out with classmates in real time.',
     textChannels: 'Text channels',
     voiceChannels: 'Voice channels',
     channels: 'Channels',
-    members: 'Members — {n}',
+    members: 'Members ({n})',
     voiceConnected: 'Voice connected',
     disconnect: 'Disconnect',
     channelEmpty: 'This is the start of #{channel}. Say hello!',
@@ -535,7 +535,7 @@ export default {
     deleteChannel: 'Delete channel',
     deleteChannelConfirm: 'Delete the “{name}” channel? Its messages will be cleared.',
     needOneText: 'A room needs at least one text channel.',
-    micDenied: 'Microphone access was blocked — you joined without voice.',
+    micDenied: 'Microphone access was blocked. You joined without voice.',
     noMic: 'Connected (no mic)',
     voiceEmpty: 'No one is in this voice channel yet.'
   },
@@ -654,7 +654,7 @@ export default {
 
   mySubjects: {
     title: 'My Subjects',
-    sub: 'Your personal workspaces — create one, then add documents to study from.',
+    sub: 'Your personal workspaces. Create one, then add documents to study from.',
     new: 'New subject',
     create: 'Create subject',
     emptyTitle: 'No subjects yet',
@@ -716,7 +716,7 @@ export default {
     linkTextPlaceholder: 'Paste the relevant text from the link here…',
     pastedSource: 'Pasted source',
     sources: 'Sources',
-    noSources: 'No sources yet — add one to get started.',
+    noSources: 'No sources yet. Add one to get started.',
     charsN: '{n} chars',
     materialEmpty: 'Add sources and select them to generate study material.',
     tabSummary: 'Summary',
@@ -745,7 +745,7 @@ export default {
   share: {
     title: 'Share note',
     anyoneWithLink: 'Anyone with the link',
-    onHint: 'Anyone with the link can open this note — no account needed.',
+    onHint: 'Anyone with the link can open this note, no account needed.',
     offHint: 'Only you and class members can open this note.',
     permission: 'Permission',
     canView: 'Can view',
@@ -776,7 +776,7 @@ export default {
     noDesc: 'No description',
     modalTitle: 'Create a class',
     name: 'Class name',
-    namePlaceholder: 'e.g. COS30043 — Group 2',
+    namePlaceholder: 'e.g. COS30043 Group 2',
     color: 'Colour',
     description: 'Description',
     descPlaceholder: 'What is this class about? (optional)',
@@ -850,7 +850,7 @@ export default {
     submitQuiz: 'Submit quiz',
     quizUnavailable: 'This quiz could not be generated from the document.',
     quizDone: "You've completed this quiz.",
-    submissionsFor: 'Submissions — {title}',
+    submissionsFor: 'Submissions: {title}',
     noSubmissions: 'No submissions yet',
     ungraded: 'Ungraded',
     scorePlaceholder: 'Score',
@@ -868,7 +868,7 @@ export default {
     post: 'Post',
     posted: 'Posted to the community',
     composerHint: 'Tip: add #tags to categorise your question. Enter to post.',
-    emptyFilter: 'Nothing here yet — be the first to post.',
+    emptyFilter: 'Nothing here yet. Be the first to post.',
     you: 'You',
     hot: 'Hot',
     new: 'New',
@@ -885,7 +885,7 @@ export default {
     linkCopied: 'Post link copied to clipboard',
     shareFailed: 'Could not copy the link.',
     loadingReplies: 'Loading replies…',
-    noReplies: 'No replies yet — be the first.',
+    noReplies: 'No replies yet. Be the first.',
     replyPlaceholder: 'Write a reply…',
     replyFailed: 'Could not post the reply.',
     reply: 'Reply',
@@ -978,7 +978,7 @@ export default {
 
   auth: {
     welcomeBack: 'Welcome back 👋',
-    welcomeSub: 'Pick up where you left off — your notes, flashcards and study rooms are waiting.',
+    welcomeSub: 'Pick up where you left off. Your notes, flashcards and study rooms are waiting.',
     joinTitle: 'Join StudySync 🚀',
     joinSub: 'Create a free account and start collaborating with classmates today.',
     login: 'Log in',
@@ -1026,7 +1026,7 @@ export default {
     roleTeacher: 'Teacher',
     roleTeacherDesc: 'Create and share material with classes.',
     roleAdmin: 'School / Admin',
-    roleAdminDesc: 'Run a school — manage teachers, students and classes.',
+    roleAdminDesc: 'Run a school: manage teachers, students and classes.',
     stepPurposeTitle: 'What will you use it for?',
     stepPurposeSub: 'Pick what fits best.',
     purposePersonal: 'Personal study',
@@ -1059,7 +1059,7 @@ export default {
     /* Welcome (after confirmation) */
     welcomeDoneTitle: "You're all set! 🎉",
     welcomeDoneConfirmed: 'Your account is ready.',
-    welcomeDoneMessage: "Welcome to StudySync — let's start learning together.",
+    welcomeDoneMessage: "Welcome to StudySync. Let's start learning together.",
     goToApp: 'Go to the app',
 
     /* Forgot / reset password */
@@ -1097,7 +1097,7 @@ export default {
     steps: {
       hub: {
         title: 'Your Study Hub',
-        body: 'Home base. Your focus hours, upcoming sessions, recent notes and what to study next — all in one glance.'
+        body: 'Home base. Your focus hours, upcoming sessions, recent notes and what to study next, all in one glance.'
       },
       mySubjects: {
         title: 'My Subjects',
@@ -1113,7 +1113,7 @@ export default {
       },
       schedule: {
         title: 'Schedule',
-        body: 'Everything with a due date on one calendar — your tasks, class assignments and study sessions.'
+        body: 'Everything with a due date on one calendar: your tasks, class assignments and study sessions.'
       },
       rooms: {
         title: 'Study Rooms',
@@ -1145,7 +1145,7 @@ export default {
       },
       search: {
         title: 'Search anything',
-        body: 'One box for notes, subjects, tasks and people — and a jump-to for every page. It is the fastest way around the app.'
+        body: 'One box for notes, subjects, tasks and people, plus a jump-to for every page. It is the fastest way around the app.'
       },
       ai: {
         title: 'AI assistant',
@@ -1157,11 +1157,11 @@ export default {
       },
       more: {
         title: 'Everything else',
-        body: 'Tap More for subjects, schedule, study rooms, flashcards, community and classes — plus theme, language and help.'
+        body: 'Tap More for subjects, schedule, study rooms, flashcards, community and classes, plus theme, language and help.'
       },
       finish: {
         title: 'You are all set',
-        body: 'That is the whole app. The Get-started checklist on your Hub has five things to try first — and the ? button brings this tour back whenever you want it.'
+        body: 'That is the whole app. The Get-started checklist on your Hub has five things to try first, and the ? button brings this tour back whenever you want it.'
       }
     }
   },
@@ -1178,7 +1178,7 @@ export default {
     replayTour: 'Replay the tour',
     items: {
       profile: { label: 'Personalise your profile', hint: 'Add a photo, your program and a short bio.' },
-      note: { label: 'Write your first note', hint: 'Start a note — or invite a classmate to write it with you.' },
+      note: { label: 'Write your first note', hint: 'Start a note, or invite a classmate to write it with you.' },
       task: { label: 'Add a task', hint: 'Track one assignment or study to-do.' },
       flashcards: { label: 'Try AI flashcards', hint: 'Turn a note into a deck you can review.' },
       rooms: { label: 'Look inside a study room', hint: 'See how studying together works.' }
@@ -1207,16 +1207,16 @@ export default {
 
     faq: {
       start: {
-        q: 'I am brand new — where do I start?',
+        q: 'I am brand new. Where do I start?',
         a: 'Start on your Hub and work through the Get-started checklist. Creating a note and adding a task covers most of what you need; everything else builds on those two.'
       },
       notes: {
         q: 'How does collaborative editing work?',
-        a: 'Open a note and share it from the Share button. Anyone with the link (and edit permission) can type at the same time as you — you will see their cursor. Version history lets you roll back any change.'
+        a: 'Open a note and share it from the Share button. Anyone with the link (and edit permission) can type at the same time as you, and you will see their cursor. Version history lets you roll back any change.'
       },
       ai: {
         q: 'What can the AI do, and does it read my notes?',
-        a: 'It generates flashcards, quiz questions, summaries and key terms from a note you choose, and answers questions using only the sources you point it at. It runs on the note you select — it does not browse your whole account on its own.'
+        a: 'It generates flashcards, quiz questions, summaries and key terms from a note you choose, and answers questions using only the sources you point it at. It runs on only the note you select and does not browse your whole account on its own.'
       },
       flashcards: {
         q: 'How do flashcards decide what to show me?',
@@ -1268,7 +1268,7 @@ export default {
     feedbackPlaceholder: 'What happened, or what would you like to see?',
     feedbackEmail: 'Reply-to email (optional)',
     feedbackSend: 'Send feedback',
-    feedbackThanks: 'Thanks — your feedback was sent.',
+    feedbackThanks: 'Thanks! Your feedback was sent.',
     feedbackFailed: 'Could not send your feedback. Please try again.'
   },
 
@@ -1279,14 +1279,14 @@ export default {
     heroLine1: 'Learn together,',
     heroLine2: 'in real time.',
     heroText:
-      'A collaborative learning platform for university students — real-time note editing, manually-built flashcards and quizzes, and live study rooms. No external AI APIs, just clever rule-based JavaScript.',
+      'A collaborative learning platform for university students, with real-time note editing, manually-built flashcards and quizzes, and live study rooms. No external AI APIs, just clever rule-based JavaScript.',
     startFree: 'Start studying free',
     haveAccount: 'I have an account',
     features: {
       collabTitle: 'Real-time collaboration',
       collabText: 'Edit notes together with presence, typing indicators and version conflict handling.',
       flashTitle: 'Auto flashcards',
-      flashText: 'Definition-pattern parsing turns your notes into flashcards — no AI API.',
+      flashText: 'Definition-pattern parsing turns your notes into flashcards, no AI API needed.',
       quizTitle: 'Smart quizzes',
       quizText: 'Multiple-choice questions with auto-generated distractors and manual shuffling.',
       diffTitle: 'Difficulty analysis',

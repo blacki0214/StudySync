@@ -26,7 +26,7 @@ export const communityPosts = [
     ago: '1h ago',
     subject: 'MATH2001',
     votes: 412,
-    title: 'Solved: Eigenvalues for tridiagonal matrices — Vietnamese explanation',
+    title: 'Solved: Eigenvalues for tridiagonal matrices (Vietnamese explanation)',
     excerpt:
       'Mình giải thích cách tìm trị riêng cho ma trận ba đường chéo bằng đa thức đặc trưng, kèm ví dụ cụ thể bằng tiếng Việt.',
     tags: ['#LinearAlgebra', '#Solved'],

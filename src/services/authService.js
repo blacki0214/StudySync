@@ -133,7 +133,7 @@ export const authService = {
     if (error) {
       // Friendlier message for the common "not confirmed yet" case.
       if (/confirm/i.test(error.message)) {
-        const err = new Error('Please confirm your email first — check your inbox.')
+        const err = new Error('Please confirm your email first. Check your inbox.')
         err.code = 'not_confirmed'
         throw err
       }

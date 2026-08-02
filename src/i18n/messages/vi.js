@@ -49,7 +49,7 @@ export default {
   },
   school: {
     welcome: 'Chào mừng, {name}',
-    sub: 'Quản lý trường của bạn — giáo viên, học sinh và lớp học.',
+    sub: 'Quản lý trường của bạn: giáo viên, học sinh và lớp học.',
     featTeachers: 'Giáo viên',
     featStudents: 'Học sinh',
     featClasses: 'Lớp học',
@@ -92,7 +92,7 @@ export default {
     next: 'Sau',
     exit: 'Thoát',
     download: 'Tải xuống',
-    pptxNote: 'Không thể xem trước tệp PowerPoint trong ứng dụng — hãy tải xuống để xem. Mẹo: xuất sang PDF để trình chiếu tại đây.',
+    pptxNote: 'Không thể xem trước tệp PowerPoint trong ứng dụng. Hãy tải xuống để xem. Mẹo: xuất sang PDF để trình chiếu tại đây.',
     presentError: 'Không thể mở tệp này.'
   },
 
@@ -207,7 +207,7 @@ export default {
     importExample: 'Chèn ví dụ',
     importPreview: 'Xem trước',
     importCount: '{n} nhiệm vụ sẵn sàng',
-    importEmpty: 'Chưa có gì để nhập — dán text hoặc JSON ở trên.',
+    importEmpty: 'Chưa có gì để nhập. Dán text hoặc JSON ở trên.',
     importBtn: 'Nhập {n}',
     importDone: 'Đã nhập {n} nhiệm vụ',
     formatText: 'Văn bản',
@@ -232,7 +232,7 @@ export default {
     allPriorities: 'Tất cả mức độ',
     summary: '{total} nhiệm vụ · {active} đang làm · {done} hoàn tất',
     completed: 'Hoàn tất',
-    emptyTitle: 'Chưa có nhiệm vụ — thêm nhiệm vụ đầu tiên.',
+    emptyTitle: 'Chưa có nhiệm vụ. Thêm nhiệm vụ đầu tiên.',
     untitled: 'Nhiệm vụ chưa đặt tên',
     unassigned: 'Chưa giao',
     addDetails: 'Thêm chi tiết…',
@@ -266,10 +266,10 @@ export default {
     browseSubjects: 'Duyệt môn học',
     recentActivity: 'Hoạt động gần đây',
     recentNotes: 'Ghi chú gần đây',
-    noNotes: 'Chưa có ghi chú — tạo ghi chú đầu tiên của bạn.',
+    noNotes: 'Chưa có ghi chú. Tạo ghi chú đầu tiên của bạn.',
     flashcardsDue: 'Thẻ ghi nhớ cần ôn',
-    noDecks: 'Chưa có bộ thẻ nào — tạo từ một ghi chú.',
-    noCardsDue: 'Đã ôn hết — không còn thẻ nào 🎉',
+    noDecks: 'Chưa có bộ thẻ nào. Tạo từ một ghi chú.',
+    noCardsDue: 'Đã ôn hết, không còn thẻ nào 🎉',
     cardsDue: '{n} cần ôn',
     deckDone: 'Xong',
     upcoming: 'Sắp tới',
@@ -278,10 +278,10 @@ export default {
     tomorrow: 'Ngày mai',
     tasksTitle: 'Công việc của bạn',
     tasksDone: 'Đã xong {done}/{total}',
-    noTasks: 'Chưa có công việc — thêm một việc để bắt đầu.',
-    allTasksDone: 'Đã hoàn thành tất cả — làm tốt lắm! 🎉',
+    noTasks: 'Chưa có công việc. Thêm một việc để bắt đầu.',
+    allTasksDone: 'Đã hoàn thành tất cả. Làm tốt lắm! 🎉',
     noSubjects: 'Chưa có môn học nào đang tiến hành.',
-    noActivity: 'Chưa có gì — tạo ghi chú, bộ thẻ hoặc nhiệm vụ và nó sẽ hiện ở đây.',
+    noActivity: 'Chưa có gì. Tạo ghi chú, bộ thẻ hoặc nhiệm vụ và nó sẽ hiện ở đây.',
     activity: {
       you: 'Bạn',
       noteEdited: '{user} đã chỉnh sửa {title}',
@@ -310,7 +310,7 @@ export default {
     topInVietnam: 'Top 4% tại Việt Nam',
     weeklyFocus: 'Thời gian tập trung trong tuần',
     weeklyFocusSub: '{hours} giờ tuần này',
-    weeklyFocusEmpty: 'Chưa ghi nhận thời gian tập trung — thời gian ở ghi chú, thẻ ghi nhớ, phòng học và không gian làm việc sẽ được tính tự động.',
+    weeklyFocusEmpty: 'Chưa ghi nhận thời gian tập trung. Thời gian ở ghi chú, thẻ ghi nhớ, phòng học và không gian làm việc sẽ được tính tự động.',
     thisWeek: 'Tuần này',
     upcomingSessions: 'Buổi học sắp tới',
     joining: '{n} người tham gia',
@@ -420,7 +420,7 @@ export default {
     commentsHint: 'Chọn văn bản rồi bấm nút bình luận để thảo luận.',
     deleteComment: 'Xoá bình luận', addComment: 'Thêm bình luận',
     commentPlaceholder: 'Viết bình luận… (Ctrl+Enter để gửi)', postComment: 'Bình luận',
-    historyHint: 'Bản chụp được lưu khi mọi người chỉnh sửa — bấm để xem thay đổi.',
+    historyHint: 'Bản chụp được lưu khi mọi người chỉnh sửa. Bấm để xem thay đổi.',
     normalText: 'Văn bản thường', style: 'Kiểu', smaller: 'Nhỏ hơn', larger: 'Lớn hơn', checklist: 'Danh sách việc',
     openHistory: 'Mở lịch sử phiên bản',
     versionHistory: 'Lịch sử phiên bản', showChanges: 'Xem thay đổi',
@@ -459,7 +459,7 @@ export default {
     titleNeedsContent: 'Hãy viết thêm một chút trước khi tạo tiêu đề.',
     titleFailed: 'Không thể tạo tiêu đề. Vui lòng thử lại.',
     chatTitle: 'Gia sư học tập',
-    chatEmpty: 'Hỏi bất cứ điều gì về ghi chú này — khái niệm, ví dụ hoặc giải thích nhanh.',
+    chatEmpty: 'Hỏi bất cứ điều gì về ghi chú này: khái niệm, ví dụ hoặc giải thích nhanh.',
     chatPlaceholder: 'Hỏi gia sư…',
     chatError: 'Xin lỗi, không thể trả lời. Vui lòng thử lại.',
     aiFlashcards: 'Xem trước thẻ ghi nhớ',
@@ -492,7 +492,7 @@ export default {
     camera: 'Camera',
     react: 'Bày tỏ',
     leave: 'Rời phòng',
-    noActivity: 'Chưa có hoạt động — chào mọi người nào!',
+    noActivity: 'Chưa có hoạt động. Chào mọi người nào!',
     noResources: 'Chưa có tài nguyên chia sẻ.',
     noMessages: 'Chưa có tin nhắn. Bắt đầu trò chuyện nào.',
     create: 'Tạo phòng',
@@ -517,13 +517,13 @@ export default {
     descLabel: 'Mô tả',
     descPlaceholder: 'Bạn sẽ học hoặc thảo luận gì ở đây?',
     subjectLabel: 'Môn học (tuỳ chọn)',
-    noSubject: 'Chung — không theo môn',
+    noSubject: 'Chung (không theo môn)',
     emptyTitle: 'Chưa có phòng học nào',
     emptySub: 'Tạo một phòng để học, trò chuyện và giao lưu với bạn học theo thời gian thực.',
     textChannels: 'Kênh chat',
     voiceChannels: 'Kênh thoại',
     channels: 'Kênh',
-    members: 'Thành viên — {n}',
+    members: 'Thành viên ({n})',
     voiceConnected: 'Đã kết nối thoại',
     disconnect: 'Ngắt kết nối',
     channelEmpty: 'Đây là khởi đầu của #{channel}. Chào mọi người nào!',
@@ -534,7 +534,7 @@ export default {
     deleteChannel: 'Xoá kênh',
     deleteChannelConfirm: 'Xoá kênh “{name}”? Tin nhắn của kênh sẽ bị xoá.',
     needOneText: 'Phòng cần ít nhất một kênh chat.',
-    micDenied: 'Micro bị chặn — bạn đã vào mà không có thoại.',
+    micDenied: 'Micro bị chặn. Bạn đã vào mà không có thoại.',
     noMic: 'Đã kết nối (không micro)',
     voiceEmpty: 'Chưa có ai trong kênh thoại này.'
   },
@@ -653,7 +653,7 @@ export default {
 
   mySubjects: {
     title: 'Môn của tôi',
-    sub: 'Không gian học của riêng bạn — tạo môn rồi thêm tài liệu để học.',
+    sub: 'Không gian học của riêng bạn. Tạo môn rồi thêm tài liệu để học.',
     new: 'Môn mới',
     create: 'Tạo môn',
     emptyTitle: 'Chưa có môn nào',
@@ -715,7 +715,7 @@ export default {
     linkTextPlaceholder: 'Dán nội dung liên quan từ liên kết vào đây…',
     pastedSource: 'Nguồn đã dán',
     sources: 'Nguồn',
-    noSources: 'Chưa có nguồn nào — thêm một nguồn để bắt đầu.',
+    noSources: 'Chưa có nguồn nào. Thêm một nguồn để bắt đầu.',
     charsN: '{n} ký tự',
     materialEmpty: 'Thêm và chọn nguồn để tạo nội dung học tập.',
     tabSummary: 'Tóm tắt',
@@ -744,7 +744,7 @@ export default {
   share: {
     title: 'Chia sẻ ghi chú',
     anyoneWithLink: 'Bất kỳ ai có liên kết',
-    onHint: 'Bất kỳ ai có liên kết đều mở được — không cần tài khoản.',
+    onHint: 'Bất kỳ ai có liên kết đều mở được, không cần tài khoản.',
     offHint: 'Chỉ bạn và thành viên lớp mới mở được ghi chú này.',
     permission: 'Quyền',
     canView: 'Chỉ xem',
@@ -775,7 +775,7 @@ export default {
     noDesc: 'Không có mô tả',
     modalTitle: 'Tạo một lớp học',
     name: 'Tên lớp',
-    namePlaceholder: 'vd. COS30043 — Nhóm 2',
+    namePlaceholder: 'vd. COS30043 Nhóm 2',
     color: 'Màu',
     description: 'Mô tả',
     descPlaceholder: 'Lớp này về điều gì? (không bắt buộc)',
@@ -848,7 +848,7 @@ export default {
     submitQuiz: 'Nộp bài trắc nghiệm',
     quizUnavailable: 'Không thể tạo trắc nghiệm từ tài liệu này.',
     quizDone: 'Bạn đã hoàn thành bài trắc nghiệm này.',
-    submissionsFor: 'Bài nộp — {title}',
+    submissionsFor: 'Bài nộp: {title}',
     noSubmissions: 'Chưa có bài nộp nào',
     ungraded: 'Chưa chấm',
     scorePlaceholder: 'Điểm',
@@ -866,7 +866,7 @@ export default {
     post: 'Đăng',
     posted: 'Đã đăng lên cộng đồng',
     composerHint: 'Mẹo: thêm #thẻ để phân loại câu hỏi. Nhấn Enter để đăng.',
-    emptyFilter: 'Chưa có gì ở đây — hãy là người đăng đầu tiên.',
+    emptyFilter: 'Chưa có gì ở đây. Hãy là người đăng đầu tiên.',
     you: 'Bạn',
     hot: 'Nổi bật',
     new: 'Mới',
@@ -883,7 +883,7 @@ export default {
     linkCopied: 'Đã sao chép liên kết bài viết',
     shareFailed: 'Không thể sao chép liên kết.',
     loadingReplies: 'Đang tải phản hồi…',
-    noReplies: 'Chưa có phản hồi — hãy là người đầu tiên.',
+    noReplies: 'Chưa có phản hồi. Hãy là người đầu tiên.',
     replyPlaceholder: 'Viết phản hồi…',
     replyFailed: 'Không thể đăng phản hồi.',
     reply: 'Trả lời',
@@ -976,7 +976,7 @@ export default {
 
   auth: {
     welcomeBack: 'Chào mừng trở lại 👋',
-    welcomeSub: 'Tiếp tục từ nơi bạn dừng lại — ghi chú, thẻ ghi nhớ và phòng học đang chờ bạn.',
+    welcomeSub: 'Tiếp tục từ nơi bạn dừng lại. Ghi chú, thẻ ghi nhớ và phòng học đang chờ bạn.',
     joinTitle: 'Tham gia StudySync 🚀',
     joinSub: 'Tạo tài khoản miễn phí và bắt đầu học cùng bạn bè ngay hôm nay.',
     login: 'Đăng nhập',
@@ -1024,7 +1024,7 @@ export default {
     roleTeacher: 'Giáo viên',
     roleTeacherDesc: 'Tạo và chia sẻ tài liệu cho lớp.',
     roleAdmin: 'Trường / Quản trị',
-    roleAdminDesc: 'Điều hành trường — quản lý giáo viên, học sinh và lớp học.',
+    roleAdminDesc: 'Điều hành trường: quản lý giáo viên, học sinh và lớp học.',
     stepPurposeTitle: 'Bạn dùng để làm gì?',
     stepPurposeSub: 'Chọn mục phù hợp nhất.',
     purposePersonal: 'Học cá nhân',
@@ -1057,7 +1057,7 @@ export default {
     /* Chào mừng (sau khi xác nhận) */
     welcomeDoneTitle: 'Hoàn tất! 🎉',
     welcomeDoneConfirmed: 'Tài khoản của bạn đã sẵn sàng.',
-    welcomeDoneMessage: 'Chào mừng đến với StudySync — hãy bắt đầu học cùng nhau.',
+    welcomeDoneMessage: 'Chào mừng đến với StudySync. Hãy bắt đầu học cùng nhau.',
     goToApp: 'Vào ứng dụng',
 
     /* Quên / đặt lại mật khẩu */
@@ -1095,7 +1095,7 @@ export default {
     steps: {
       hub: {
         title: 'Trung tâm học tập',
-        body: 'Nơi bắt đầu. Giờ tập trung, buổi học sắp tới, ghi chú gần đây và việc cần học tiếp — tất cả trong một màn hình.'
+        body: 'Nơi bắt đầu. Giờ tập trung, buổi học sắp tới, ghi chú gần đây và việc cần học tiếp, tất cả trong một màn hình.'
       },
       mySubjects: {
         title: 'Môn học của tôi',
@@ -1111,7 +1111,7 @@ export default {
       },
       schedule: {
         title: 'Lịch',
-        body: 'Mọi thứ có hạn chót trên cùng một lịch — nhiệm vụ cá nhân, bài tập lớp và buổi học.'
+        body: 'Mọi thứ có hạn chót trên cùng một lịch: nhiệm vụ cá nhân, bài tập lớp và buổi học.'
       },
       rooms: {
         title: 'Phòng học chung',
@@ -1143,7 +1143,7 @@ export default {
       },
       search: {
         title: 'Tìm mọi thứ',
-        body: 'Một ô cho ghi chú, môn học, nhiệm vụ và người dùng — kèm lối tắt tới mọi trang. Đây là cách di chuyển nhanh nhất.'
+        body: 'Một ô cho ghi chú, môn học, nhiệm vụ và người dùng, kèm lối tắt tới mọi trang. Đây là cách di chuyển nhanh nhất.'
       },
       ai: {
         title: 'Trợ lý AI',
@@ -1155,11 +1155,11 @@ export default {
       },
       more: {
         title: 'Mọi thứ còn lại',
-        body: 'Chạm Thêm để vào môn học, lịch, phòng học chung, thẻ ghi nhớ, cộng đồng và lớp học — cùng giao diện, ngôn ngữ và trợ giúp.'
+        body: 'Chạm Thêm để vào môn học, lịch, phòng học chung, thẻ ghi nhớ, cộng đồng và lớp học, cùng giao diện, ngôn ngữ và trợ giúp.'
       },
       finish: {
         title: 'Xong rồi!',
-        body: 'Đó là toàn bộ ứng dụng. Danh sách Bắt đầu trên Trung tâm học tập có năm việc nên thử trước — và nút ? luôn mở lại tour này khi bạn cần.'
+        body: 'Đó là toàn bộ ứng dụng. Danh sách Bắt đầu trên Trung tâm học tập có năm việc nên thử trước, và nút ? luôn mở lại tour này khi bạn cần.'
       }
     }
   },
@@ -1176,7 +1176,7 @@ export default {
     replayTour: 'Xem lại tour',
     items: {
       profile: { label: 'Cá nhân hóa hồ sơ', hint: 'Thêm ảnh, ngành học và giới thiệu ngắn.' },
-      note: { label: 'Viết ghi chú đầu tiên', hint: 'Tạo một ghi chú — hoặc rủ bạn học viết cùng.' },
+      note: { label: 'Viết ghi chú đầu tiên', hint: 'Tạo một ghi chú, hoặc rủ bạn học viết cùng.' },
       task: { label: 'Thêm một nhiệm vụ', hint: 'Theo dõi một bài tập hoặc việc cần học.' },
       flashcards: { label: 'Thử thẻ ghi nhớ AI', hint: 'Biến ghi chú thành bộ thẻ để ôn tập.' },
       rooms: { label: 'Ghé một phòng học chung', hint: 'Xem cách học nhóm hoạt động.' }
@@ -1205,16 +1205,16 @@ export default {
 
     faq: {
       start: {
-        q: 'Tôi mới hoàn toàn — nên bắt đầu từ đâu?',
+        q: 'Tôi mới hoàn toàn, nên bắt đầu từ đâu?',
         a: 'Hãy bắt đầu ở Trung tâm học tập và làm theo danh sách Bắt đầu. Tạo một ghi chú và thêm một nhiệm vụ là đã bao quát phần lớn; mọi thứ khác đều xây trên hai việc đó.'
       },
       notes: {
         q: 'Soạn thảo cộng tác hoạt động thế nào?',
-        a: 'Mở ghi chú rồi bấm Chia sẻ. Bất kỳ ai có liên kết (và quyền sửa) đều có thể gõ cùng lúc với bạn — bạn sẽ thấy con trỏ của họ. Lịch sử phiên bản cho phép khôi phục mọi thay đổi.'
+        a: 'Mở ghi chú rồi bấm Chia sẻ. Bất kỳ ai có liên kết (và quyền sửa) đều có thể gõ cùng lúc với bạn, và bạn sẽ thấy con trỏ của họ. Lịch sử phiên bản cho phép khôi phục mọi thay đổi.'
       },
       ai: {
         q: 'AI làm được gì, và nó có đọc ghi chú của tôi không?',
-        a: 'AI tạo thẻ ghi nhớ, câu hỏi, tóm tắt và từ khóa từ ghi chú bạn chọn, đồng thời trả lời câu hỏi chỉ dựa trên nguồn bạn chỉ định. Nó chạy trên ghi chú bạn chọn — không tự duyệt toàn bộ tài khoản của bạn.'
+        a: 'AI tạo thẻ ghi nhớ, câu hỏi, tóm tắt và từ khóa từ ghi chú bạn chọn, đồng thời trả lời câu hỏi chỉ dựa trên nguồn bạn chỉ định. Nó chỉ chạy trên ghi chú bạn chọn và không tự duyệt toàn bộ tài khoản của bạn.'
       },
       flashcards: {
         q: 'Thẻ ghi nhớ quyết định hiển thị gì cho tôi?',
@@ -1266,7 +1266,7 @@ export default {
     feedbackPlaceholder: 'Chuyện gì đã xảy ra, hoặc bạn muốn thấy điều gì?',
     feedbackEmail: 'Email phản hồi (không bắt buộc)',
     feedbackSend: 'Gửi góp ý',
-    feedbackThanks: 'Cảm ơn — góp ý của bạn đã được gửi.',
+    feedbackThanks: 'Cảm ơn! Góp ý của bạn đã được gửi.',
     feedbackFailed: 'Không gửi được góp ý. Vui lòng thử lại.'
   },
 
@@ -1277,14 +1277,14 @@ export default {
     heroLine1: 'Học cùng nhau,',
     heroLine2: 'theo thời gian thực.',
     heroText:
-      'Nền tảng học tập cộng tác cho sinh viên đại học — chỉnh sửa ghi chú thời gian thực, thẻ ghi nhớ và câu hỏi tự tạo, cùng phòng học trực tiếp. Không dùng API AI bên ngoài, chỉ là JavaScript theo quy tắc thông minh.',
+      'Nền tảng học tập cộng tác cho sinh viên đại học, với chỉnh sửa ghi chú thời gian thực, thẻ ghi nhớ và câu hỏi tự tạo, cùng phòng học trực tiếp. Không dùng API AI bên ngoài, chỉ là JavaScript theo quy tắc thông minh.',
     startFree: 'Bắt đầu học miễn phí',
     haveAccount: 'Tôi đã có tài khoản',
     features: {
       collabTitle: 'Cộng tác thời gian thực',
       collabText: 'Cùng chỉnh sửa ghi chú với hiện diện, chỉ báo đang gõ và xử lý xung đột phiên bản.',
       flashTitle: 'Thẻ ghi nhớ tự động',
-      flashText: 'Phân tích mẫu định nghĩa biến ghi chú thành thẻ ghi nhớ — không cần API AI.',
+      flashText: 'Phân tích mẫu định nghĩa biến ghi chú thành thẻ ghi nhớ, không cần API AI.',
       quizTitle: 'Câu hỏi thông minh',
       quizText: 'Câu hỏi trắc nghiệm với đáp án gây nhiễu tự tạo và xáo trộn thủ công.',
       diffTitle: 'Phân tích độ khó',

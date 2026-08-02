@@ -19,7 +19,7 @@ defineEmits(['update:search', 'update:subjectId', 'update:sort'])
 
 const subjectOptions = computed(() => [
   { value: '', label: t('notes.allSubjects') },
-  ...props.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+  ...props.subjects.map((s) => ({ value: s.id, label: `${s.code} · ${s.name}` }))
 ])
 const sortOptions = computed(() => [
   { value: 'recent', label: t('notes.sortRecent') },

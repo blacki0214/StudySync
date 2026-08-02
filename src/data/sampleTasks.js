@@ -9,7 +9,7 @@ export const sampleTasks = [
   // ---- Personal tasks (My Tasks page) ----
   {
     id: 'task-1', owner_id: 'demo-user', subject_id: null,
-    title: 'Revise lecture 7 — consensus algorithms', status: 'in_progress',
+    title: 'Revise lecture 7: consensus algorithms', status: 'in_progress',
     priority: 'high', type: 'research', due_date: '2026-06-24',
     description: 'Summarise PoW vs PoS and make flashcards.', position: 0,
     assignee_name: 'You', created_at: '2026-06-20T08:00:00Z'

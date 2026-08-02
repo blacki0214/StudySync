@@ -10,7 +10,7 @@ export const sampleNotes = [
     id: 'note-1',
     subject_id: 'sub-1',
     author_id: 'user-2',
-    title: 'Consensus Mechanisms — Deep Dive',
+    title: 'Consensus Mechanisms: Deep Dive',
     week: 'Week 6',
     read_minutes: 12,
     content:

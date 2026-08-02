@@ -29,7 +29,7 @@ function subjectCode(id) {
 
 const subjectOptions = computed(() => [
   { value: '', label: t('rooms.noSubject') },
-  ...content.subjects.map((s) => ({ value: s.id, label: `${s.code} — ${s.name}` }))
+  ...content.subjects.map((s) => ({ value: s.id, label: `${s.code} · ${s.name}` }))
 ])
 
 // --- Create room ---

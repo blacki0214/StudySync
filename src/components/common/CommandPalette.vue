@@ -68,7 +68,7 @@ const index = computed(() => {
     entries.push({ type: 'notes', icon: 'bi-file-earmark-text', label: n.title, sublabel: subjectStore.getById(n.subject_id)?.code, run: () => go({ name: 'note-detail', params: { id: n.id } }) })
   )
   subjectStore.subjects.forEach((s) =>
-    entries.push({ type: 'subjects', icon: 'bi-journal-bookmark', label: `${s.code} — ${s.name}`, sublabel: s.category, run: () => go({ name: 'subject-hub', params: { id: s.id } }) })
+    entries.push({ type: 'subjects', icon: 'bi-journal-bookmark', label: `${s.code} · ${s.name}`, sublabel: s.category, run: () => go({ name: 'subject-hub', params: { id: s.id } }) })
   )
   content.rooms.forEach((r) =>
     entries.push({ type: 'rooms', icon: 'bi-people', label: r.name, sublabel: r.code, run: () => go({ name: 'study-room', params: { id: r.id } }) })
