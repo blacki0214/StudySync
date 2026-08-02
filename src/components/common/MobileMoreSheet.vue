@@ -10,12 +10,24 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../../stores/authStore.js'
 import { useUiStore } from '../../stores/uiStore.js'
+import { useTourStore } from '../../stores/tourStore.js'
 import { SUPPORTED, setLocale } from '../../i18n/index.js'
 
 const auth = useAuthStore()
 const ui = useUiStore()
+const tour = useTourStore()
 const router = useRouter()
 const { t, locale } = useI18n()
+
+// Phones have no floating "?" button, so guidance lives here instead.
+function runTour() {
+  ui.closeMore()
+  tour.startTour()
+}
+function openHelp(tab) {
+  ui.closeMore()
+  tour.openHelp(tab)
+}
 
 const user = computed(() => auth.user || {})
 
@@ -103,6 +115,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
               >{{ l.short }}</button>
             </span>
           </div>
+        </div>
+
+        <!-- Help & guidance (the phone's stand-in for the desktop "?" button) -->
+        <div class="m-sheet-label">{{ t('help.menuTitle') }}</div>
+        <div class="m-sheet-prefs">
+          <button class="m-pref-row" @click="runTour">
+            <i class="bi bi-play-circle"></i><span>{{ t('help.menuTour') }}</span>
+          </button>
+          <button class="m-pref-row" @click="openHelp('faq')">
+            <i class="bi bi-question-circle"></i><span>{{ t('help.menuFaq') }}</span>
+          </button>
+          <button class="m-pref-row" @click="openHelp('feedback')">
+            <i class="bi bi-chat-heart"></i><span>{{ t('help.menuFeedback') }}</span>
+          </button>
         </div>
 
         <button class="m-sheet-logout" @click="logout">

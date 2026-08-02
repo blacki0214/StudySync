@@ -1,0 +1,629 @@
+/* onboarding.css
+   ----------------------------------------------------------------------------
+   Everything for the new-user guidance flow:
+     · the welcome dialog                       (.tour-welcome*)
+     · the spotlight product tour               (.tour-root / .tour-card)
+     · the "?" help menu and Help centre modal  (.help-*)
+     · the Get-started checklist on the Hub     (.gs-*)
+
+   All of it themes through the tokens in variables.css, so light/dark come for
+   free. Stacking: the tour sits above every other overlay (it must be able to
+   point at the sidebar, the FABs and the modals), the Help centre sits above
+   normal page chrome but below the tour. */
+
+/* The page is frozen while a tour surface is open — otherwise the cut-out
+   drifts away from the element it is supposed to be framing. */
+body.tour-locked {
+  overflow: hidden;
+}
+
+/* ===========================================================================
+   1 · Welcome dialog
+   =========================================================================== */
+.tour-welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+
+.tour-welcome {
+  position: relative;
+  width: min(460px, 100%);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  text-align: center;
+  animation: tour-rise 0.34s var(--ease-fluid) both;
+}
+
+@keyframes tour-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.tour-welcome-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-text-faint);
+  cursor: pointer;
+}
+.tour-welcome-x:hover { background: var(--c-hover); color: var(--c-text); }
+
+.tw-mark {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  border-radius: 18px;
+  background: var(--c-primary-light);
+  display: grid;
+  place-items: center;
+}
+.tw-mark img { width: 40px; height: 40px; object-fit: contain; }
+
+.tw-title { font-size: 1.5rem; font-weight: 800; margin: 0 0 0.35rem; letter-spacing: -0.02em; }
+.tw-sub { color: var(--c-text-muted); margin: 0 0 var(--space-5); line-height: 1.5; }
+
+.tw-points {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+.tw-points li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.tw-points i {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--grad-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.tw-actions { display: flex; gap: var(--space-2); justify-content: center; flex-wrap: wrap; }
+.tw-primary { padding-inline: var(--space-5); }
+.tw-foot { margin: var(--space-4) 0 0; font-size: 0.78rem; color: var(--c-text-faint); }
+
+/* ===========================================================================
+   2 · Spotlight tour
+   =========================================================================== */
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+}
+
+/* The cut-out itself is transparent; its huge shadow spread is what dims the
+   rest of the screen, leaving the highlighted element perfectly sharp. The
+   ring is listed FIRST so it paints on top of the dim. */
+.tour-hole {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.95),
+    0 0 0 9999px rgba(15, 23, 42, 0.62);
+  transition: top 0.32s var(--ease-fluid), left 0.32s var(--ease-fluid),
+              width 0.32s var(--ease-fluid), height 0.32s var(--ease-fluid);
+  pointer-events: none;
+}
+.tour-hole::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.28);
+  animation: tour-pulse 2s ease-out infinite;
+}
+@keyframes tour-pulse {
+  0%   { opacity: 0.9; transform: scale(1); }
+  70%  { opacity: 0;   transform: scale(1.12); }
+  100% { opacity: 0;   transform: scale(1.12); }
+}
+
+/* Steps with no anchor (the closing card) dim the whole screen instead. */
+.tour-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.tour-card {
+  position: fixed;
+  /* Sensible default for the single frame before the first measurement lands;
+     the inline top/left/width from ProductTour override it immediately. */
+  top: 50%;
+  left: 50%;
+  width: 336px;
+  z-index: 2401;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4);
+  transition: top 0.32s var(--ease-fluid), left 0.32s var(--ease-fluid);
+}
+.tour-card.is-centered { text-align: center; padding: var(--space-5); }
+.tour-card.is-centered .tc-head { justify-content: center; }
+.tour-card.is-centered .tc-count { display: none; }
+.tour-card.is-centered .tc-dots { justify-content: center; }
+
+/* Arrow: a rotated square wearing two of the card's borders. */
+.tour-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  transform: rotate(45deg);
+}
+.arrow-left  .tour-arrow { left: -7px;  margin-top: -6px;  border-top: none; border-right: none; }
+.arrow-right .tour-arrow { right: -7px; margin-top: -6px;  border-bottom: none; border-left: none; }
+.arrow-top   .tour-arrow { top: -7px;   margin-left: -6px; border-bottom: none; border-right: none; }
+.arrow-bottom .tour-arrow { bottom: -7px; margin-left: -6px; border-top: none; border-left: none; }
+
+.tc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.tc-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--grad-brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.tc-count {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--c-text-faint);
+  letter-spacing: 0.02em;
+}
+
+.tc-title { font-size: 1.02rem; font-weight: 700; margin: 0 0 0.3rem; }
+.tc-body { color: var(--c-text-muted); font-size: 0.88rem; line-height: 1.55; margin: 0 0 var(--space-4); }
+
+.tc-dots { display: flex; gap: 5px; margin-bottom: var(--space-4); flex-wrap: wrap; }
+.tc-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--c-border-strong);
+  cursor: pointer;
+  transition: background 0.2s ease, width 0.2s var(--ease-fluid);
+}
+.tc-dot.is-done { background: var(--c-primary-light); }
+.tc-dot.is-active { width: 18px; border-radius: 4px; background: var(--c-primary); }
+[data-theme='dark'] .tc-dot.is-done { background: var(--c-primary-dark); }
+
+.tc-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.tc-nav { display: flex; gap: var(--space-2); }
+.tc-skip {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--c-text-faint);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tc-skip:hover { color: var(--c-text); text-decoration: underline; }
+
+.tour-fade-enter-active, .tour-fade-leave-active { transition: opacity 0.2s ease; }
+.tour-fade-enter-from, .tour-fade-leave-to { opacity: 0; }
+
+/* ===========================================================================
+   3 · Help menu ("?" button popover)
+   =========================================================================== */
+.help-menu-root { position: relative; display: flex; }
+
+.fab-help { cursor: pointer; transition: background 0.18s ease, color 0.18s ease, transform 0.18s var(--ease-fluid); }
+.fab-help:hover { background: var(--c-surface-2); color: var(--c-text); }
+.fab-help.is-open { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+
+.help-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  width: 274px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  z-index: 1055;
+}
+.help-menu-head {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-faint);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+}
+.help-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--c-text);
+}
+.help-menu-item:hover { background: var(--c-surface-2); }
+.help-menu-item > i {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.hmi-text { display: flex; flex-direction: column; min-width: 0; }
+.hmi-label { font-size: 0.88rem; font-weight: 600; }
+.hmi-hint { font-size: 0.76rem; color: var(--c-text-muted); line-height: 1.35; }
+
+.help-pop-enter-active, .help-pop-leave-active { transition: opacity 0.16s ease, transform 0.16s var(--ease-fluid); }
+.help-pop-enter-from, .help-pop-leave-to { opacity: 0; transform: translateY(8px) scale(0.98); }
+
+/* ===========================================================================
+   4 · Help centre modal
+   =========================================================================== */
+.help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  background: rgba(15, 23, 42, 0.5);
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+}
+.help-panel {
+  width: min(600px, 100%);
+  max-height: min(86vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: tour-rise 0.28s var(--ease-fluid) both;
+}
+
+.help-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+.help-title { font-size: 1.25rem; font-weight: 800; margin: 0; }
+.help-sub { color: var(--c-text-muted); font-size: 0.86rem; margin: 0.15rem 0 0; }
+.help-x {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.help-x:hover { background: var(--c-hover); color: var(--c-text); }
+
+.help-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--c-border);
+}
+.help-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: none;
+  color: var(--c-text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.help-tab:hover { color: var(--c-text); }
+.help-tab.is-active { color: var(--c-primary-dark); border-bottom-color: var(--c-primary); }
+[data-theme='dark'] .help-tab.is-active { color: var(--c-text); }
+
+.help-body { padding: var(--space-4) var(--space-5) var(--space-5); overflow-y: auto; }
+.help-lead { color: var(--c-text-muted); font-size: 0.88rem; margin: 0 0 var(--space-4); }
+.help-lead-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-faint);
+  margin-bottom: var(--space-2);
+}
+
+/* --- FAQ accordion --- */
+.faq-item { border-bottom: 1px solid var(--c-border); }
+.faq-q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--c-text);
+  cursor: pointer;
+}
+.faq-caret { color: var(--c-text-faint); transition: transform 0.2s var(--ease-fluid); flex-shrink: 0; }
+.faq-item.is-open .faq-caret { transform: rotate(180deg); }
+.faq-a {
+  margin: 0;
+  padding: 0 var(--space-5) var(--space-3) 0;
+  color: var(--c-text-muted);
+  font-size: 0.87rem;
+  line-height: 1.6;
+}
+
+.faq-tour-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  cursor: pointer;
+  text-align: left;
+}
+.faq-tour-cta:hover { filter: brightness(0.98); }
+.faq-tour-cta > i:first-child { font-size: 1.2rem; }
+.faq-tour-cta span { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.faq-tour-cta small { font-weight: 500; opacity: 0.8; }
+[data-theme='dark'] .faq-tour-cta { color: var(--c-text); }
+
+/* --- Support --- */
+.support-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+.support-card:hover { background: var(--c-surface-2); text-decoration: none; color: var(--c-text); }
+.sc-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sc-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.sc-text small { color: var(--c-text-muted); font-size: 0.78rem; }
+.sc-go { color: var(--c-text-faint); font-size: 0.8rem; }
+
+.support-meta {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--c-border);
+}
+.sm-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem var(--space-4);
+  margin: 0;
+  font-size: 0.83rem;
+}
+.sm-grid dt { color: var(--c-text-muted); }
+.sm-grid dd { margin: 0; font-weight: 600; word-break: break-all; }
+
+/* --- Feedback form --- */
+.fb-kinds { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
+.fb-kind {
+  padding: 0.3rem 0.85rem;
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fb-kind:hover { background: var(--c-surface-2); }
+.fb-kind.is-active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+
+.fb-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  margin: var(--space-3) 0 0.3rem;
+}
+.fb-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-4); }
+
+/* ===========================================================================
+   5 · Get-started checklist (Hub)
+   =========================================================================== */
+.gs-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  position: relative;
+  overflow: hidden;
+}
+/* A soft brand wash along the top edge so it reads as a promo, not a widget. */
+.gs-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--grad-brand);
+}
+.gs-card.is-complete::before { background: var(--grad-green); }
+
+.gs-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.gs-title { font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.gs-title i { color: var(--c-primary); }
+.gs-card.is-complete .gs-title i { color: var(--c-warning); }
+.gs-sub { color: var(--c-text-muted); font-size: 0.85rem; margin: 0.15rem 0 0; }
+.gs-dismiss {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-text-faint);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.gs-dismiss:hover { background: var(--c-hover); color: var(--c-text); }
+
+.gs-progress { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-4) 0; }
+.gs-track { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--c-surface-2); overflow: hidden; }
+.gs-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--grad-brand);
+  transition: width 0.4s var(--ease-fluid);
+}
+.gs-card.is-complete .gs-fill { background: var(--grad-green); }
+.gs-count { font-size: 0.78rem; font-weight: 700; color: var(--c-text-muted); white-space: nowrap; }
+
+.gs-items { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.gs-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.gs-item:hover { background: var(--c-surface-2); text-decoration: none; color: var(--c-text); }
+.gs-check {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.gs-item.is-done .gs-check { background: transparent; color: var(--c-success); font-size: 1.15rem; }
+.gs-item-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.gs-item-label { font-size: 0.9rem; font-weight: 600; }
+.gs-item.is-done .gs-item-label { color: var(--c-text-muted); text-decoration: line-through; }
+.gs-item-hint { font-size: 0.78rem; color: var(--c-text-muted); }
+.gs-item.is-done .gs-item-hint { display: none; }
+.gs-go { color: var(--c-text-faint); font-size: 0.8rem; }
+
+.gs-foot { margin-top: var(--space-3); display: flex; justify-content: flex-end; }
+.gs-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--c-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gs-replay:hover { color: var(--c-primary); }
+
+/* ===========================================================================
+   6 · Small screens
+   =========================================================================== */
+@media (max-width: 768px) {
+  .tour-welcome { padding: var(--space-5) var(--space-4) var(--space-4); }
+  .tw-title { font-size: 1.25rem; }
+  .tw-actions { flex-direction: column-reverse; }
+  .tw-actions .btn { width: 100%; }
+
+  .help-menu { width: min(280px, calc(100vw - 32px)); }
+  .help-backdrop { padding: 0; place-items: end stretch; }
+  .help-panel {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .help-head, .help-tabs, .help-body { padding-inline: var(--space-4); }
+}
+
+/* Users who ask for less motion get the guidance without the animation. */
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole, .tour-card, .gs-fill { transition: none; }
+  .tour-hole::after { animation: none; }
+  .tour-welcome, .help-panel { animation: none; }
+}

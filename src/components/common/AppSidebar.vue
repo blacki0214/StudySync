@@ -30,32 +30,33 @@ const { t, locale } = useI18n()
 // The nav adapts to the signed-in role: students study, teachers teach, admins
 // run a school. Teachers/admins still reach personal features via the account
 // menu + direct routes — this is just the primary rail.
+// `tour` is the data-tour hook the product tour spotlights (see tourStore).
 const studentLinks = [
-  { to: '/hub', icon: 'bi-house', activeIcon: 'bi-house-fill', key: 'nav.hub' },
-  { to: '/my-subjects', icon: 'bi-folder', activeIcon: 'bi-folder-fill', key: 'nav.mySubjects' },
+  { to: '/hub', icon: 'bi-house', activeIcon: 'bi-house-fill', key: 'nav.hub', tour: 'nav-hub' },
+  { to: '/my-subjects', icon: 'bi-folder', activeIcon: 'bi-folder-fill', key: 'nav.mySubjects', tour: 'nav-my-subjects' },
   { to: '/subjects', icon: 'bi-journal-bookmark', activeIcon: 'bi-journal-bookmark-fill', key: 'nav.subjects' },
-  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
-  { to: '/tasks', icon: 'bi-check2-square', activeIcon: 'bi-check-square-fill', key: 'nav.tasks' },
-  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule' },
-  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms' },
-  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards' },
-  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
-  { to: '/classes', icon: 'bi-easel2', activeIcon: 'bi-easel2-fill', key: 'nav.classes' }
+  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes', tour: 'nav-notes' },
+  { to: '/tasks', icon: 'bi-check2-square', activeIcon: 'bi-check-square-fill', key: 'nav.tasks', tour: 'nav-tasks' },
+  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule', tour: 'nav-schedule' },
+  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms', tour: 'nav-rooms' },
+  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards', tour: 'nav-flashcards' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community', tour: 'nav-community' },
+  { to: '/classes', icon: 'bi-easel2', activeIcon: 'bi-easel2-fill', key: 'nav.classes', tour: 'nav-classes' }
 ]
 const teacherLinks = [
-  { to: '/teach', icon: 'bi-easel', activeIcon: 'bi-easel-fill', key: 'nav.teach' },
-  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
-  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes' },
-  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule' },
-  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms' },
-  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
-  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards' }
+  { to: '/teach', icon: 'bi-easel', activeIcon: 'bi-easel-fill', key: 'nav.teach', tour: 'nav-teach' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes', tour: 'nav-classes' },
+  { to: '/notes', icon: 'bi-file-earmark-text', activeIcon: 'bi-file-earmark-text-fill', key: 'nav.collabNotes', tour: 'nav-notes' },
+  { to: '/schedule', icon: 'bi-calendar-week', activeIcon: 'bi-calendar-week-fill', key: 'nav.schedule', tour: 'nav-schedule' },
+  { to: '/rooms', icon: 'bi-people', activeIcon: 'bi-people-fill', key: 'nav.studyRooms', tour: 'nav-rooms' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community', tour: 'nav-community' },
+  { to: '/flashcards', icon: 'bi-stars', activeIcon: 'bi-stars', key: 'nav.flashcards', tour: 'nav-flashcards' }
 ]
 const adminLinks = [
-  { to: '/school', icon: 'bi-building', activeIcon: 'bi-building-fill', key: 'nav.school' },
-  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes' },
-  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community' },
-  { to: '/settings', icon: 'bi-gear', activeIcon: 'bi-gear-fill', key: 'nav.settings' }
+  { to: '/school', icon: 'bi-building', activeIcon: 'bi-building-fill', key: 'nav.school', tour: 'nav-school' },
+  { to: '/classes', icon: 'bi-mortarboard', activeIcon: 'bi-mortarboard-fill', key: 'nav.classes', tour: 'nav-classes' },
+  { to: '/community', icon: 'bi-chat-square-text', activeIcon: 'bi-chat-square-text-fill', key: 'nav.community', tour: 'nav-community' },
+  { to: '/settings', icon: 'bi-gear', activeIcon: 'bi-gear-fill', key: 'nav.settings', tour: 'nav-settings' }
 ]
 const links = computed(() => (auth.isAdmin ? adminLinks : auth.isTeacher ? teacherLinks : studentLinks))
 
@@ -84,7 +85,7 @@ async function logout() {
     </div>
 
     <!-- Global search → command palette -->
-    <button class="sidebar-search" @click="palette.show()">
+    <button class="sidebar-search" data-tour="search" @click="palette.show()">
       <i class="bi bi-search"></i>
       <span>{{ t('nav.search') }}</span>
       <span class="kbd">{{ searchShortcut }}</span>
@@ -97,6 +98,7 @@ async function logout() {
         :key="link.to"
         :to="link.to"
         class="sidebar-link"
+        :data-tour="link.tour"
         @click="ui.closeSidebar()"
       >
         <i class="bi link-icon link-icon-outline" :class="link.icon"></i>

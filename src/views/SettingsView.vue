@@ -12,6 +12,7 @@ import { useAuthStore } from '../stores/authStore.js'
 import { useUiStore } from '../stores/uiStore.js'
 import { useNotificationStore } from '../stores/notificationStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
+import { useTourStore } from '../stores/tourStore.js'
 import { SUPPORTED, setLocale } from '../i18n/index.js'
 import { resizeImageToDataUrl } from '../utils/image.js'
 import AppSelect from '../components/common/AppSelect.vue'
@@ -22,6 +23,7 @@ const auth = useAuthStore()
 const ui = useUiStore()
 const notif = useNotificationStore()
 const dialog = useDialogStore()
+const tour = useTourStore()
 
 const user = computed(() => auth.user || {})
 const section = ref('account')
@@ -193,6 +195,26 @@ async function signOut() {
           <div class="settings-row">
             <div class="sr-text"><div class="sr-label">{{ t('settings.language') }}</div><div class="sr-hint">{{ t('settings.languageHint') }}</div></div>
             <AppSelect class="set-lang" :model-value="locale" :options="langOptions" @update:model-value="setLocale" />
+          </div>
+        </div>
+
+        <!-- Onboarding: the same actions as the floating "?" menu, for users
+             who look for them in Settings instead. -->
+        <div class="settings-block">
+          <div class="sb-title">{{ t('settings.guidance') }}</div>
+          <div class="settings-row">
+            <div class="sr-text"><div class="sr-label">{{ t('help.menuTour') }}</div><div class="sr-hint">{{ t('help.menuTourHint') }}</div></div>
+            <button class="btn btn-outline-soft btn-sm" @click="tour.startTour()"><i class="bi bi-play-circle"></i>{{ t('settings.replay') }}</button>
+          </div>
+          <div class="settings-row">
+            <div class="sr-text"><div class="sr-label">{{ t('help.menuChecklist') }}</div><div class="sr-hint">{{ t('help.menuChecklistHint') }}</div></div>
+            <button class="btn btn-outline-soft btn-sm" :disabled="!tour.checklistDismissed" @click="tour.showChecklist()">
+              <i class="bi bi-eye"></i>{{ tour.checklistDismissed ? t('settings.showIt') : t('settings.shown') }}
+            </button>
+          </div>
+          <div class="settings-row">
+            <div class="sr-text"><div class="sr-label">{{ t('help.title') }}</div><div class="sr-hint">{{ t('help.subtitle') }}</div></div>
+            <button class="btn btn-outline-soft btn-sm" @click="tour.openHelp('faq')"><i class="bi bi-question-circle"></i>{{ t('settings.openHelp') }}</button>
           </div>
         </div>
       </div>

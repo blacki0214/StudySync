@@ -20,6 +20,7 @@ import RecentNotes from '../components/hub/RecentNotes.vue'
 import FlashcardsDue from '../components/hub/FlashcardsDue.vue'
 import UpcomingSchedule from '../components/hub/UpcomingSchedule.vue'
 import TasksOverview from '../components/hub/TasksOverview.vue'
+import GetStartedChecklist from '../components/hub/GetStartedChecklist.vue'
 
 const auth = useAuthStore()
 const content = useContentStore()
@@ -68,6 +69,9 @@ const mySubjects = computed(() => content.subjects.filter((s) => s.progress > 0)
         <router-link to="/notes" class="btn btn-brand"><i class="bi bi-plus-lg"></i>{{ t('dashboard.newNote') }}</router-link>
       </div>
     </header>
+
+    <!-- First-run guidance: five things to try. Hides itself once dismissed. -->
+    <GetStartedChecklist />
 
     <!-- Stat cards (personal analytics) -->
     <div class="row g-3 row-gap-section">

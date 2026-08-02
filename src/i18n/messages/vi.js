@@ -924,7 +924,12 @@ export default {
     pwMismatch: 'Mật khẩu không khớp.',
     pwChanged: 'Đã cập nhật mật khẩu',
     pwFailed: 'Không thể cập nhật mật khẩu.',
-    session: 'Phiên đăng nhập'
+    session: 'Phiên đăng nhập',
+    guidance: 'Hướng dẫn',
+    replay: 'Xem lại',
+    showIt: 'Hiện lại',
+    shown: 'Đang hiện',
+    openHelp: 'Mở'
   },
 
   profile: {
@@ -1068,6 +1073,201 @@ export default {
     updatePassword: 'Cập nhật mật khẩu',
     resetDoneTitle: 'Đã cập nhật mật khẩu',
     resetDoneSub: 'Bây giờ bạn có thể đăng nhập bằng mật khẩu mới.'
+  },
+
+  /* Hướng dẫn lần đầu: hộp thoại chào mừng + tour có đèn rọi (xem tourStore). */
+  tour: {
+    there: 'bạn',
+    welcomeTitle: 'Chào mừng đến StudySync, {name}!',
+    welcomeSub: 'Tour hai phút sẽ chỉ cho bạn mọi thứ nằm ở đâu. Bạn có thể bỏ qua và xem lại bất cứ lúc nào.',
+    welcomePoint1: 'Viết và chia sẻ ghi chú cùng bạn học',
+    welcomePoint2: 'Biến ghi chú thành thẻ ghi nhớ, câu hỏi và tóm tắt',
+    welcomePoint3: 'Học chung trong phòng học trực tuyến và lớp học',
+    takeTour: 'Xem tour',
+    skipForNow: 'Bỏ qua',
+    replayHint: 'Bạn có thể mở lại tour bất cứ lúc nào từ nút ?.',
+    progress: 'Tiến độ tour',
+    skip: 'Bỏ qua tour',
+    back: 'Quay lại',
+    next: 'Tiếp',
+    finish: 'Đã hiểu',
+
+    steps: {
+      hub: {
+        title: 'Trung tâm học tập',
+        body: 'Nơi bắt đầu. Giờ tập trung, buổi học sắp tới, ghi chú gần đây và việc cần học tiếp — tất cả trong một màn hình.'
+      },
+      mySubjects: {
+        title: 'Môn học của tôi',
+        body: 'Mọi môn bạn đang theo, mỗi môn có không gian riêng cho ghi chú, tài liệu và tiến độ. Duyệt danh mục đầy đủ để thêm môn mới.'
+      },
+      notes: {
+        title: 'Ghi chú cộng tác',
+        body: 'Trình soạn thảo để bạn và bạn học viết cùng lúc theo thời gian thực. Chia sẻ liên kết, để lại bình luận và khôi phục bằng lịch sử phiên bản.'
+      },
+      tasks: {
+        title: 'Nhiệm vụ',
+        body: 'Theo dõi bài tập và việc cần học dưới dạng danh sách, bảng hoặc bảng kéo thả. Trạng thái tùy chỉnh được theo cách bạn làm việc.'
+      },
+      schedule: {
+        title: 'Lịch',
+        body: 'Mọi thứ có hạn chót trên cùng một lịch — nhiệm vụ cá nhân, bài tập lớp và buổi học.'
+      },
+      rooms: {
+        title: 'Phòng học chung',
+        body: 'Phòng trực tuyến để học cùng nhau: đồng hồ chung, trò chuyện, gọi thoại và danh sách ai đang có mặt.'
+      },
+      flashcards: {
+        title: 'Thẻ ghi nhớ & AI',
+        body: 'Chọn một ghi chú, AI sẽ tạo thẻ ghi nhớ, câu hỏi trắc nghiệm, bản tóm tắt hoặc từ khóa. Ôn lại bằng phương pháp lặp lại ngắt quãng.'
+      },
+      community: {
+        title: 'Cộng đồng',
+        body: 'Đặt câu hỏi, chia sẻ tài liệu và bình chọn nội dung hữu ích. Trả lời theo luồng giúp thảo luận dài vẫn dễ đọc.'
+      },
+      classes: {
+        title: 'Lớp học',
+        body: 'Tham gia lớp bằng mã giáo viên cung cấp để nhận bài tập, bài kiểm tra, slide và thảo luận của lớp đó.'
+      },
+      teach: {
+        title: 'Bảng điều khiển giảng dạy',
+        body: 'Mọi lớp bạn phụ trách, kèm thao tác nhanh cho bài tập, bài kiểm tra, điểm danh và tình hình học của sinh viên.'
+      },
+      school: {
+        title: 'Bảng điều khiển trường',
+        body: 'Góc nhìn toàn trường: giáo viên, lớp học và sĩ số trên toàn hệ thống.'
+      },
+      settings: {
+        title: 'Cài đặt',
+        body: 'Hồ sơ, giao diện, ngôn ngữ và tùy chọn thông báo của bạn đều ở đây.'
+      },
+      search: {
+        title: 'Tìm mọi thứ',
+        body: 'Một ô cho ghi chú, môn học, nhiệm vụ và người dùng — kèm lối tắt tới mọi trang. Đây là cách di chuyển nhanh nhất.'
+      },
+      ai: {
+        title: 'Trợ lý AI',
+        body: 'Hỏi về chính ghi chú của bạn và nhận câu trả lời kèm nguồn, hoặc tạo tài liệu ôn tập ngay lập tức.'
+      },
+      help: {
+        title: 'Trợ giúp ở đây',
+        body: 'Nút ? mở lại tour này và chứa Câu hỏi thường gặp, hỗ trợ cùng biểu mẫu góp ý. Không cần ghi nhớ gì cả.'
+      },
+      more: {
+        title: 'Mọi thứ còn lại',
+        body: 'Chạm Thêm để vào môn học, lịch, phòng học chung, thẻ ghi nhớ, cộng đồng và lớp học — cùng giao diện, ngôn ngữ và trợ giúp.'
+      },
+      finish: {
+        title: 'Xong rồi!',
+        body: 'Đó là toàn bộ ứng dụng. Danh sách Bắt đầu trên Trung tâm học tập có năm việc nên thử trước — và nút ? luôn mở lại tour này khi bạn cần.'
+      }
+    }
+  },
+
+  /* Thẻ "năm phút đầu tiên" trên Trung tâm học tập. */
+  checklist: {
+    title: 'Bắt đầu',
+    sub: 'Năm việc nhanh để StudySync thành của bạn.',
+    titleDone: 'Bạn đã sẵn sàng!',
+    subDone: 'Bạn đã thử hết danh sách. Làm tốt lắm.',
+    progress: 'Xong {done}/{total}',
+    dismiss: 'Ẩn thẻ này',
+    hideIt: 'Ẩn thẻ này',
+    replayTour: 'Xem lại tour',
+    items: {
+      profile: { label: 'Cá nhân hóa hồ sơ', hint: 'Thêm ảnh, ngành học và giới thiệu ngắn.' },
+      note: { label: 'Viết ghi chú đầu tiên', hint: 'Tạo một ghi chú — hoặc rủ bạn học viết cùng.' },
+      task: { label: 'Thêm một nhiệm vụ', hint: 'Theo dõi một bài tập hoặc việc cần học.' },
+      flashcards: { label: 'Thử thẻ ghi nhớ AI', hint: 'Biến ghi chú thành bộ thẻ để ôn tập.' },
+      rooms: { label: 'Ghé một phòng học chung', hint: 'Xem cách học nhóm hoạt động.' }
+    }
+  },
+
+  /* Menu nút "?" và cửa sổ Trung tâm trợ giúp. */
+  help: {
+    menuTitle: 'Trợ giúp & hướng dẫn',
+    menuTour: 'Xem tour sản phẩm',
+    menuTourHint: 'Đi nhanh qua từng tính năng.',
+    menuChecklist: 'Danh sách bắt đầu',
+    menuChecklistHint: 'Hiện lại danh sách trên Trung tâm học tập.',
+    menuFaq: 'Trợ giúp & câu hỏi thường gặp',
+    menuFaqHint: 'Giải đáp những thắc mắc phổ biến.',
+    menuSupport: 'Liên hệ hỗ trợ',
+    menuSupportHint: 'Gặp người thật khi bạn gặp khó.',
+    menuFeedback: 'Gửi góp ý',
+    menuFeedbackHint: 'Báo lỗi hoặc đề xuất ý tưởng.',
+
+    title: 'Trung tâm trợ giúp',
+    subtitle: 'Giải đáp, hỗ trợ và nơi để bạn nói lên suy nghĩ.',
+    tabFaq: 'Hỏi đáp',
+    tabSupport: 'Hỗ trợ',
+    tabFeedback: 'Góp ý',
+
+    faq: {
+      start: {
+        q: 'Tôi mới hoàn toàn — nên bắt đầu từ đâu?',
+        a: 'Hãy bắt đầu ở Trung tâm học tập và làm theo danh sách Bắt đầu. Tạo một ghi chú và thêm một nhiệm vụ là đã bao quát phần lớn; mọi thứ khác đều xây trên hai việc đó.'
+      },
+      notes: {
+        q: 'Soạn thảo cộng tác hoạt động thế nào?',
+        a: 'Mở ghi chú rồi bấm Chia sẻ. Bất kỳ ai có liên kết (và quyền sửa) đều có thể gõ cùng lúc với bạn — bạn sẽ thấy con trỏ của họ. Lịch sử phiên bản cho phép khôi phục mọi thay đổi.'
+      },
+      ai: {
+        q: 'AI làm được gì, và nó có đọc ghi chú của tôi không?',
+        a: 'AI tạo thẻ ghi nhớ, câu hỏi, tóm tắt và từ khóa từ ghi chú bạn chọn, đồng thời trả lời câu hỏi chỉ dựa trên nguồn bạn chỉ định. Nó chạy trên ghi chú bạn chọn — không tự duyệt toàn bộ tài khoản của bạn.'
+      },
+      flashcards: {
+        q: 'Thẻ ghi nhớ quyết định hiển thị gì cho tôi?',
+        a: 'Thẻ dùng phương pháp lặp lại ngắt quãng: thẻ bạn thấy khó sẽ quay lại sớm hơn, thẻ đã thuộc sẽ giãn ra xa hơn. Trang Thẻ ghi nhớ hiển thị những thẻ đến hạn hôm nay.'
+      },
+      tasks: {
+        q: 'Tôi đổi được trạng thái nhiệm vụ không?',
+        a: 'Được. Mở Nhiệm vụ, chọn Sửa trạng thái để đổi tên, đổi màu hoặc sắp xếp lại, hoặc chọn mẫu có sẵn. Mọi mục có hạn chót cũng xuất hiện trên Lịch của bạn.'
+      },
+      rooms: {
+        q: 'Phòng học chung là gì?',
+        a: 'Là không gian trực tuyến để học cùng người khác: đồng hồ chung, trò chuyện, gọi thoại và danh sách ai đang có mặt. Bạn có thể tạo phòng và mời bạn học, hoặc vào phòng đang mở.'
+      },
+      classes: {
+        q: 'Làm sao để vào lớp của tôi?',
+        a: 'Xin giáo viên mã tham gia, mở mục Lớp học và nhập mã. Bạn sẽ nhận được bài tập, bài kiểm tra, slide và thảo luận của lớp đó.'
+      },
+      privacy: {
+        q: 'Ai có thể xem ghi chú của tôi?',
+        a: 'Chỉ mình bạn, cho tới khi bạn chia sẻ. Ghi chú chỉ hiện với người khác khi bạn bật liên kết chia sẻ hoặc đăng nó lên lớp học hay cộng đồng.'
+      },
+      shortcuts: {
+        q: 'Có phím tắt không?',
+        a: 'Ctrl+K (Cmd+K trên Mac) mở tìm kiếm ở mọi nơi và cũng nhảy tới bất kỳ trang nào. Trong tour, phím mũi tên chuyển bước và Esc để thoát.'
+      }
+    },
+
+    supportLead: 'Không tìm thấy câu trả lời? Đây là cách liên hệ với chúng tôi.',
+    supportEmail: 'Hỗ trợ qua email',
+    supportBug: 'Báo lỗi',
+    supportBugHint: 'Có gì hỏng? Hãy kể chuyện gì đã xảy ra.',
+    supportTour: 'Xem lại tour sản phẩm',
+    supportTourHint: 'Đi qua các tính năng một lần nữa.',
+    supportDetails: 'Hữu ích khi bạn báo lỗi',
+    supportAccount: 'Tài khoản',
+    supportPage: 'Trang hiện tại',
+    mailSubject: 'Yêu cầu hỗ trợ StudySync',
+    mailBody: 'Mô tả bạn đang làm gì và điều gì đã sai:',
+
+    feedbackLead: 'Hãy cho chúng tôi biết điều gì hiệu quả và điều gì chưa. Chúng tôi đọc tất cả.',
+    feedbackKind: 'Loại góp ý',
+    kind: {
+      bug: 'Lỗi',
+      idea: 'Ý tưởng',
+      question: 'Câu hỏi',
+      other: 'Khác'
+    },
+    feedbackMessage: 'Nội dung',
+    feedbackPlaceholder: 'Chuyện gì đã xảy ra, hoặc bạn muốn thấy điều gì?',
+    feedbackEmail: 'Email phản hồi (không bắt buộc)',
+    feedbackSend: 'Gửi góp ý',
+    feedbackThanks: 'Cảm ơn — góp ý của bạn đã được gửi.',
+    feedbackFailed: 'Không gửi được góp ý. Vui lòng thử lại.'
   },
 
   landing: {

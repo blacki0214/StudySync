@@ -926,7 +926,12 @@ export default {
     pwMismatch: 'The passwords do not match.',
     pwChanged: 'Password updated',
     pwFailed: 'Could not update the password.',
-    session: 'Session'
+    session: 'Session',
+    guidance: 'Guidance',
+    replay: 'Replay',
+    showIt: 'Show it',
+    shown: 'Showing',
+    openHelp: 'Open'
   },
 
   profile: {
@@ -1070,6 +1075,201 @@ export default {
     updatePassword: 'Update password',
     resetDoneTitle: 'Password updated',
     resetDoneSub: 'You can now log in with your new password.'
+  },
+
+  /* First-run guidance: welcome dialog + spotlight tour (see tourStore). */
+  tour: {
+    there: 'there',
+    welcomeTitle: 'Welcome to StudySync, {name}!',
+    welcomeSub: 'A two-minute tour will show you where everything lives. You can skip it and come back to it whenever you like.',
+    welcomePoint1: 'Write and share notes with your classmates',
+    welcomePoint2: 'Turn any note into flashcards, quizzes and summaries',
+    welcomePoint3: 'Study together in live rooms and classes',
+    takeTour: 'Take the tour',
+    skipForNow: 'Skip for now',
+    replayHint: 'You can restart the tour any time from the ? button.',
+    progress: 'Tour progress',
+    skip: 'Skip tour',
+    back: 'Back',
+    next: 'Next',
+    finish: 'Got it',
+
+    steps: {
+      hub: {
+        title: 'Your Study Hub',
+        body: 'Home base. Your focus hours, upcoming sessions, recent notes and what to study next — all in one glance.'
+      },
+      mySubjects: {
+        title: 'My Subjects',
+        body: 'Every subject you are enrolled in, with its own workspace for notes, documents and progress. Browse the full catalogue to add more.'
+      },
+      notes: {
+        title: 'Collaborative Notes',
+        body: 'A rich editor where you and your classmates can write together in real time. Share a link, leave comments, and roll back with version history.'
+      },
+      tasks: {
+        title: 'Tasks',
+        body: 'Track assignments and study to-dos as a list, table or board. Statuses are fully customisable to match how you work.'
+      },
+      schedule: {
+        title: 'Schedule',
+        body: 'Everything with a due date on one calendar — your tasks, class assignments and study sessions.'
+      },
+      rooms: {
+        title: 'Study Rooms',
+        body: 'Live rooms for studying together: shared timers, chat, voice and a presence list so you can see who else is working.'
+      },
+      flashcards: {
+        title: 'Flashcards & AI',
+        body: 'Point the AI at a note and it writes flashcards, quiz questions, a summary or key terms. Review them with spaced repetition.'
+      },
+      community: {
+        title: 'Community',
+        body: 'Ask questions, share resources and vote on what helps. Threaded replies keep long discussions readable.'
+      },
+      classes: {
+        title: 'Classes',
+        body: 'Join a class with the code your teacher gives you to get its assignments, quizzes, slides and discussions.'
+      },
+      teach: {
+        title: 'Your teaching dashboard',
+        body: 'Every class you run, with quick actions for assignments, quizzes and attendance, plus how your students are doing.'
+      },
+      school: {
+        title: 'School dashboard',
+        body: 'The institution view: teachers, classes and enrolment across your whole school.'
+      },
+      settings: {
+        title: 'Settings',
+        body: 'Your profile, theme, language and notification preferences all live here.'
+      },
+      search: {
+        title: 'Search anything',
+        body: 'One box for notes, subjects, tasks and people — and a jump-to for every page. It is the fastest way around the app.'
+      },
+      ai: {
+        title: 'AI assistant',
+        body: 'Ask a question about your own notes and get an answer with sources, or generate study material on the spot.'
+      },
+      help: {
+        title: 'Help lives here',
+        body: 'The ? button reopens this tour and holds the FAQ, support and a feedback form. Nothing to memorise.'
+      },
+      more: {
+        title: 'Everything else',
+        body: 'Tap More for subjects, schedule, study rooms, flashcards, community and classes — plus theme, language and help.'
+      },
+      finish: {
+        title: 'You are all set',
+        body: 'That is the whole app. The Get-started checklist on your Hub has five things to try first — and the ? button brings this tour back whenever you want it.'
+      }
+    }
+  },
+
+  /* The "first five minutes" card on the Hub. */
+  checklist: {
+    title: 'Get started',
+    sub: 'Five quick things to make StudySync yours.',
+    titleDone: 'You are all set up!',
+    subDone: 'You have tried everything on the list. Nice work.',
+    progress: '{done} of {total} done',
+    dismiss: 'Hide this card',
+    hideIt: 'Hide this card',
+    replayTour: 'Replay the tour',
+    items: {
+      profile: { label: 'Personalise your profile', hint: 'Add a photo, your program and a short bio.' },
+      note: { label: 'Write your first note', hint: 'Start a note — or invite a classmate to write it with you.' },
+      task: { label: 'Add a task', hint: 'Track one assignment or study to-do.' },
+      flashcards: { label: 'Try AI flashcards', hint: 'Turn a note into a deck you can review.' },
+      rooms: { label: 'Look inside a study room', hint: 'See how studying together works.' }
+    }
+  },
+
+  /* The "?" menu and the Help centre modal. */
+  help: {
+    menuTitle: 'Help & guidance',
+    menuTour: 'Take the product tour',
+    menuTourHint: 'A quick walk through every feature.',
+    menuChecklist: 'Get-started checklist',
+    menuChecklistHint: 'Bring the checklist back to your Hub.',
+    menuFaq: 'Help & FAQ',
+    menuFaqHint: 'Answers to the common questions.',
+    menuSupport: 'Contact support',
+    menuSupportHint: 'Reach a human when you are stuck.',
+    menuFeedback: 'Send feedback',
+    menuFeedbackHint: 'Report a bug or suggest an idea.',
+
+    title: 'Help centre',
+    subtitle: 'Answers, support and a place to tell us what you think.',
+    tabFaq: 'FAQ',
+    tabSupport: 'Support',
+    tabFeedback: 'Feedback',
+
+    faq: {
+      start: {
+        q: 'I am brand new — where do I start?',
+        a: 'Start on your Hub and work through the Get-started checklist. Creating a note and adding a task covers most of what you need; everything else builds on those two.'
+      },
+      notes: {
+        q: 'How does collaborative editing work?',
+        a: 'Open a note and share it from the Share button. Anyone with the link (and edit permission) can type at the same time as you — you will see their cursor. Version history lets you roll back any change.'
+      },
+      ai: {
+        q: 'What can the AI do, and does it read my notes?',
+        a: 'It generates flashcards, quiz questions, summaries and key terms from a note you choose, and answers questions using only the sources you point it at. It runs on the note you select — it does not browse your whole account on its own.'
+      },
+      flashcards: {
+        q: 'How do flashcards decide what to show me?',
+        a: 'Cards use spaced repetition: ones you find hard come back sooner, ones you know are pushed further out. The Flashcards page shows what is due today.'
+      },
+      tasks: {
+        q: 'Can I change the task statuses?',
+        a: 'Yes. Open Tasks, then Edit statuses to rename, recolour or reorder them, or pick a ready-made template. Anything with a due date also appears on your Schedule.'
+      },
+      rooms: {
+        q: 'What is a study room?',
+        a: 'A live space for studying with other people: a shared timer, chat, voice and a list of who is currently in. Create one and invite classmates, or join an open room.'
+      },
+      classes: {
+        q: 'How do I join my class?',
+        a: 'Ask your teacher for the join code, then open Classes and enter it. You will get that class assignments, quizzes, slides and discussions.'
+      },
+      privacy: {
+        q: 'Who can see my notes?',
+        a: 'Only you, until you share them. A note becomes visible to others when you turn on its share link or post it to a class or the community.'
+      },
+      shortcuts: {
+        q: 'Are there keyboard shortcuts?',
+        a: 'Ctrl+K (Cmd+K on Mac) opens search from anywhere, which also jumps to any page. During the tour, the arrow keys move between steps and Esc leaves it.'
+      }
+    },
+
+    supportLead: 'Cannot find the answer? Here is how to reach us.',
+    supportEmail: 'Email support',
+    supportBug: 'Report a bug',
+    supportBugHint: 'Something broken? Tell us what happened.',
+    supportTour: 'Replay the product tour',
+    supportTourHint: 'Walk through the features again.',
+    supportDetails: 'Handy when you report something',
+    supportAccount: 'Account',
+    supportPage: 'Current page',
+    mailSubject: 'StudySync support request',
+    mailBody: 'Describe what you were doing and what went wrong:',
+
+    feedbackLead: 'Tell us what is working and what is not. We read everything.',
+    feedbackKind: 'Type of feedback',
+    kind: {
+      bug: 'Bug',
+      idea: 'Idea',
+      question: 'Question',
+      other: 'Other'
+    },
+    feedbackMessage: 'Your message',
+    feedbackPlaceholder: 'What happened, or what would you like to see?',
+    feedbackEmail: 'Reply-to email (optional)',
+    feedbackSend: 'Send feedback',
+    feedbackThanks: 'Thanks — your feedback was sent.',
+    feedbackFailed: 'Could not send your feedback. Please try again.'
   },
 
   landing: {

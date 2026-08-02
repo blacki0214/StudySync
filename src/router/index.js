@@ -8,6 +8,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/authStore.js'
+import { useTourStore } from '../stores/tourStore.js'
 
 const routes = [
   // The marketing landing page is removed — go straight to the app. Logged-out
@@ -84,6 +85,13 @@ router.beforeEach(async (to) => {
     return auth.homePath
   }
   return true
+})
+
+// Tick off the "explore this" items on the Hub's Get-started checklist. Only a
+// handful of paths map to a milestone (see tourStore); everything else is a
+// no-op, so this stays cheap.
+router.afterEach((to) => {
+  useTourStore().noteVisit(to.path)
 })
 
 export default router
