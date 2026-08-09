@@ -11,7 +11,9 @@ import { htmlToText } from '../../utils/html.js'
 const props = defineProps({
   note: { type: Object, required: true },
   subjectCode: { type: String, default: '' },
-  deletable: { type: Boolean, default: false }
+  deletable: { type: Boolean, default: false },
+  /** Active search term — v-highlight marks it inside the title and excerpt. */
+  highlight: { type: String, default: '' }
 })
 defineEmits(['delete'])
 const { t } = useI18n()
@@ -33,8 +35,8 @@ const excerpt = computed(() => plain.value.slice(0, 180))
     <div class="d-flex align-items-start gap-2">
       <span class="badge-soft">{{ subjectCode || 'Note' }}</span>
     </div>
-    <div class="note-title mt-3">{{ note.title }}</div>
-    <p class="note-excerpt">{{ excerpt }}</p>
+    <div v-highlight="highlight" class="note-title mt-3">{{ note.title }}</div>
+    <p v-highlight="highlight" class="note-excerpt">{{ excerpt }}</p>
     <div class="note-meta">
       <span><i class="bi bi-heart-fill text-danger me-1"></i>{{ note.likes_count }}</span>
       <span><i class="bi bi-clock-history me-1"></i>v{{ note.version }}</span>

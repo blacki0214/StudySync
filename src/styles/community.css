@@ -157,6 +157,43 @@
 .reply-composer.top { margin: 0 0 var(--space-3); }
 
 /* ----------------------------------------------------------------------------
+   Free-text search above the filter pills. The pill narrows the set, the query
+   narrows it again — matches are marked by v-highlight. */
+.community-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.community-search:focus-within { border-color: var(--c-primary); }
+.community-search > .bi-search { color: var(--c-text-muted); }
+.community-search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--c-text);
+  font-size: 0.92rem;
+  padding: 0.65rem 0;
+}
+/* Chrome/Safari draw their own clear "x" on type=search — we provide our own. */
+.community-search-input::-webkit-search-cancel-button { display: none; }
+.community-search-clear {
+  border: none;
+  background: none;
+  color: var(--c-text-faint);
+  padding: 0.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.community-search-clear:hover { color: var(--c-text); }
+
+/* ----------------------------------------------------------------------------
    Phones: tighten the composer + cards so they don't feel oversized, and give
    the composer input room for its two-line placeholder. */
 @media (max-width: 768px) {

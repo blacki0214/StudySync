@@ -636,6 +636,15 @@ export default {
     legend: '= detected technical term.'
   },
 
+  // Shared <Pagination> control (notes list, community feed, …).
+  pager: {
+    label: 'Pagination',
+    showing: 'Showing {from}–{to} of {total}',
+    previous: 'Previous page',
+    next: 'Next page',
+    page: 'Page {n}'
+  },
+
   palette: {
     placeholder: 'Search notes, subjects, rooms, or run a command...',
     empty: 'No results.',
@@ -863,6 +872,7 @@ export default {
     title: 'Community',
     sub: 'Ask, answer, and earn reputation across 420+ subjects.',
     newPost: 'New post',
+    searchPlaceholder: 'Search posts by title, content, subject or tag...',
     askPlaceholder: 'Ask a question or share something useful...',
     ai: 'AI',
     post: 'Post',

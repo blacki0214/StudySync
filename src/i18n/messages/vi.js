@@ -635,6 +635,15 @@ export default {
     legend: '= thuật ngữ kỹ thuật được phát hiện.'
   },
 
+  // Bộ điều khiển <Pagination> dùng chung (danh sách ghi chú, cộng đồng, …).
+  pager: {
+    label: 'Phân trang',
+    showing: 'Hiển thị {from}–{to} trong {total}',
+    previous: 'Trang trước',
+    next: 'Trang sau',
+    page: 'Trang {n}'
+  },
+
   palette: {
     placeholder: 'Tìm ghi chú, môn học, phòng, hoặc chạy lệnh...',
     empty: 'Không có kết quả.',
@@ -861,6 +870,7 @@ export default {
     title: 'Cộng đồng',
     sub: 'Hỏi, trả lời và tích luỹ uy tín trên hơn 420 môn học.',
     newPost: 'Bài viết mới',
+    searchPlaceholder: 'Tìm bài theo tiêu đề, nội dung, môn học hoặc thẻ...',
     askPlaceholder: 'Đặt câu hỏi hoặc chia sẻ điều hữu ích...',
     ai: 'AI',
     post: 'Đăng',

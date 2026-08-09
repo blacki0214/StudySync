@@ -15,6 +15,7 @@ import NoteSearchFilter from '../components/notes/NoteSearchFilter.vue'
 import AppSelect from '../components/common/AppSelect.vue'
 import LoadingSpinner from '../components/common/LoadingSpinner.vue'
 import EmptyState from '../components/common/EmptyState.vue'
+import Pagination from '../components/common/Pagination.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -83,6 +84,19 @@ const filtered = computed(() => {
   return list
 })
 
+// --- Pagination ------------------------------------------------------------
+// The grid is 3 columns on desktop, so a multiple of 3 always fills its rows.
+const PER_PAGE = 9
+const page = ref(1)
+
+/** The slice actually rendered. `filtered` stays the full result set so the
+ *  pager can report an honest total. */
+const paged = computed(() => filtered.value.slice((page.value - 1) * PER_PAGE, page.value * PER_PAGE))
+
+// Any change to the query resets to page 1 — otherwise a search that returns
+// two notes while the user sits on page 4 renders an empty grid.
+watch([search, subjectId, sort], () => { page.value = 1 })
+
 function openForm() {
   // Default to the active subject filter (if any); otherwise no subject.
   form.value = { title: '', content: '', subject_id: subjectId.value || '' }
@@ -133,11 +147,21 @@ async function createNote() {
       <button class="btn btn-brand empty-cta" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.createNote') }}</button>
     </EmptyState>
 
-    <div v-else class="row g-4">
-      <div v-for="n in filtered" :key="n.id" class="col-12 col-md-6 col-lg-4">
-        <NoteCard :note="n" :subject-code="subjectCode(n.subject_id)" deletable @delete="askDelete" />
+    <template v-else>
+      <div class="row g-4">
+        <div v-for="n in paged" :key="n.id" class="col-12 col-md-6 col-lg-4">
+          <NoteCard
+            :note="n"
+            :subject-code="subjectCode(n.subject_id)"
+            :highlight="search"
+            deletable
+            @delete="askDelete"
+          />
+        </div>
       </div>
-    </div>
+
+      <Pagination v-model="page" :total="filtered.length" :per-page="PER_PAGE" />
+    </template>
 
     <!-- New note modal (Bootstrap-styled, controlled by showForm) -->
     <div v-if="showForm" class="modal d-block" tabindex="-1" style="background: rgba(15,23,42,.5)">

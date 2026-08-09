@@ -4,13 +4,14 @@
  * threaded (nested) replies, share and save. Everything persists (Supabase or
  * demo/localStorage). No trending panel or contributors leaderboard.
  */
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useContentStore } from '../stores/contentStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
 import { communityService } from '../services/communityService.js'
 import CommentNode from '../components/community/CommentNode.vue'
+import Pagination from '../components/common/Pagination.vue'
 
 const { t } = useI18n()
 const content = useContentStore()
@@ -28,6 +29,7 @@ const filters = [
   { value: 'Saved', key: 'community.saved' }
 ]
 const activeFilter = ref('Hot')
+const search = ref('')
 
 const myVotes = ref(new Map())   // postId -> 1 | -1
 const savedIds = ref(new Set())  // saved post ids
@@ -50,7 +52,8 @@ const mySubjectCodes = computed(() =>
   content.subjects.filter((s) => s.owner_id && s.owner_id === auth.user?.id).map((s) => s.code)
 )
 
-const displayPosts = computed(() => {
+/** The active pill applied — sorting or filtering, but not yet searched. */
+const filteredPosts = computed(() => {
   const list = [...content.posts]
   switch (activeFilter.value) {
     case 'Top': return list.sort((a, b) => (b.votes || 0) - (a.votes || 0))
@@ -62,6 +65,25 @@ const displayPosts = computed(() => {
     default: return list
   }
 })
+
+/** Free-text search runs on top of the pill, across title, body, subject and
+ *  tags — so a pill narrows the set and the query narrows it again. */
+const displayPosts = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return filteredPosts.value
+  return filteredPosts.value.filter((p) =>
+    [p.title, p.excerpt, p.subject, ...(p.tags || [])]
+      .some((field) => String(field || '').toLowerCase().includes(q))
+  )
+})
+
+// --- Pagination ------------------------------------------------------------
+const PER_PAGE = 5
+const page = ref(1)
+const pagedPosts = computed(() => displayPosts.value.slice((page.value - 1) * PER_PAGE, page.value * PER_PAGE))
+
+// A new pill or query always restarts at page 1.
+watch([search, activeFilter], () => { page.value = 1 })
 
 async function submitPost() {
   const text = draft.value.trim()
@@ -219,6 +241,21 @@ function initials(name) {
       </div>
     </div>
 
+    <!-- Search -->
+    <div class="community-search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input
+        v-model="search"
+        type="search"
+        class="community-search-input"
+        :placeholder="t('community.searchPlaceholder')"
+        :aria-label="t('community.searchPlaceholder')"
+      />
+      <button v-if="search" class="community-search-clear" :aria-label="t('common.cancel')" @click="search = ''">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </div>
+
     <!-- Filters -->
     <div class="filter-pills">
       <button v-for="f in filters" :key="f.value" class="fp" :class="{ active: activeFilter === f.value }" @click="activeFilter = f.value">
@@ -231,7 +268,7 @@ function initials(name) {
       <i class="bi bi-chat-square-text"></i>
       <p>{{ t('community.emptyFilter') }}</p>
     </div>
-    <div v-for="post in displayPosts" :key="post.id" class="post-card">
+    <div v-for="post in pagedPosts" :key="post.id" class="post-card">
       <!-- Vote column (up/down) -->
       <div class="vote-col">
         <button class="vote-btn up" :class="{ voted: myVote(post.id) === 1 }" :title="t('community.upvote')" @click="vote(post, 1)"><i class="bi bi-arrow-up"></i></button>
@@ -252,8 +289,8 @@ function initials(name) {
           >{{ post.subject }}</router-link>
           <span v-else-if="post.subject" class="ph-subject badge-outline">{{ post.subject }}</span>
         </div>
-        <div class="post-title" :class="{ answered: post.answered }">{{ post.title }}</div>
-        <div v-if="post.excerpt" class="post-excerpt">{{ post.excerpt }}</div>
+        <div v-highlight="search" class="post-title" :class="{ answered: post.answered }">{{ post.title }}</div>
+        <div v-if="post.excerpt" v-highlight="search" class="post-excerpt">{{ post.excerpt }}</div>
         <div v-if="post.tags?.length" class="post-tags">
           <span v-for="tag in post.tags" :key="tag" class="badge-soft">{{ tag }}</span>
         </div>
@@ -294,5 +331,7 @@ function initials(name) {
         </div>
       </div>
     </div>
+
+    <Pagination v-model="page" :total="displayPosts.length" :per-page="PER_PAGE" />
   </div>
 </template>

@@ -8,7 +8,7 @@
  * Open-state is shared via paletteStore; the global keydown that opens it lives
  * in App.vue. The searchable index + keyboard nav are local to this component.
  */
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { usePaletteStore } from '../../stores/paletteStore.js'
@@ -26,7 +26,6 @@ const { t } = useI18n()
 
 const query = ref('')
 const activeIndex = ref(0)
-const inputRef = ref(null)
 
 // Section order + translated headers.
 const SECTIONS = ['actions', 'notes', 'subjects', 'rooms', 'decks', 'community']
@@ -114,18 +113,17 @@ function runActive() {
   results.value[activeIndex.value]?.run()
 }
 
-// Reset + focus whenever the palette opens; reset selection as the query changes.
+// Reset whenever the palette opens; reset selection as the query changes.
+// (Focusing the input is handled by v-focus on the input itself.)
 watch(
   () => palette.open,
-  async (isOpen) => {
+  (isOpen) => {
     if (isOpen) {
       // The palette is global; make sure the searchable data is loaded.
       if (!subjectStore.subjects.length) subjectStore.fetchSubjects()
       content.ensureLoaded()
       query.value = ''
       activeIndex.value = 0
-      await nextTick()
-      inputRef.value?.focus()
     }
   }
 )
@@ -137,10 +135,14 @@ watch(query, () => (activeIndex.value = 0))
     <div v-if="palette.open" class="palette-wrap" @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)" @keydown.enter.prevent="runActive" @keydown.esc="palette.hide()">
       <button class="palette-backdrop" :aria-label="t('common.cancel')" @click="palette.hide()"></button>
 
-      <div class="palette" role="dialog" aria-modal="true">
+      <!-- v-click-outside closes the palette on any press that lands outside it,
+           including on the app behind the backdrop. -->
+      <div v-click-outside="palette.hide" class="palette" role="dialog" aria-modal="true">
         <div class="palette-input">
           <i class="bi bi-search"></i>
-          <input ref="inputRef" v-model="query" :placeholder="t('palette.placeholder')" />
+          <!-- v-focus replaces the old nextTick()+ref focus dance: the palette is
+               v-if'd, so the input is a fresh element on every open. -->
+          <input v-focus v-model="query" :placeholder="t('palette.placeholder')" />
           <span class="kbd">Esc</span>
           <!-- Phones have no Esc key: a tappable close button instead (CSS shows
                it only on mobile, where the palette goes full-screen). -->
