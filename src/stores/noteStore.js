@@ -32,6 +32,10 @@ let contentTimer = null
 export const useNoteStore = defineStore('notes', {
   state: () => ({
     notes: [],
+    // Notes authored by somebody else that this user opened via a share link.
+    // Kept separate from `notes` so the author_id scoping that fixed the
+    // cross-account leak stays intact — see noteService.listNotes.
+    sharedNotes: [],
     loading: false,
 
     // --- Active collaborative editing session ---
@@ -71,10 +75,27 @@ export const useNoteStore = defineStore('notes', {
       this.loading = true
       try {
         // Scope to the signed-in user so accounts never see each other's notes.
-        this.notes = await noteService.listNotes({ subjectId, authorId: auth.user?.id })
+        // "Shared with me" is fetched alongside it (own list is unaffected if
+        // that query fails or the migration hasn't been applied).
+        const [own, shared] = await Promise.all([
+          noteService.listNotes({ subjectId, authorId: auth.user?.id }),
+          auth.user?.id ? noteService.listSharedWithMe(auth.user.id) : Promise.resolve([])
+        ])
+        this.notes = own
+        this.sharedNotes = subjectId ? shared.filter((n) => n.subject_id === subjectId) : shared
       } finally {
         this.loading = false
       }
+    },
+
+    /**
+     * Remember that the current user opened a note through a share link, so it
+     * shows up under "Shared with me". Best-effort — never blocks the editor.
+     */
+    async recordSharedOpen({ noteId, permission }) {
+      const auth = useAuthStore()
+      if (!auth.user?.id) return // guests have no profile row to reference
+      await noteService.recordCollaborator({ noteId, userId: auth.user.id, permission })
     },
 
     async createNote(payload) {

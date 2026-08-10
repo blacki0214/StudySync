@@ -802,6 +802,28 @@
   color: var(--c-text-muted);
 }
 
+/* Signed-in identity on a share link. The shell is hidden on this route, so
+   without this the page gives no clue who you are and reads as anonymous. */
+.share-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+.share-me-avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 0.66rem;
+}
+
+/* Phones: the identity chip drops its label so the bar stays on one line. */
+@media (max-width: 575px) {
+  .share-me { font-size: 0; gap: 0; }
+  .share-me-avatar { font-size: 0.66rem; }
+}
+
 /* "This link is no longer available" screen. */
 .share-gate {
   max-width: 420px;

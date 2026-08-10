@@ -13,7 +13,9 @@ const props = defineProps({
   subjectCode: { type: String, default: '' },
   deletable: { type: Boolean, default: false },
   /** Active search term — v-highlight marks it inside the title and excerpt. */
-  highlight: { type: String, default: '' }
+  highlight: { type: String, default: '' },
+  /** 'read' | 'edit' when this note was shared with the viewer; '' otherwise. */
+  sharedBadge: { type: String, default: '' }
 })
 defineEmits(['delete'])
 const { t } = useI18n()
@@ -34,6 +36,9 @@ const excerpt = computed(() => plain.value.slice(0, 180))
     ><i class="bi bi-trash3"></i></button>
     <div class="d-flex align-items-start gap-2">
       <span class="badge-soft">{{ subjectCode || 'Note' }}</span>
+      <span v-if="sharedBadge" class="badge-outline">
+        <i class="bi me-1" :class="sharedBadge === 'edit' ? 'bi-pencil' : 'bi-eye'"></i>{{ sharedBadge === 'edit' ? t('notes.sharedCanEdit') : t('notes.sharedCanView') }}
+      </span>
     </div>
     <div v-highlight="highlight" class="note-title mt-3">{{ note.title }}</div>
     <p v-highlight="highlight" class="note-excerpt">{{ excerpt }}</p>

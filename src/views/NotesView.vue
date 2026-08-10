@@ -27,6 +27,11 @@ const search = ref(route.query.q || '')
 const subjectId = ref(route.query.subject || '')
 const sort = ref('recent')
 
+// Which set of notes to show: the ones I wrote, or the ones opened via someone
+// else's share link. They are two different lists because opening a share link
+// never transfers ownership — see noteStore.sharedNotes.
+const scope = ref('mine') // 'mine' | 'shared'
+
 // New-note form state.
 const showForm = ref(false)
 const form = ref({ title: '', content: '', subject_id: '' })
@@ -70,7 +75,7 @@ const subjectOptions = computed(() => [
 ])
 
 const filtered = computed(() => {
-  let list = [...noteStore.notes]
+  let list = scope.value === 'shared' ? [...noteStore.sharedNotes] : [...noteStore.notes]
   if (subjectId.value) list = list.filter((n) => n.subject_id === subjectId.value)
   if (search.value) {
     const q = search.value.toLowerCase()
@@ -95,7 +100,7 @@ const paged = computed(() => filtered.value.slice((page.value - 1) * PER_PAGE, p
 
 // Any change to the query resets to page 1 — otherwise a search that returns
 // two notes while the user sits on page 4 renders an empty grid.
-watch([search, subjectId, sort], () => { page.value = 1 })
+watch([search, subjectId, sort, scope], () => { page.value = 1 })
 
 function openForm() {
   // Default to the active subject filter (if any); otherwise no subject.
@@ -129,6 +134,19 @@ async function createNote() {
       <button class="btn btn-brand" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.newNote') }}</button>
     </header>
 
+    <!-- Scope pills. "Shared with me" only appears once there is something in
+         it, so an account that has never opened a share link is not shown an
+         empty tab it can do nothing about. -->
+    <div v-if="noteStore.sharedNotes.length" class="filter-pills">
+      <button class="fp" :class="{ active: scope === 'mine' }" @click="scope = 'mine'">
+        <i class="bi bi-person"></i>{{ t('notes.scopeMine') }}
+      </button>
+      <button class="fp" :class="{ active: scope === 'shared' }" @click="scope = 'shared'">
+        <i class="bi bi-people"></i>{{ t('notes.scopeShared') }}
+        <span class="fp-count">{{ noteStore.sharedNotes.length }}</span>
+      </button>
+    </div>
+
     <NoteSearchFilter
       v-model:search="search"
       v-model:subjectId="subjectId"
@@ -140,21 +158,25 @@ async function createNote() {
 
     <EmptyState
       v-else-if="!filtered.length"
-      icon="bi-sticky"
-      :title="t('notes.emptyTitle')"
-      :message="t('notes.emptyMsg')"
+      :icon="scope === 'shared' ? 'bi-people' : 'bi-sticky'"
+      :title="scope === 'shared' ? t('notes.sharedEmptyTitle') : t('notes.emptyTitle')"
+      :message="scope === 'shared' ? t('notes.sharedEmptyMsg') : t('notes.emptyMsg')"
     >
-      <button class="btn btn-brand empty-cta" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.createNote') }}</button>
+      <!-- No "create" CTA on the shared tab: you cannot create someone else's
+           note, the only way in is opening their link. -->
+      <button v-if="scope === 'mine'" class="btn btn-brand empty-cta" @click="openForm"><i class="bi bi-plus-lg"></i>{{ t('notes.createNote') }}</button>
     </EmptyState>
 
     <template v-else>
       <div class="row g-4">
         <div v-for="n in paged" :key="n.id" class="col-12 col-md-6 col-lg-4">
+          <!-- Shared notes belong to someone else: no delete affordance. -->
           <NoteCard
             :note="n"
             :subject-code="subjectCode(n.subject_id)"
             :highlight="search"
-            deletable
+            :deletable="scope === 'mine'"
+            :shared-badge="scope === 'shared' ? (n.shared_permission || 'read') : ''"
             @delete="askDelete"
           />
         </div>

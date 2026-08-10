@@ -40,6 +40,7 @@ import * as Y from 'yjs'
 import { noteService } from '../services/noteService.js'
 import { commentService } from '../services/commentService.js'
 import { useSubjectStore } from '../stores/subjectStore.js'
+import { useNoteStore } from '../stores/noteStore.js'
 import { useContentStore } from '../stores/contentStore.js'
 import { useAuthStore } from '../stores/authStore.js'
 import { useDialogStore } from '../stores/dialogStore.js'
@@ -64,6 +65,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const subjectStore = useSubjectStore()
+const noteStore = useNoteStore()
 const contentStore = useContentStore()
 
 const auth = useAuthStore()
@@ -227,6 +229,19 @@ onMounted(async () => {
     if (isShared) { linkUnavailable.value = true; ready.value = true; return }
     router.replace('/notes')
     return
+  }
+
+  // A signed-in visitor arriving through a share link: remember the note so it
+  // is listed back under "Shared with me". Opening a link never transfers
+  // ownership (author_id is untouched), so without this record the note would
+  // be unreachable from the reader's own Notes page. Guests are skipped — they
+  // have no profile row to reference. Fire-and-forget: it must not delay the
+  // editor, and it is a no-op for the author themselves.
+  if (isShared && !isAnon.value && note.value.author_id !== me.value?.id) {
+    noteStore.recordSharedOpen({
+      noteId: note.value.id,
+      permission: note.value.share_permission || 'read'
+    })
   }
 
   // Build the shared CRDT document and (live) the realtime provider.
@@ -714,6 +729,19 @@ async function runExport(kind) {
         <router-link v-if="isAnon" class="btn btn-brand" :to="{ name: 'login', query: { redirect: route.fullPath } }">
           {{ t('share.signIn') }}
         </router-link>
+
+        <!-- Signed in: the blank layout hides the app shell, so without this the
+             page gives no sign of WHO you are and reads as anonymous. -->
+        <template v-else>
+          <span class="share-me">
+            <img v-if="me.avatar_url || me.avatar" :src="me.avatar_url || me.avatar" class="avatar-ring share-me-avatar" alt="" />
+            <span v-else class="user-avatar share-me-avatar">{{ initials(me.full_name) }}</span>
+            {{ me.full_name }}
+          </span>
+          <router-link class="btn btn-outline-soft" :to="{ name: 'note-detail', params: { id: note.id } }">
+            <i class="bi bi-box-arrow-up-right"></i>{{ t('share.openInApp') }}
+          </router-link>
+        </template>
       </div>
     </div>
 

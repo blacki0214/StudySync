@@ -35,13 +35,23 @@
 .community-empty i { font-size: 1.8rem; }
 
 .filter-pills { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4); }
+/* Shared by the community feed and the Notes scope switcher. inline-flex so an
+   icon and its label space themselves, the same way .btn does. */
 .fp {
+  display: inline-flex; align-items: center; gap: 0.4rem;
   border: 1px solid var(--c-border-strong); background: var(--c-surface);
   color: var(--c-text-muted); font-weight: 600; font-size: 0.85rem;
   border-radius: var(--radius-pill); padding: 0.35rem 0.9rem;
 }
 .fp:hover { color: var(--c-text); }
 .fp.active { background: var(--grad-button); color: #fff; border-color: transparent; }
+/* Count bubble on a pill (e.g. how many notes are shared with you). */
+.fp-count {
+  background: var(--c-surface-2); color: var(--c-text-muted);
+  border-radius: var(--radius-pill); padding: 0 0.4rem;
+  font-size: 0.74rem; font-weight: 700; min-width: 18px; text-align: center;
+}
+.fp.active .fp-count { background: rgba(255, 255, 255, 0.25); color: #fff; }
 
 .post-card {
   background: var(--c-surface);

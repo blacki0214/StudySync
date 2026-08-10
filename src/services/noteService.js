@@ -20,6 +20,9 @@ const demoVersions = {} // noteId -> array of version snapshots
 let demoIdCounter = 1000
 const nextDemoId = (prefix) => `${prefix}-${++demoIdCounter}`
 
+// Demo-mode store for "shared with me": noteId -> { permission, last_opened_at }.
+const demoShared = {}
+
 export const noteService = {
   /**
    * List notes, optionally filtered by subject and/or class.
@@ -45,6 +48,69 @@ export const noteService = {
     const { data, error } = await query
     if (error) throw error
     return data
+  },
+
+  /**
+   * Record that a signed-in user opened a note through a share link, so it can
+   * be listed back under "Shared with me". Called once per open.
+   *
+   * Deliberately best-effort: it never throws and never blocks opening the
+   * note. A missing `note_collaborators` table (migration not applied yet), a
+   * guest with no profile row, or the user being the author are all normal
+   * no-ops rather than errors.
+   */
+  async recordCollaborator({ noteId, userId, permission = 'read' }) {
+    if (!noteId || !userId) return
+    if (!isSupabaseConfigured) {
+      demoShared[noteId] = { permission, last_opened_at: new Date().toISOString() }
+      return
+    }
+    try {
+      await supabase
+        .from('note_collaborators')
+        .upsert(
+          { note_id: noteId, user_id: userId, permission, last_opened_at: new Date().toISOString() },
+          { onConflict: 'note_id,user_id' }
+        )
+    } catch { /* table may not exist yet — the note still opens fine */ }
+  },
+
+  /**
+   * Notes that were shared WITH this user (i.e. opened via a share link and
+   * authored by somebody else), most recently opened first.
+   *
+   * Returns the note rows with `shared_permission` / `shared_at` attached so
+   * the list can badge them. Notes the user authored are filtered out — those
+   * already appear in their own list.
+   */
+  async listSharedWithMe(userId) {
+    if (!userId) return []
+
+    if (!isSupabaseConfigured) {
+      return Object.entries(demoShared)
+        .map(([noteId, meta]) => {
+          const note = demoNotes.find((n) => n.id === noteId)
+          return note ? { ...note, shared_permission: meta.permission, shared_at: meta.last_opened_at } : null
+        })
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.shared_at) - new Date(a.shared_at))
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('note_collaborators')
+        .select('permission, last_opened_at, notes (*)')
+        .eq('user_id', userId)
+        .order('last_opened_at', { ascending: false })
+      if (error) throw error
+
+      return (data || [])
+        .filter((row) => row.notes && row.notes.author_id !== userId)
+        .map((row) => ({ ...row.notes, shared_permission: row.permission, shared_at: row.last_opened_at }))
+    } catch {
+      // Migration not applied yet → behave exactly as before (own notes only).
+      return []
+    }
   },
 
   /** Fetch a single note by id. */

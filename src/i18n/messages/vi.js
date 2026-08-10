@@ -364,6 +364,13 @@ export default {
     sortTitle: 'Tiêu đề A–Z',
     emptyTitle: 'Không tìm thấy ghi chú',
     emptyMsg: 'Hãy thử tìm kiếm khác, hoặc tạo ghi chú đầu tiên cho môn học này.',
+    // "Được chia sẻ với tôi" — ghi chú của người khác, mở qua link của họ.
+    scopeMine: 'Ghi chú của tôi',
+    scopeShared: 'Được chia sẻ với tôi',
+    sharedCanEdit: 'Có thể sửa',
+    sharedCanView: 'Chỉ xem',
+    sharedEmptyTitle: 'Chưa có ai chia sẻ gì với bạn',
+    sharedEmptyMsg: 'Ghi chú bạn mở qua link chia sẻ của người khác sẽ hiện ở đây.',
     createNote: 'Tạo ghi chú',
     modalTitle: 'Tạo ghi chú mới',
     subject: 'Môn học',
@@ -752,6 +759,7 @@ export default {
 
   share: {
     title: 'Chia sẻ ghi chú',
+    openInApp: 'Mở trong ứng dụng',
     anyoneWithLink: 'Bất kỳ ai có liên kết',
     onHint: 'Bất kỳ ai có liên kết đều mở được, không cần tài khoản.',
     offHint: 'Chỉ bạn và thành viên lớp mới mở được ghi chú này.',

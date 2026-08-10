@@ -364,6 +364,13 @@ export default {
     sortTitle: 'Title A–Z',
     emptyTitle: 'No notes found',
     emptyMsg: 'Try a different search, or create the first note for this subject.',
+    // "Shared with me" — notes authored by someone else, opened via their link.
+    scopeMine: 'My notes',
+    scopeShared: 'Shared with me',
+    sharedCanEdit: 'Can edit',
+    sharedCanView: 'View only',
+    sharedEmptyTitle: 'Nothing shared with you yet',
+    sharedEmptyMsg: 'Notes you open through someone else\'s share link appear here.',
     createNote: 'Create note',
     modalTitle: 'Create a new note',
     subject: 'Subject',
@@ -753,6 +760,7 @@ export default {
 
   share: {
     title: 'Share note',
+    openInApp: 'Open in app',
     anyoneWithLink: 'Anyone with the link',
     onHint: 'Anyone with the link can open this note, no account needed.',
     offHint: 'Only you and class members can open this note.',
