@@ -1,7 +1,6 @@
 # StudySync Vietnam
 
-A real-time collaborative study platform for university students, built for
-**COS30043 – Interface Design and Development**.
+A real-time collaborative study platform for university students
 
 <p align="center">
   <img src="src/assets/images/logo_2.png" alt="StudySync logo" width="96" />
